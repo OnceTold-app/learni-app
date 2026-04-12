@@ -111,13 +111,13 @@ export async function POST(req: NextRequest) {
           content: isCorrect
             ? `${childName} answered "${answer}" to "${currentQuestion}" — CORRECT! ${
                 phase === 'warmup' || phase === 'closing'
-                  ? `Streak: ${sessionStats.streakCount + 1}. Celebrate briefly ("Nice one!", "You got it!") then give the next question.`
-                  : `Stars: +4. Celebrate! Then give the next problem.`
+                  ? `Streak: ${sessionStats.streakCount + 1}. Celebrate briefly ("Nice one!", "You got it!") then give a NEW DIFFERENT question. NEVER repeat a question they already got right.`
+                  : `Stars: +4. Celebrate! Then give a NEW DIFFERENT problem on a different aspect of the topic. NEVER repeat the same question.`
               }`
             : `${childName} answered "${answer}" to "${currentQuestion}" — INCORRECT. The correct answer was "${currentCorrectAnswer}". ${
                 phase === 'warmup' || phase === 'closing'
-                  ? `Be kind: "Not quite! Let's try that one again." Give the same question back.`
-                  : `Use the misconception engine: be warm and encouraging, identify what they likely confused, explain from a different angle, then give a simpler version of the same concept. NEVER make them feel bad.`
+                  ? `Be kind: "Not quite! The answer was ${currentCorrectAnswer}." Then give a DIFFERENT question (not the same one again).`
+                  : `Use the misconception engine: be warm and encouraging, identify what they likely confused, explain from a different angle, then give a SIMPLER version (not the same question). NEVER make them feel bad.`
               }`,
         })
       }
@@ -126,7 +126,7 @@ export async function POST(req: NextRequest) {
       messages.push({
         role: 'user',
         content: phase === 'warmup'
-          ? `Start the warm-up rapid fire. This tests PREVIOUS lessons — NOT today's topic. Drill general knowledge: times tables, number bonds, basic facts ${childName} should already know for Year ${yearLevel}. Personal best is ${sessionStats.personalBest} correct in a row. Say something like "Right ${childName} — let's wake up that brain. Stuff you already know. Fast as you can. Go." then give the first question.`
+          ? `Start the warm-up rapid fire. This tests PREVIOUS lessons — NOT today's topic. Drill a WIDE VARIETY: times tables (different numbers each time), number bonds, addition, subtraction, basic facts ${childName} should already know for Year ${yearLevel}. NEVER repeat the same question in a session. Mix up the numbers and operations. Personal best is ${sessionStats.personalBest} correct in a row. Say something encouraging like "Hey ${childName} — let's warm up that amazing brain! Ready?" then give the first question.`
           : phase === 'closing'
             ? `Start the closing rapid fire. This tests ONLY what ${childName} just learned TODAY in the ${subject} lesson. Only ask questions from today's lesson content — make sure it's locked in. Say "Last round — let's see if today's lesson stuck. No thinking, just knowing. Go." then give the first question.`
             : phase === 'financial'

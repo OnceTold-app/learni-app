@@ -640,63 +640,34 @@ export default function SessionPage() {
               </div>
             )}
 
-            {/* Hint offer */}
-            {showHintOffer && !state.selectedAnswer && (
-              <div style={{
-                marginTop: '16px',
-                padding: '14px 18px',
-                background: 'rgba(46,196,182,0.08)',
-                border: '1px solid rgba(46,196,182,0.15)',
-                borderRadius: '14px',
-                textAlign: 'center',
-              }}>
-                <div style={{ fontSize: '14px', color: '#2ec4b6', fontWeight: 700, marginBottom: '10px' }}>
-                  Need a hint? 🤔
-                </div>
-                <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
-                  <button
-                    onClick={() => {
-                      setShowHintOffer(false)
-                      lastActivityRef.current = Date.now()
-                      // Ask Claude for a hint
-                      historyRef.current.push({ role: 'user', content: `${childName} is stuck on "${state.question}". Give a helpful hint without giving the answer. Be encouraging.` })
-                      fetchQuestion(state.phase)
-                    }}
-                    style={{
-                      padding: '8px 20px',
-                      background: '#2ec4b6',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '20px',
-                      fontSize: '13px',
-                      fontWeight: 800,
-                      fontFamily: "'Nunito', sans-serif",
-                      cursor: 'pointer',
-                    }}
-                  >
-                    Yes please
-                  </button>
-                  <button
-                    onClick={() => {
-                      setShowHintOffer(false)
-                      lastActivityRef.current = Date.now()
-                      speak('You\'ve got this!')
-                    }}
-                    style={{
-                      padding: '8px 20px',
-                      background: 'rgba(255,255,255,0.06)',
-                      color: 'rgba(255,255,255,0.5)',
-                      border: '1px solid rgba(255,255,255,0.1)',
-                      borderRadius: '20px',
-                      fontSize: '13px',
-                      fontWeight: 700,
-                      cursor: 'pointer',
-                    }}
-                  >
-                    I&apos;ve got this
-                  </button>
-                </div>
-              </div>
+            {/* Help button — always visible during lesson/financial */}
+            {!state.selectedAnswer && !isRapidFire && (
+              <button
+                onClick={() => {
+                  setShowHintOffer(false)
+                  if (hintTimerRef.current) clearTimeout(hintTimerRef.current)
+                  lastActivityRef.current = Date.now()
+                  historyRef.current.push({ role: 'user', content: `${childName} pressed the help button for "${state.question}". Give a warm, encouraging hint WITHOUT giving the answer. Guide them step by step.` })
+                  fetchQuestion(state.phase)
+                }}
+                style={{
+                  marginTop: '14px',
+                  padding: '10px 20px',
+                  background: 'rgba(245,166,35,0.1)',
+                  border: '1px solid rgba(245,166,35,0.2)',
+                  borderRadius: '20px',
+                  fontSize: '13px',
+                  fontWeight: 700,
+                  color: '#f5a623',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  margin: '14px auto 0',
+                }}
+              >
+                💡 I need help
+              </button>
             )}
           </div>
         )}
@@ -783,39 +754,34 @@ export default function SessionPage() {
               </div>
             )}
 
-            {/* Hint offer for multi-choice */}
-            {showHintOffer && !state.selectedAnswer && (
-              <div style={{
-                marginTop: '16px',
-                padding: '14px 18px',
-                background: 'rgba(46,196,182,0.08)',
-                border: '1px solid rgba(46,196,182,0.15)',
-                borderRadius: '14px',
-                textAlign: 'center',
-              }}>
-                <div style={{ fontSize: '14px', color: '#2ec4b6', fontWeight: 700, marginBottom: '10px' }}>
-                  Need a hint? 🤔
-                </div>
-                <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
-                  <button
-                    onClick={() => {
-                      setShowHintOffer(false)
-                      lastActivityRef.current = Date.now()
-                      historyRef.current.push({ role: 'user', content: `${childName} is stuck on "${state.question}". Give a helpful hint without giving the answer.` })
-                      fetchQuestion(state.phase)
-                    }}
-                    style={{ padding: '8px 20px', background: '#2ec4b6', color: 'white', border: 'none', borderRadius: '20px', fontSize: '13px', fontWeight: 800, fontFamily: "'Nunito', sans-serif", cursor: 'pointer' }}
-                  >
-                    Yes please
-                  </button>
-                  <button
-                    onClick={() => { setShowHintOffer(false); lastActivityRef.current = Date.now(); speak('You\'ve got this!') }}
-                    style={{ padding: '8px 20px', background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.5)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '20px', fontSize: '13px', fontWeight: 700, cursor: 'pointer' }}
-                  >
-                    I&apos;ve got this
-                  </button>
-                </div>
-              </div>
+            {/* Help button — always visible during lesson/financial */}
+            {!state.selectedAnswer && !isRapidFire && (
+              <button
+                onClick={() => {
+                  setShowHintOffer(false)
+                  if (hintTimerRef.current) clearTimeout(hintTimerRef.current)
+                  lastActivityRef.current = Date.now()
+                  historyRef.current.push({ role: 'user', content: `${childName} pressed the help button for "${state.question}". Give a warm, encouraging hint WITHOUT giving the answer. Guide them step by step.` })
+                  fetchQuestion(state.phase)
+                }}
+                style={{
+                  marginTop: '14px',
+                  padding: '10px 20px',
+                  background: 'rgba(245,166,35,0.1)',
+                  border: '1px solid rgba(245,166,35,0.2)',
+                  borderRadius: '20px',
+                  fontSize: '13px',
+                  fontWeight: 700,
+                  color: '#f5a623',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  margin: '14px auto 0',
+                }}
+              >
+                💡 I need help
+              </button>
             )}
           </div>
         )}
