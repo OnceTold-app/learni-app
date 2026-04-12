@@ -30,14 +30,20 @@ export default function SignupPage() {
 
       if (authError) throw authError
 
-      // Create account record
+      // Create account record with 14-day trial
       if (authData.user) {
+        const trialEnd = new Date()
+        trialEnd.setDate(trialEnd.getDate() + 14)
+
         const { error: accountError } = await supabase
           .from('accounts')
           .insert({
-            id: authData.user.id,
+            user_id: authData.user.id,
             email,
-            name,
+            full_name: name,
+            plan: 'trial',
+            subscription_status: 'trialing',
+            trial_ends_at: trialEnd.toISOString(),
           })
 
         if (accountError && !accountError.message.includes('duplicate')) {
