@@ -51,6 +51,8 @@ export default function SessionPage() {
   const childName = typeof window !== 'undefined' ? localStorage.getItem('learni_child_name') || 'Student' : 'Student'
   const yearLevel = typeof window !== 'undefined' ? parseInt(localStorage.getItem('learni_year_level') || '5') : 5
   const subject = typeof window !== 'undefined' ? localStorage.getItem('learni_subject') || 'Maths' : 'Maths'
+  const sessionMode = typeof window !== 'undefined' ? localStorage.getItem('learni_session_mode') || 'full' : 'full'
+  const sessionTopic = typeof window !== 'undefined' ? localStorage.getItem('learni_session_topic') || '' : ''
   const [focusAreas, setFocusAreas] = useState<string[]>([])
   const [weakTopics, setWeakTopics] = useState<string[]>([])
   const [reviewTopics, setReviewTopics] = useState<string[]>([])
@@ -60,8 +62,10 @@ export default function SessionPage() {
   const [questionsInPhase, setQuestionsInPhase] = useState(0)
 
   const [state, setState] = useState<SessionState>({
-    phase: 'warmup',
-    phaseLabel: PHASE_LABELS.warmup,
+    phase: (typeof window !== 'undefined' && localStorage.getItem('learni_session_mode') === 'practice' ? 'lesson' :
+            typeof window !== 'undefined' && localStorage.getItem('learni_session_mode') === 'challenge' ? 'warmup' :
+            'warmup') as Phase,
+    phaseLabel: PHASE_LABELS[typeof window !== 'undefined' && localStorage.getItem('learni_session_mode') === 'practice' ? 'lesson' : 'warmup'],
     earniSays: '',
     question: null,
     visual: null,
@@ -374,14 +378,10 @@ export default function SessionPage() {
       const limit = PHASE_TIMES[state.phase]
 
       if (phaseElapsed >= limit && state.phase !== 'reward' && !state.loading) {
-        const nextPhase: Record<Phase, Phase> = {
-          warmup: 'lesson',
-          lesson: 'financial',
-          financial: 'closing',
-          closing: 'reward',
-          reward: 'reward',
-        }
-        const next = nextPhase[state.phase]
+        const fullFlow: Record<Phase, Phase> = { warmup: 'lesson', lesson: 'financial', financial: 'closing', closing: 'reward', reward: 'reward' }
+        const shortFlow: Record<Phase, Phase> = { warmup: 'reward', lesson: 'reward', financial: 'reward', closing: 'reward', reward: 'reward' }
+        const flow = (sessionMode === 'practice' || sessionMode === 'challenge' || sessionMode === 'learn') ? shortFlow : fullFlow
+        const next = flow[state.phase]
         phaseStartRef.current = Date.now()
         historyRef.current = []
         setQuestionsInPhase(0)

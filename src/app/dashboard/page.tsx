@@ -239,7 +239,7 @@ export default function DashboardPage() {
 
             {/* Start session button */}
             <a
-              href="/session"
+              href="/start-session"
               onClick={() => {
                 if (child) {
                   localStorage.setItem('learni_child_id', child.id)

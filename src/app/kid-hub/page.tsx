@@ -221,7 +221,7 @@ export default function KidHubPage() {
 
         {/* Start session button */}
         <a
-          href="/session"
+          href="/start-session"
           style={{
             display: 'block',
             background: 'linear-gradient(135deg, #2ec4b6, #1ab5a8)',
