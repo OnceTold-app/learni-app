@@ -89,7 +89,10 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <p style={{ textAlign: 'center', marginTop: '20px', fontSize: '13px', color: '#5a8a84' }}>
+        <p style={{ textAlign: 'center', marginTop: '16px', fontSize: '13px', color: '#5a8a84' }}>
+          <a href="/forgot-password" style={{ color: '#8abfba', textDecoration: 'none' }}>Forgot password?</a>
+        </p>
+        <p style={{ textAlign: 'center', marginTop: '12px', fontSize: '13px', color: '#5a8a84' }}>
           Don&apos;t have an account? <a href="/signup" style={{ color: '#1a9e92', fontWeight: 600 }}>Sign up</a>
         </p>
       </div>
