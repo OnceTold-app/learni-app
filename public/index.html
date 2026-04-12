@@ -576,11 +576,113 @@ window.addEventListener('scroll', () => {
 document.querySelector('.nav').style.background = window.scrollY > 10 ? 'rgba(255,255,255,0.92)' : 'rgba(255,255,255,0.85)';
 });
 </script>
+<!-- Earni Chat Widget -->
+<style>
+.chat-fab{position:fixed;bottom:24px;right:24px;z-index:1000;width:60px;height:60px;border-radius:50%;background:var(--turq);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 24px rgba(46,196,182,0.4);transition:all .2s;font-size:28px;}
+.chat-fab:hover{transform:scale(1.08);box-shadow:0 8px 32px rgba(46,196,182,0.5);}
+.chat-fab.open{background:var(--ink);}
+.chat-box{position:fixed;bottom:96px;right:24px;z-index:1000;width:380px;max-width:calc(100vw - 48px);height:520px;max-height:calc(100vh - 140px);background:white;border-radius:20px;box-shadow:0 20px 60px rgba(0,0,0,0.15),0 0 0 1px rgba(46,196,182,0.1);display:none;flex-direction:column;overflow:hidden;}
+.chat-box.open{display:flex;}
+.chat-header{background:var(--ink);padding:16px 20px;display:flex;align-items:center;gap:12px;}
+.chat-avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(145deg,var(--turq),var(--turq-deep));display:flex;align-items:center;justify-content:center;font-size:18px;}
+.chat-header-text h4{font-family:'Nunito',sans-serif;font-size:14px;font-weight:900;color:white;margin:0;}
+.chat-header-text p{font-size:11px;color:rgba(255,255,255,0.5);margin:0;}
+.chat-messages{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;}
+.chat-msg{max-width:85%;padding:10px 14px;border-radius:16px;font-size:14px;line-height:1.55;word-wrap:break-word;}
+.chat-msg.bot{background:var(--turq-soft);color:var(--ink);border-bottom-left-radius:4px;align-self:flex-start;}
+.chat-msg.user{background:var(--ink);color:white;border-bottom-right-radius:4px;align-self:flex-end;}
+.chat-msg.typing{background:var(--turq-soft);color:var(--muted);font-style:italic;align-self:flex-start;border-bottom-left-radius:4px;}
+.chat-input-wrap{padding:12px;border-top:1px solid var(--border);display:flex;gap:8px;}
+.chat-input{flex:1;border:1.5px solid var(--border);border-radius:24px;padding:10px 16px;font-size:14px;font-family:'Plus Jakarta Sans',sans-serif;outline:none;transition:border-color .15s;}
+.chat-input:focus{border-color:var(--turq);}
+.chat-send{width:40px;height:40px;border-radius:50%;background:var(--turq);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:white;font-size:18px;transition:background .15s;flex-shrink:0;}
+.chat-send:hover{background:var(--turq-deep);}
+.chat-send:disabled{background:var(--border);cursor:not-allowed;}
+</style>
+
+<button class="chat-fab" id="chatFab" onclick="toggleChat()" aria-label="Chat with Earni">💬</button>
+
+<div class="chat-box" id="chatBox">
+<div class="chat-header">
+<div class="chat-avatar">🤖</div>
+<div class="chat-header-text">
+<h4>Earni</h4>
+<p>Learni's AI assistant</p>
+</div>
+</div>
+<div class="chat-messages" id="chatMessages">
+<div class="chat-msg bot">Hey! I'm Earni 👋 Got questions about Learni? I'm here to help.</div>
+</div>
+<div class="chat-input-wrap">
+<input class="chat-input" id="chatInput" type="text" placeholder="Ask Earni anything..." onkeydown="if(event.key==='Enter')sendChat()">
+<button class="chat-send" id="chatSend" onclick="sendChat()">→</button>
+</div>
+</div>
+
 <script>
-// Earni Chat Widget
-const EARNI_AGENT = 'agent_0701kp025ajmeawv606w6p9c3rsj';
+let chatOpen=false;
+let chatHistory=[{role:'system',content:`You are Earni, the AI behind Learni — a learning platform for children in New Zealand.
+
+Key facts:
+- Learni (learniapp.co) is an AI-powered learning platform for NZ school children (Year 1-13)
+- Children learn through voice-guided lessons where Earni explains problems and they tap answers
+- Stars earned convert to real money tracked in the parent Hub (3-jar system: Save/Spend/Give)
+- Pricing: Free (2 sessions/week), Standard $19 NZD/month (unlimited), Family $29 NZD/month (up to 4 kids)
+- 14-day free trial on paid plans. No credit card for Free. Cancel anytime.
+- NZ Curriculum aligned. NCEA prep for Year 11-13. Multiple languages supported.
+- No ads. Ever. Data stays in AU/NZ.
+- Built by Mo & Bonnie Olckers in Red Beach, Auckland. Their daughters Lia (9) & Demi (7) were first testers.
+- Competitors: Kip McGrath ($72/session), Khan Academy (no voice/rewards), Mathletics (no AI)
+- Sign up at learniapp.co
+
+You are warm, helpful, honest. Never oversell. Keep answers concise. If unsure, say so and offer hello@learniapp.co.`}];
+
+function toggleChat(){
+chatOpen=!chatOpen;
+document.getElementById('chatBox').classList.toggle('open',chatOpen);
+document.getElementById('chatFab').classList.toggle('open',chatOpen);
+document.getElementById('chatFab').textContent=chatOpen?'✕':'💬';
+if(chatOpen)document.getElementById('chatInput').focus();
+}
+
+function addMsg(text,who){
+const d=document.createElement('div');
+d.className='chat-msg '+who;
+d.textContent=text;
+document.getElementById('chatMessages').appendChild(d);
+document.getElementById('chatMessages').scrollTop=9999;
+return d;
+}
+
+async function sendChat(){
+const input=document.getElementById('chatInput');
+const msg=input.value.trim();
+if(!msg)return;
+input.value='';
+addMsg(msg,'user');
+chatHistory.push({role:'user',content:msg});
+
+const typing=addMsg('Earni is typing...','typing');
+document.getElementById('chatSend').disabled=true;
+
+try{
+const res=await fetch('/api/earni-chat',{
+method:'POST',
+headers:{'Content-Type':'application/json'},
+body:JSON.stringify({messages:chatHistory})
+});
+const data=await res.json();
+typing.remove();
+const reply=data.reply||'Sorry, something went wrong. Try again?';
+addMsg(reply,'bot');
+chatHistory.push({role:'assistant',content:reply});
+}catch(e){
+typing.remove();
+addMsg('Oops — couldn\'t connect. Try again in a moment.','bot');
+}
+document.getElementById('chatSend').disabled=false;
+document.getElementById('chatInput').focus();
+}
 </script>
-<elevenlabs-convai agent-id="agent_0701kp025ajmeawv606w6p9c3rsj" chat-only="true"></elevenlabs-convai>
-<script src="https://elevenlabs.io/convai-widget/index.js" async type="text/javascript"></script>
 </body>
 </html>
