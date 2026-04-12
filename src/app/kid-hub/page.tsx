@@ -5,7 +5,7 @@ import { getCurrentRank, getNextRank, getProgressToNextRank } from '@/lib/ranks'
 
 interface SessionData {
   id: string
-  created_at: string
+  completed_at: string
   stars_earned: number
   subject: string
   duration_seconds: number
@@ -246,7 +246,7 @@ export default function KidHubPage() {
             <h2 style={{ fontFamily: "'Nunito', sans-serif", fontSize: '16px', fontWeight: 800, color: 'rgba(255,255,255,0.5)', marginBottom: '12px' }}>Recent sessions</h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {sessions.slice(0, 5).map(s => {
-                const date = new Date(s.created_at)
+                const date = new Date(s.completed_at)
                 const mins = Math.round((s.duration_seconds || 0) / 60)
                 return (
                   <div key={s.id} style={{

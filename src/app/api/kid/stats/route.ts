@@ -10,27 +10,27 @@ export async function GET(req: NextRequest) {
     process.env.SUPABASE_SERVICE_ROLE_KEY || ''
   )
 
-  // Get total stars from star_ledger
+  // Get total stars from star_ledger — column is 'stars' not 'amount'
   const { data: starData } = await supabase
     .from('star_ledger')
-    .select('amount')
+    .select('stars')
     .eq('learner_id', childId)
 
-  const totalStars = (starData || []).reduce((sum, row) => sum + (row.amount || 0), 0)
+  const totalStars = (starData || []).reduce((sum, row) => sum + (row.stars || 0), 0)
 
   // Get sessions
   const { data: sessions } = await supabase
     .from('sessions')
-    .select('id, created_at, duration_seconds, stars_earned, subject, questions_correct, questions_total')
+    .select('id, completed_at, duration_seconds, stars_earned, subject, questions_correct, questions_total')
     .eq('learner_id', childId)
-    .order('created_at', { ascending: false })
+    .order('completed_at', { ascending: false })
     .limit(10)
 
   // Calculate total stars from sessions if star_ledger is empty
   const sessionStars = (sessions || []).reduce((sum, s) => sum + (s.stars_earned || 0), 0)
 
   // Calculate streak
-  const dates = (sessions || []).map(s => new Date(s.created_at).toDateString())
+  const dates = (sessions || []).map(s => s.completed_at ? new Date(s.completed_at).toDateString() : '')
   const uniqueDates = [...new Set(dates)]
   let streak = 0
   const today = new Date()

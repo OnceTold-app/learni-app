@@ -14,7 +14,7 @@ interface Child {
 
 interface SessionSummary {
   id: string
-  created_at: string
+  completed_at: string
   duration_seconds: number
   stars_earned: number
   subject: string
@@ -314,7 +314,7 @@ export default function DashboardPage() {
                         {s.subject || 'Session'}
                       </div>
                       <div style={{ fontSize: '12px', color: '#5a8a84' }}>
-                        {new Date(s.created_at).toLocaleDateString('en-NZ', { weekday: 'short', day: 'numeric', month: 'short' })}
+                        {new Date(s.completed_at).toLocaleDateString('en-NZ', { weekday: 'short', day: 'numeric', month: 'short' })}
                         {' · '}{Math.round((s.duration_seconds || 0) / 60)} min
                         {' · '}{s.questions_correct || 0}/{s.questions_total || 0} correct
                       </div>

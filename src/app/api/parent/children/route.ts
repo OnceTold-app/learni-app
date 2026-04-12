@@ -36,17 +36,17 @@ export async function GET(req: NextRequest) {
   const enriched = await Promise.all((children || []).map(async (child) => {
     const { data: stars } = await supabase
       .from('star_ledger')
-      .select('amount')
+      .select('stars')
       .eq('learner_id', child.id)
 
-    const totalStars = (stars || []).reduce((sum, s) => sum + (s.amount || 0), 0)
+    const totalStars = (stars || []).reduce((sum, s) => sum + (s.stars || 0), 0)
 
     // Get last session
     const { data: lastSession } = await supabase
       .from('sessions')
-      .select('created_at')
+      .select('completed_at')
       .eq('learner_id', child.id)
-      .order('created_at', { ascending: false })
+      .order('completed_at', { ascending: false })
       .limit(1)
 
     // Get avatar
@@ -64,7 +64,7 @@ export async function GET(req: NextRequest) {
       ...child,
       total_stars: totalStars,
       streak_days: 0,
-      last_session: lastSession?.[0]?.created_at || null,
+      last_session: lastSession?.[0]?.completed_at || null,
       avatar_url: avatarUrl,
     }
   }))

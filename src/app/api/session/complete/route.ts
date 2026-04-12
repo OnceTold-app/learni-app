@@ -23,7 +23,9 @@ export async function POST(req: NextRequest) {
       process.env.SUPABASE_SERVICE_ROLE_KEY || ''
     )
 
-    // Save session (column names match actual schema)
+    // Save session — ACTUAL column names from DB:
+    // id, learner_id, subject, topic, questions_total, questions_correct,
+    // stars_earned, duration_seconds, input_mode_used, completed_at, weak_topics, strong_topics
     const { data: session, error: sessionError } = await supabase
       .from('sessions')
       .insert({
@@ -33,23 +35,29 @@ export async function POST(req: NextRequest) {
         questions_correct: correctCount || 0,
         questions_total: totalQuestions || 0,
         subject: (subjects || ['Maths']).join(', '),
+        completed_at: new Date().toISOString(),
       })
       .select()
       .single()
 
     if (sessionError) {
       console.error('Session save error:', sessionError)
-      return NextResponse.json({ error: 'Failed to save session' }, { status: 500 })
+      return NextResponse.json({ error: 'Failed to save session', detail: sessionError.message }, { status: 500 })
     }
 
-    // Add to star ledger (append-only)
-    if (starsEarned > 0) {
-      await supabase.from('star_ledger').insert({
+    // Add to star ledger — ACTUAL column names:
+    // id, learner_id, session_id, type, stars, dollar_value, note, created_at
+    if (starsEarned > 0 && session?.id) {
+      const { error: starError } = await supabase.from('star_ledger').insert({
         learner_id: childId,
-        session_id: session?.id,
-        amount: starsEarned,
-        reason: `Session: ${(subjects || ['Practice']).join(', ')}`,
+        session_id: session.id,
+        type: 'earned',
+        stars: starsEarned,
+        note: `Session: ${(subjects || ['Practice']).join(', ')}`,
       })
+      if (starError) {
+        console.error('Star ledger error:', starError)
+      }
     }
 
     // Update jar allocation if provided
