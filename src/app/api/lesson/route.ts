@@ -111,13 +111,13 @@ export async function POST(req: NextRequest) {
           content: isCorrect
             ? `${childName} answered "${answer}" to "${currentQuestion}" — CORRECT! ${
                 phase === 'warmup' || phase === 'closing'
-                  ? `Streak: ${sessionStats.streakCount + 1}. Celebrate briefly ("Nice one!", "You got it!") then give a NEW DIFFERENT question. NEVER repeat a question they already got right.`
-                  : `Stars: +4. Celebrate! Then give a NEW DIFFERENT problem on a different aspect of the topic. NEVER repeat the same question.`
+                  ? `Streak: ${sessionStats.streakCount + 1}. Celebrate briefly ("Nice one!", "You got it!") then give the next question. Don't repeat the same question back-to-back, but it's fine to revisit questions later in the session.`
+                  : `Stars: +4. Celebrate! Then give the next problem. Don't repeat the same question back-to-back, but revisiting topics later is fine.`
               }`
             : `${childName} answered "${answer}" to "${currentQuestion}" — INCORRECT. The correct answer was "${currentCorrectAnswer}". ${
                 phase === 'warmup' || phase === 'closing'
-                  ? `Be kind: "Not quite! The answer was ${currentCorrectAnswer}." Then give a DIFFERENT question (not the same one again).`
-                  : `Use the misconception engine: be warm and encouraging, identify what they likely confused, explain from a different angle, then give a SIMPLER version (not the same question). NEVER make them feel bad.`
+                  ? `Be kind: "Not quite! The answer was ${currentCorrectAnswer}." Then give a different question (not the same one straight away).`
+                  : `Use the misconception engine: be warm and encouraging, identify what they likely confused, explain from a different angle, then give a simpler version. Don't give the exact same question straight away. NEVER make them feel bad.`
               }`,
         })
       }
@@ -126,7 +126,7 @@ export async function POST(req: NextRequest) {
       messages.push({
         role: 'user',
         content: phase === 'warmup'
-          ? `Start the warm-up rapid fire. This tests PREVIOUS lessons — NOT today's topic. Drill a WIDE VARIETY: times tables (different numbers each time), number bonds, addition, subtraction, basic facts ${childName} should already know for Year ${yearLevel}. NEVER repeat the same question in a session. Mix up the numbers and operations. Personal best is ${sessionStats.personalBest} correct in a row. Say something encouraging like "Hey ${childName} — let's warm up that amazing brain! Ready?" then give the first question.`
+          ? `Start the warm-up rapid fire. This tests PREVIOUS lessons — NOT today's topic. Drill a WIDE VARIETY: times tables (different numbers each time), number bonds, addition, subtraction, basic facts ${childName} should already know for Year ${yearLevel}. Don't repeat the same question back-to-back. Mix up the numbers and operations. It's fine to revisit a question later in the session. Personal best is ${sessionStats.personalBest} correct in a row. Say something encouraging like "Hey ${childName} — let's warm up that amazing brain! Ready?" then give the first question.`
           : phase === 'closing'
             ? `Start the closing rapid fire. This tests ONLY what ${childName} just learned TODAY in the ${subject} lesson. Only ask questions from today's lesson content — make sure it's locked in. Say "Last round — let's see if today's lesson stuck. No thinking, just knowing. Go." then give the first question.`
             : phase === 'financial'
