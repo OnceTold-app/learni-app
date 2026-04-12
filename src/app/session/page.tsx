@@ -240,11 +240,21 @@ export default function SessionPage() {
       })
     } catch { /* Will retry later */ }
 
-    // Redirect to hub or home
-    window.location.href = '/dashboard'
+    // Redirect to kid hub or parent dashboard
+    const childId = localStorage.getItem('learni_child_id')
+    window.location.href = childId ? '/kid-hub' : '/dashboard'
   }
 
+  const [typedAnswer, setTypedAnswer] = useState('')
   const isRapidFire = state.phase === 'warmup' || state.phase === 'closing'
+  const isTeaching = !state.question && state.earniSays && !state.showJars && !state.loading
+  const isTypeIn = state.question && state.options.length === 0 && !state.showJars
+
+  function handleTypedSubmit() {
+    if (!typedAnswer.trim() || state.loading || state.selectedAnswer) return
+    handleAnswer(typedAnswer.trim())
+    setTypedAnswer('')
+  }
 
   return (
     <div style={{
@@ -345,8 +355,121 @@ export default function SessionPage() {
           )}
         </div>
 
-        {/* Question */}
-        {state.question && !state.showJars && (
+        {/* Teaching — no question, just Earni talking */}
+        {isTeaching && (
+          <button
+            onClick={() => fetchQuestion(state.phase)}
+            style={{
+              background: 'rgba(46,196,182,0.15)',
+              border: '1px solid rgba(46,196,182,0.3)',
+              borderRadius: '30px',
+              padding: '14px 32px',
+              fontSize: '16px',
+              fontWeight: 800,
+              fontFamily: "'Nunito', sans-serif",
+              color: '#2ec4b6',
+              cursor: 'pointer',
+            }}
+          >
+            Got it — next →
+          </button>
+        )}
+
+        {/* Type-in answer */}
+        {isTypeIn && (
+          <div style={{
+            background: 'rgba(255,255,255,0.04)',
+            border: '1px solid rgba(255,255,255,0.08)',
+            borderRadius: '20px',
+            padding: '24px',
+            width: '100%',
+            textAlign: 'center',
+          }}>
+            <div style={{
+              fontSize: '24px',
+              fontWeight: 900,
+              fontFamily: "'Nunito', sans-serif",
+              marginBottom: '20px',
+              lineHeight: 1.3,
+            }}>
+              {state.question}
+            </div>
+
+            {state.selectedAnswer === null ? (
+              <form onSubmit={(e) => { e.preventDefault(); handleTypedSubmit() }} style={{ display: 'flex', gap: '10px' }}>
+                <input
+                  type="text"
+                  value={typedAnswer}
+                  onChange={e => setTypedAnswer(e.target.value)}
+                  placeholder="Type your answer..."
+                  autoFocus
+                  style={{
+                    flex: 1,
+                    padding: '14px 18px',
+                    background: 'rgba(255,255,255,0.08)',
+                    border: '1.5px solid rgba(255,255,255,0.15)',
+                    borderRadius: '14px',
+                    fontSize: '20px',
+                    fontWeight: 800,
+                    fontFamily: "'Nunito', sans-serif",
+                    color: 'white',
+                    outline: 'none',
+                    textAlign: 'center',
+                    boxSizing: 'border-box',
+                  }}
+                />
+                <button
+                  type="submit"
+                  disabled={!typedAnswer.trim()}
+                  style={{
+                    padding: '14px 24px',
+                    background: typedAnswer.trim() ? '#2ec4b6' : 'rgba(46,196,182,0.3)',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '14px',
+                    fontFamily: "'Nunito', sans-serif",
+                    fontSize: '16px',
+                    fontWeight: 900,
+                    cursor: typedAnswer.trim() ? 'pointer' : 'not-allowed',
+                  }}
+                >
+                  Go
+                </button>
+              </form>
+            ) : (
+              <div style={{
+                padding: '14px 18px',
+                background: state.isCorrect ? 'rgba(46,196,182,0.15)' : 'rgba(239,68,68,0.15)',
+                border: `1.5px solid ${state.isCorrect ? '#2ec4b6' : '#ef4444'}`,
+                borderRadius: '14px',
+                fontSize: '20px',
+                fontWeight: 800,
+                fontFamily: "'Nunito', sans-serif",
+                color: 'white',
+                textAlign: 'center',
+              }}>
+                {state.selectedAnswer} {state.isCorrect ? '✓' : `✗ → ${state.answer}`}
+              </div>
+            )}
+
+            {state.hint && state.selectedAnswer && !state.isCorrect && (
+              <div style={{
+                marginTop: '12px',
+                padding: '10px 14px',
+                background: 'rgba(245,166,35,0.1)',
+                border: '1px solid rgba(245,166,35,0.2)',
+                borderRadius: '12px',
+                fontSize: '14px',
+                color: '#f5a623',
+              }}>
+                💡 {state.hint}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Multiple choice question */}
+        {state.question && state.options.length > 0 && !state.showJars && (
           <div style={{
             background: 'rgba(255,255,255,0.04)',
             border: '1px solid rgba(255,255,255,0.08)',
