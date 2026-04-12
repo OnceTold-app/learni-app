@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
+import MathsVisual from '@/components/maths-visual'
 
 type Phase = 'warmup' | 'lesson' | 'financial' | 'closing' | 'reward'
 
@@ -9,6 +10,7 @@ interface SessionState {
   phaseLabel: string
   earniSays: string
   question: string | null
+  visual: Record<string, unknown> | null
   options: string[]
   answer: string
   hint: string | null
@@ -55,6 +57,7 @@ export default function SessionPage() {
     phaseLabel: PHASE_LABELS.warmup,
     earniSays: '',
     question: null,
+    visual: null,
     options: [],
     answer: '',
     hint: null,
@@ -74,7 +77,7 @@ export default function SessionPage() {
     elapsedMinutes: 0,
   })
 
-  const historyRef = useRef<Array<{ role: 'user' | 'assistant'; content: string }>>([]) 
+  const historyRef = useRef<Array<{ role: 'user' | 'assistant'; content: string }>>([])
   const phaseStartRef = useRef(Date.now())
   const sessionStartRef = useRef(Date.now())
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
@@ -83,11 +86,12 @@ export default function SessionPage() {
   const [paused, setPaused] = useState(false)
   const [speaking, setSpeaking] = useState(false)
   const [voiceEnabled, setVoiceEnabled] = useState(true)
+  const [voiceSpeed, setVoiceSpeed] = useState(1.0)
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const [showHintOffer, setShowHintOffer] = useState(false)
   const hintTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  // Speak function — calls ElevenLabs TTS
+  // Speak function - calls ElevenLabs TTS
   async function speak(text: string) {
     if (!voiceEnabled || !text) return
     // Cancel any current speech
@@ -106,6 +110,7 @@ export default function SessionPage() {
       const blob = await res.blob()
       const url = URL.createObjectURL(blob)
       const audio = new Audio(url)
+      audio.playbackRate = voiceSpeed
       audioRef.current = audio
       audio.onended = () => { setSpeaking(false); audioRef.current = null }
       audio.onerror = () => { setSpeaking(false); audioRef.current = null }
@@ -161,6 +166,7 @@ export default function SessionPage() {
         phaseLabel: PHASE_LABELS[phase],
         earniSays: earniText,
         question: data.question || null,
+        visual: data.visual || null,
         options: data.options || [],
         answer: data.answer || '',
         hint: data.hint || null,
@@ -427,6 +433,23 @@ export default function SessionPage() {
           >
             {voiceEnabled ? (speaking ? '🗣️' : '🔊') : '🔇'}
           </button>
+          {voiceEnabled && (
+            <button
+              onClick={() => setVoiceSpeed(s => s >= 1.25 ? 0.75 : s + 0.25)}
+              style={{
+                background: 'rgba(255,255,255,0.06)',
+                border: '1px solid rgba(255,255,255,0.1)',
+                borderRadius: '20px',
+                padding: '4px 8px',
+                fontSize: '11px',
+                fontWeight: 700,
+                cursor: 'pointer',
+                color: 'rgba(255,255,255,0.4)',
+              }}
+            >
+              {voiceSpeed}x
+            </button>
+          )}
           <span style={{
             background: 'rgba(46,196,182,0.12)',
             border: '1px solid rgba(46,196,182,0.2)',
@@ -489,7 +512,14 @@ export default function SessionPage() {
           )}
         </div>
 
-        {/* Teaching - no question, just Earni talking */}
+        {/* Visual maths aid */}
+        {state.visual && (
+          <div style={{ width: '100%', maxWidth: '400px' }}>
+            <MathsVisual visual={state.visual as { type: string; [key: string]: unknown }} />
+          </div>
+        )}
+
+        {/* Teaching — no question, just Earni talking */}
         {isTeaching && (
           <button
             onClick={() => {
