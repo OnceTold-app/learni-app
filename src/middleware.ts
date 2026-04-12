@@ -2,6 +2,13 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
+  // Serve landing page directly for homepage — no redirect
+  if (request.nextUrl.pathname === '/') {
+    const url = request.nextUrl.clone()
+    url.pathname = '/index.html'
+    return NextResponse.rewrite(url)
+  }
+
   let supabaseResponse = NextResponse.next({ request })
 
   const supabase = createServerClient(
@@ -27,7 +34,7 @@ export async function middleware(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser()
 
-  // Protect /hub and /learn routes — redirect to login if not authenticated
+  // Protect /hub and /learn routes
   const isProtected =
     request.nextUrl.pathname.startsWith('/hub') ||
     request.nextUrl.pathname.startsWith('/learn')
@@ -54,6 +61,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|index\\.html|.*\\.(?:svg|png|jpg|jpeg|gif|webp|html)$).*)',
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|html|css|js|ico)$).*)',
   ],
 }
