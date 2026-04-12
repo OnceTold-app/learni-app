@@ -119,18 +119,33 @@ export default function SessionPage() {
     recognition.onresult = (event: any) => {
       const transcript = event.results[0][0].transcript.trim()
       if (transcript) {
-        // Check if it sounds like an answer or a help request
-        const helpWords = ['help', 'hint', 'don\'t know', 'stuck', 'confused', 'what', 'how do i', 'i don\'t get it']
-        const isHelp = helpWords.some(w => transcript.toLowerCase().includes(w))
+        lastActivityRef.current = Date.now()
+        const lower = transcript.toLowerCase()
         
-        if (isHelp && !isRapidFire) {
+        // Check if it sounds like a help request
+        const helpWords = ['help', 'hint', 'don\'t know', 'stuck', 'confused', 'what does', 'how do', 'i don\'t get', 'explain', 'don\'t understand', 'can you help']
+        const isHelp = helpWords.some(w => lower.includes(w))
+        
+        // Check if it sounds like "move on" / "got it"
+        const moveOnWords = ['got it', 'okay', 'ok', 'next', 'yes', 'yeah', 'yep', 'ready', 'i understand', 'makes sense', 'continue']
+        const isMoveOn = moveOnWords.some(w => lower.includes(w))
+        
+        if (isHelp) {
           // Kid is asking for help verbally
-          lastActivityRef.current = Date.now()
-          historyRef.current.push({ role: 'user', content: `${childName} said out loud: "${transcript}". They need help with "${state.question}". Be warm and give a hint.` })
+          const context = state.question ? `with "${state.question}"` : 'with what Earni just explained'
+          historyRef.current.push({ role: 'user', content: `${childName} said out loud: "${transcript}". They need help ${context}. Be warm, patient and give a hint or re-explain differently.` })
+          fetchQuestion(state.phase)
+        } else if (!state.question && isMoveOn) {
+          // During teaching, kid says they understand — move on
+          historyRef.current.push({ role: 'user', content: 'Got it, I understand. Continue.' })
           fetchQuestion(state.phase)
         } else if (state.question && !state.selectedAnswer) {
           // Treat as an answer attempt
           handleAnswer(transcript)
+        } else if (!state.question) {
+          // During teaching, kid said something — treat as a question/comment
+          historyRef.current.push({ role: 'user', content: `${childName} said: "${transcript}". Respond naturally and helpfully. If it's a question, answer it. Then continue the lesson.` })
+          fetchQuestion(state.phase)
         }
       }
     }
@@ -139,14 +154,14 @@ export default function SessionPage() {
     recognition.start()
   }
 
-  // Auto-listen after Earni finishes speaking
+  // Auto-listen after Earni finishes speaking — ALWAYS when mic is on
   useEffect(() => {
-    if (!speaking && micEnabled && state.question && !state.selectedAnswer && !paused) {
+    if (!speaking && micEnabled && !paused && state.sessionStarted && !state.showJars) {
       const timer = setTimeout(() => startListening(), 500)
       return () => clearTimeout(timer)
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [speaking, micEnabled, state.question, state.selectedAnswer, paused])
+  }, [speaking, micEnabled, paused, state.sessionStarted, state.showJars, state.earniSays])
   const [showHintOffer, setShowHintOffer] = useState(false)
   const hintTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [celebration, setCelebration] = useState<string | null>(null)
