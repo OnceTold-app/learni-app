@@ -267,10 +267,9 @@ export default function SessionPage() {
         sessionStarted: true,
         showJars: phase === 'reward',
       }))
-      // Speak Earni's words
+      // Speak Earni's words — question waits until speech finishes
       if (earniText) {
-        const speakText = data.question ? `${earniText} ${data.question}` : earniText
-        speak(speakText)
+        speak(earniText)
       }
       // Reset hint timer
       setShowHintOffer(false)
@@ -448,12 +447,21 @@ export default function SessionPage() {
       starsEarned: newStars,
     }))
 
-    // In rapid fire, auto-advance quickly
-    const delay = (state.phase === 'warmup' || state.phase === 'closing') ? 800 : 2000
+    // Wait for Earni to finish speaking before advancing
+    // Don't auto-advance — let the speak() callback or a timer handle it
+    function advanceWhenReady() {
+      // If audio is still playing, wait for it to finish
+      if (audioRef.current && !audioRef.current.ended) {
+        audioRef.current.onended = () => {
+          fetchQuestion(state.phase, selected, state.question || '', state.answer)
+        }
+      } else {
+        fetchQuestion(state.phase, selected, state.question || '', state.answer)
+      }
+    }
 
-    setTimeout(() => {
-      fetchQuestion(state.phase, selected, state.question || '', state.answer)
-    }, delay)
+    const minDelay = (state.phase === 'warmup' || state.phase === 'closing') ? 1200 : 2500
+    setTimeout(advanceWhenReady, minDelay)
   }
 
   function playSound(correct: boolean) {
