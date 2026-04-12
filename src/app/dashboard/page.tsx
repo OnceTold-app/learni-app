@@ -100,9 +100,10 @@ export default function DashboardPage() {
           }}>learni<span style={{ color: '#2ec4b6' }}>.</span></a>
           <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '13px', marginLeft: '12px' }}>The Hub</span>
         </div>
-        <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '13px' }}>
+        <a href="/dashboard" style={{ color: 'rgba(255,255,255,0.5)', fontSize: '13px', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+          <span style={{ width: '28px', height: '28px', borderRadius: '50%', background: 'rgba(46,196,182,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 800, color: '#2ec4b6' }}>{parentName.charAt(0).toUpperCase()}</span>
           {parentName}
-        </div>
+        </a>
       </div>
 
       <div style={{ maxWidth: '800px', margin: '0 auto', padding: '24px' }}>
