@@ -83,6 +83,8 @@ export default function SessionPage() {
   const [speaking, setSpeaking] = useState(false)
   const [voiceEnabled, setVoiceEnabled] = useState(true)
   const audioRef = useRef<HTMLAudioElement | null>(null)
+  const [showHintOffer, setShowHintOffer] = useState(false)
+  const hintTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Speak function — calls ElevenLabs TTS
   async function speak(text: string) {
@@ -169,6 +171,15 @@ export default function SessionPage() {
         const speakText = data.question ? `${earniText} ${data.question}` : earniText
         speak(speakText)
       }
+      // Start hint offer timer for lesson/financial questions (not rapid fire)
+      setShowHintOffer(false)
+      if (hintTimerRef.current) clearTimeout(hintTimerRef.current)
+      if (data.question && phase !== 'warmup' && phase !== 'closing') {
+        hintTimerRef.current = setTimeout(() => {
+          setShowHintOffer(true)
+          speak('Need a hint?')
+        }, 8000)
+      }
     } catch {
       setState(s => ({
         ...s,
@@ -252,6 +263,8 @@ export default function SessionPage() {
   function handleAnswer(selected: string) {
     if (state.loading || state.selectedAnswer) return
     lastActivityRef.current = Date.now()
+    setShowHintOffer(false)
+    if (hintTimerRef.current) clearTimeout(hintTimerRef.current)
 
     const isCorrect = selected.toLowerCase().trim() === state.answer.toLowerCase().trim()
     const newStreak = isCorrect ? state.streakCount + 1 : 0
@@ -568,6 +581,65 @@ export default function SessionPage() {
                 💡 {state.hint}
               </div>
             )}
+
+            {/* Hint offer */}
+            {showHintOffer && !state.selectedAnswer && (
+              <div style={{
+                marginTop: '16px',
+                padding: '14px 18px',
+                background: 'rgba(46,196,182,0.08)',
+                border: '1px solid rgba(46,196,182,0.15)',
+                borderRadius: '14px',
+                textAlign: 'center',
+              }}>
+                <div style={{ fontSize: '14px', color: '#2ec4b6', fontWeight: 700, marginBottom: '10px' }}>
+                  Need a hint? 🤔
+                </div>
+                <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                  <button
+                    onClick={() => {
+                      setShowHintOffer(false)
+                      lastActivityRef.current = Date.now()
+                      // Ask Claude for a hint
+                      historyRef.current.push({ role: 'user', content: `${childName} is stuck on "${state.question}". Give a helpful hint without giving the answer. Be encouraging.` })
+                      fetchQuestion(state.phase)
+                    }}
+                    style={{
+                      padding: '8px 20px',
+                      background: '#2ec4b6',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '20px',
+                      fontSize: '13px',
+                      fontWeight: 800,
+                      fontFamily: "'Nunito', sans-serif",
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Yes please
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowHintOffer(false)
+                      lastActivityRef.current = Date.now()
+                      speak('You\'ve got this!')
+                    }}
+                    style={{
+                      padding: '8px 20px',
+                      background: 'rgba(255,255,255,0.06)',
+                      color: 'rgba(255,255,255,0.5)',
+                      border: '1px solid rgba(255,255,255,0.1)',
+                      borderRadius: '20px',
+                      fontSize: '13px',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    I&apos;ve got this
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -650,6 +722,41 @@ export default function SessionPage() {
                 color: '#f5a623',
               }}>
                 💡 {state.hint}
+              </div>
+            )}
+
+            {/* Hint offer for multi-choice */}
+            {showHintOffer && !state.selectedAnswer && (
+              <div style={{
+                marginTop: '16px',
+                padding: '14px 18px',
+                background: 'rgba(46,196,182,0.08)',
+                border: '1px solid rgba(46,196,182,0.15)',
+                borderRadius: '14px',
+                textAlign: 'center',
+              }}>
+                <div style={{ fontSize: '14px', color: '#2ec4b6', fontWeight: 700, marginBottom: '10px' }}>
+                  Need a hint? 🤔
+                </div>
+                <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                  <button
+                    onClick={() => {
+                      setShowHintOffer(false)
+                      lastActivityRef.current = Date.now()
+                      historyRef.current.push({ role: 'user', content: `${childName} is stuck on "${state.question}". Give a helpful hint without giving the answer.` })
+                      fetchQuestion(state.phase)
+                    }}
+                    style={{ padding: '8px 20px', background: '#2ec4b6', color: 'white', border: 'none', borderRadius: '20px', fontSize: '13px', fontWeight: 800, fontFamily: "'Nunito', sans-serif", cursor: 'pointer' }}
+                  >
+                    Yes please
+                  </button>
+                  <button
+                    onClick={() => { setShowHintOffer(false); lastActivityRef.current = Date.now(); speak('You\'ve got this!') }}
+                    style={{ padding: '8px 20px', background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.5)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '20px', fontSize: '13px', fontWeight: 700, cursor: 'pointer' }}
+                  >
+                    I&apos;ve got this
+                  </button>
+                </div>
               </div>
             )}
           </div>
