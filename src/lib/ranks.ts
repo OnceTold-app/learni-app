@@ -10,13 +10,13 @@ export interface Rank {
 }
 
 export const RANKS: Rank[] = [
-  { id: 'beginner', title: 'Beginner', emoji: '🌱', starsRequired: 0, topicsMastered: 0, color: '#8abfba' },
+  { id: 'beginner', title: 'Starter', emoji: '🌱', starsRequired: 0, topicsMastered: 0, color: '#8abfba' },
   { id: 'explorer', title: 'Explorer', emoji: '🔍', starsRequired: 50, topicsMastered: 1, color: '#2ec4b6' },
   { id: 'learner', title: 'Learner', emoji: '📖', starsRequired: 150, topicsMastered: 2, color: '#3b82f6' },
   { id: 'scholar', title: 'Scholar', emoji: '🎓', starsRequired: 300, topicsMastered: 3, color: '#8b5cf6' },
   { id: 'champion', title: 'Champion', emoji: '🏅', starsRequired: 500, topicsMastered: 5, color: '#f59e0b' },
-  { id: 'master', title: 'Master', emoji: '⚔️', starsRequired: 800, topicsMastered: 7, color: '#ef4444' },
-  { id: 'wizard', title: 'Wizard', emoji: '🧙', starsRequired: 1200, topicsMastered: 10, color: '#a855f7' },
+  { id: 'allstar', title: 'All-Star', emoji: '⭐', starsRequired: 800, topicsMastered: 7, color: '#ef4444' },
+  { id: 'prodigy', title: 'Prodigy', emoji: '🚀', starsRequired: 1200, topicsMastered: 10, color: '#a855f7' },
   { id: 'legend', title: 'Legend', emoji: '👑', starsRequired: 2000, topicsMastered: 13, color: '#f5a623' },
   { id: 'grandmaster', title: 'Grand Master', emoji: '🌟', starsRequired: 3500, topicsMastered: 16, color: '#ff6b6b' },
 ]

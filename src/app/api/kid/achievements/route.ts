@@ -16,7 +16,7 @@ const BADGES = [
   { id: 'streak_7', name: 'On Fire', emoji: '🔥🔥', desc: '7-day streak', check: (s: Stats) => s.streakDays >= 7 },
   { id: 'streak_30', name: 'Unstoppable', emoji: '🏆', desc: '30-day streak', check: (s: Stats) => s.streakDays >= 30 },
   { id: 'perfect_session', name: 'Perfect Score', emoji: '💯', desc: 'Get every question right in a session', check: (s: Stats) => s.hadPerfectSession },
-  { id: 'speed_demon', name: 'Speed Demon', emoji: '⚡', desc: '10 rapid fire in a row', check: (s: Stats) => s.bestStreak >= 10 },
+  { id: 'speed_star', name: 'Speed Star', emoji: '⚡', desc: '10 rapid fire in a row', check: (s: Stats) => s.bestStreak >= 10 },
   { id: 'marathon', name: 'Marathon Learner', emoji: '🏃', desc: '10 sessions completed', check: (s: Stats) => s.totalSessions >= 10 },
   { id: 'century', name: 'Century Club', emoji: '💪', desc: '100 questions answered', check: (s: Stats) => s.totalQuestions >= 100 },
   { id: 'helper', name: 'Smart Cookie', emoji: '🍪', desc: 'Ask for help 5 times (asking is smart!)', check: (s: Stats) => s.helpRequests >= 5 },
