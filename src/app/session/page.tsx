@@ -57,6 +57,7 @@ export default function SessionPage() {
   const masteryResultsRef = useRef<Array<{ topic: string; correct: boolean }>>([])
   const [audioChecked, setAudioChecked] = useState(false)
   const [audioCheckPlaying, setAudioCheckPlaying] = useState(false)
+  const [questionsInPhase, setQuestionsInPhase] = useState(0)
 
   const [state, setState] = useState<SessionState>({
     phase: 'warmup',
@@ -383,6 +384,7 @@ export default function SessionPage() {
         const next = nextPhase[state.phase]
         phaseStartRef.current = Date.now()
         historyRef.current = []
+        setQuestionsInPhase(0)
         fetchQuestion(next)
       }
     }, 3000)
@@ -409,9 +411,10 @@ export default function SessionPage() {
     const newPB = Math.max(state.personalBest, newStreak)
     const newStars = isCorrect ? state.starsEarned + 4 : state.starsEarned
 
-    // Track mastery
+    // Track mastery + question count
     if (state.question) {
       masteryResultsRef.current.push({ topic: subject, correct: isCorrect })
+      setQuestionsInPhase(q => q + 1)
     }
 
     // Sound effect
@@ -839,6 +842,58 @@ export default function SessionPage() {
             ⭐ {state.starsEarned}
           </span>
         </div>
+      </div>
+
+      {/* Session timeline */}
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        padding: '0',
+        background: 'rgba(0,0,0,0.2)',
+      }}>
+        {(['warmup', 'lesson', 'financial', 'closing', 'reward'] as Phase[]).map((p, i) => {
+          const isCurrent = state.phase === p
+          const isPast = ['warmup', 'lesson', 'financial', 'closing', 'reward'].indexOf(state.phase) > i
+          const labels: Record<Phase, string> = { warmup: '⚡ Warm Up', lesson: '📚 Lesson', financial: '💰 Money', closing: '⚡ Recap', reward: '⭐ Stars' }
+          const phaseMins: Record<Phase, number> = { warmup: 3, lesson: 12, financial: 5, closing: 5, reward: 0 }
+          const elapsed = isCurrent ? Math.min((Date.now() - phaseStartRef.current) / 60000 / (phaseMins[p] || 1), 1) : 0
+
+          return (
+            <div key={p} style={{
+              flex: p === 'lesson' ? 3 : p === 'reward' ? 0.5 : 1,
+              position: 'relative',
+              padding: '8px 0',
+            }}>
+              {/* Progress fill */}
+              <div style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                bottom: 0,
+                width: isPast ? '100%' : isCurrent ? `${elapsed * 100}%` : '0%',
+                background: isPast ? 'rgba(46,196,182,0.15)' : isCurrent ? 'rgba(46,196,182,0.1)' : 'transparent',
+                transition: 'width 3s linear',
+              }} />
+              <div style={{
+                position: 'relative',
+                textAlign: 'center',
+                fontSize: '10px',
+                fontWeight: isCurrent ? 800 : 600,
+                color: isPast ? '#2ec4b6' : isCurrent ? 'white' : 'rgba(255,255,255,0.2)',
+                fontFamily: "'Nunito', sans-serif",
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+              }}>
+                {labels[p]}
+                {isCurrent && p !== 'reward' && (
+                  <span style={{ marginLeft: '4px', fontSize: '9px', color: 'rgba(255,255,255,0.3)' }}>
+                    Q{questionsInPhase + 1}
+                  </span>
+                )}
+              </div>
+            </div>
+          )
+        })}
       </div>
 
       {/* Main content — full width layout */}

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { getCurrentRank, getNextRank, getProgressToNextRank } from '@/lib/ranks'
 
 interface SessionData {
   id: string
@@ -19,6 +20,7 @@ export default function KidHubPage() {
   const [sessions, setSessions] = useState<SessionData[]>([])
   const [loading, setLoading] = useState(true)
   const [needsBaseline, setNeedsBaseline] = useState(false)
+  const [topicsMastered, setTopicsMastered] = useState(0)
   const [badges, setBadges] = useState<Array<{ id: string; name: string; emoji: string; desc: string; earned: boolean; isNew: boolean }>>([])
 
   useEffect(() => {
@@ -46,6 +48,19 @@ export default function KidHubPage() {
         }
         if (data.avatarUrl) setAvatarUrl(data.avatarUrl)
       }
+      // Load mastery for ranking
+      const masteryRes = await fetch(`/api/kid/mastery?childId=${childId}`)
+      if (masteryRes.ok) {
+        const masteryData = await masteryRes.json()
+        const mastered = Object.values(masteryData.mastery || {}).filter(
+          (s: unknown) => {
+            const stats = s as { correct: number; total: number }
+            return stats.total >= 3 && (stats.correct / stats.total) >= 0.8
+          }
+        ).length
+        setTopicsMastered(mastered)
+      }
+
       // Load achievements
       const badgeRes = await fetch(`/api/kid/achievements?childId=${childId}`)
       if (badgeRes.ok) {
@@ -118,6 +133,30 @@ export default function KidHubPage() {
             color: 'white',
             marginBottom: '4px',
           }}>Hey {displayName}! 👋</h1>
+          {/* Rank */}
+          {(() => {
+            const rank = getCurrentRank(totalStars, topicsMastered)
+            const next = getNextRank(totalStars, topicsMastered)
+            const progress = getProgressToNextRank(totalStars, topicsMastered)
+            return (
+              <div style={{ marginBottom: '4px' }}>
+                <span style={{ fontSize: '13px', fontWeight: 800, color: rank.color, fontFamily: "'Nunito', sans-serif" }}>
+                  {rank.emoji} {rank.title}
+                </span>
+                {next && (
+                  <div style={{ marginTop: '6px', maxWidth: '200px', margin: '6px auto 0' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9px', color: 'rgba(255,255,255,0.25)', marginBottom: '3px' }}>
+                      <span>{rank.title}</span>
+                      <span>{next.emoji} {next.title}</span>
+                    </div>
+                    <div style={{ height: '4px', background: 'rgba(255,255,255,0.08)', borderRadius: '2px', overflow: 'hidden' }}>
+                      <div style={{ height: '100%', background: rank.color, width: `${progress}%`, borderRadius: '2px', transition: 'width 0.5s' }} />
+                    </div>
+                  </div>
+                )}
+              </div>
+            )
+          })()}
           <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '14px' }}>Ready to learn and earn?</p>
           <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', marginTop: '10px' }}>
             <a href="/kid-welcome" style={{ fontSize: '12px', color: 'rgba(255,255,255,0.3)', textDecoration: 'none', padding: '4px 10px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.08)' }}>✏️ Username</a>
