@@ -32,7 +32,7 @@ export default function KidWelcomePage() {
       if (!res.ok) throw new Error(data.error)
 
       localStorage.setItem('learni_child_username', data.username)
-      window.location.href = '/kid-hub'
+      window.location.href = '/kid-avatar'
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Try another username')
     } finally {
