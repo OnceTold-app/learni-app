@@ -51,6 +51,13 @@ export default function SignupPage() {
         }
       }
 
+      // Auto-login: store session so they go straight to dashboard
+      if (authData.session) {
+        localStorage.setItem('learni_parent_token', authData.session.access_token)
+        localStorage.setItem('learni_parent_name', name)
+        localStorage.setItem('learni_parent_id', authData.user?.id || '')
+      }
+
       setSuccess(true)
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Something went wrong'
@@ -89,9 +96,9 @@ export default function SignupPage() {
             marginBottom: '12px',
           }}>You&apos;re in!</h1>
           <p style={{ color: '#5a8a84', fontSize: '16px', lineHeight: 1.6, marginBottom: '24px' }}>
-            Check your email to confirm your account, then come back to set up your child&apos;s profile.
+            Your 14-day free trial has started. Let&apos;s add your child.
           </p>
-          <a href="/" style={{
+          <a href="/onboarding" style={{
             display: 'inline-block',
             background: '#2ec4b6',
             color: 'white',
@@ -101,7 +108,7 @@ export default function SignupPage() {
             fontWeight: 900,
             fontSize: '16px',
             textDecoration: 'none',
-          }}>Back to Learni →</a>
+          }}>Add your child →</a>
         </div>
       </div>
     )

@@ -14,11 +14,20 @@ export async function GET(req: NextRequest) {
   const { data: { user }, error: authError } = await supabase.auth.getUser(token)
   if (authError || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
+  // Get account ID (accounts.id != auth user.id)
+  const { data: account } = await supabase
+    .from('accounts')
+    .select('id')
+    .eq('user_id', user.id)
+    .single()
+
+  if (!account) return NextResponse.json({ children: [] })
+
   // Get children with star totals
   const { data: children, error } = await supabase
     .from('learners')
     .select('id, name, year_level, created_at')
-    .eq('account_id', user.id)
+    .eq('account_id', account.id)
     .order('created_at')
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })

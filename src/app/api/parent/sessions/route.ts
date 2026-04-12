@@ -24,7 +24,14 @@ export async function GET(req: NextRequest) {
     .eq('id', childId)
     .single()
 
-  if (!child || child.account_id !== user.id) {
+  // Get account
+  const { data: account } = await supabase
+    .from('accounts')
+    .select('id')
+    .eq('user_id', user.id)
+    .single()
+
+  if (!child || !account || child.account_id !== account.id) {
     return NextResponse.json({ error: 'Not found' }, { status: 404 })
   }
 
