@@ -13,13 +13,33 @@ export async function POST(req: NextRequest) {
     process.env.SUPABASE_SERVICE_ROLE_KEY || ''
   )
 
-  // Find child by name + pin (case insensitive name)
-  const { data: child, error } = await supabase
+  // Find child by name OR username + pin
+  const trimmed = name.trim()
+  
+  // Try username first, then name
+  let child = null
+  let error = null
+
+  const { data: byUsername, error: err1 } = await supabase
     .from('learners')
     .select('id, name, username, year_level, session_language, has_onboarded, account_id')
-    .ilike('name', name.trim())
+    .ilike('username', trimmed)
     .eq('pin', pin)
     .single()
+
+  if (byUsername) {
+    child = byUsername
+  } else {
+    const { data: byName, error: err2 } = await supabase
+      .from('learners')
+      .select('id, name, username, year_level, session_language, has_onboarded, account_id')
+      .ilike('name', trimmed)
+      .eq('pin', pin)
+      .single()
+    child = byName
+    error = err2
+    if (err1 && err2) error = err2
+  }
 
   if (error || !child) {
     return NextResponse.json({ error: "Hmm, that doesn't match. Check your name and PIN!" }, { status: 401 })

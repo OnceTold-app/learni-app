@@ -26,7 +26,7 @@ export async function GET(req: NextRequest) {
   // Get children with star totals
   const { data: children, error } = await supabase
     .from('learners')
-    .select('id, name, year_level, created_at')
+    .select('id, name, username, year_level, created_at')
     .eq('account_id', account.id)
     .order('created_at')
 

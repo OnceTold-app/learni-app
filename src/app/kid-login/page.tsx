@@ -83,7 +83,7 @@ export default function KidLoginPage() {
           marginBottom: '6px',
         }}>Hey! 👋</h1>
         <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '15px', marginBottom: '28px' }}>
-          What&apos;s your name and PIN?
+          Your name or username, and your PIN.
         </p>
 
         <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
@@ -91,7 +91,7 @@ export default function KidLoginPage() {
             type="text"
             value={name}
             onChange={e => setName(e.target.value)}
-            placeholder="Your name"
+            placeholder="Name or username"
             required
             style={{
               width: '100%',

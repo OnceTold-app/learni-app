@@ -149,10 +149,19 @@ export default function DashboardPage() {
                   }}>
                     {c.name.charAt(0)}
                   </div>
-                  <div style={{ textAlign: 'left' }}>
+                  <div style={{ textAlign: 'left', flex: 1 }}>
                     <div style={{ fontFamily: "'Nunito', sans-serif", fontWeight: 900, fontSize: '15px', color: '#0d2b28' }}>{c.name}</div>
                     <div style={{ fontSize: '12px', color: '#5a8a84' }}>Year {c.year_level} · ⭐ {c.total_stars} stars</div>
                   </div>
+                  {c.id === selectedChild && (
+                    <a
+                      href={`/manage-child?id=${c.id}`}
+                      onClick={(e) => e.stopPropagation()}
+                      style={{ fontSize: '11px', color: '#8abfba', textDecoration: 'none', fontWeight: 600 }}
+                    >
+                      Manage
+                    </a>
+                  )}
                 </button>
               ))}
               {children.length < 4 && (
