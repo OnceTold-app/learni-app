@@ -90,6 +90,63 @@ export default function SessionPage() {
   const [voiceEnabled, setVoiceEnabled] = useState(true)
   const [voiceSpeed, setVoiceSpeed] = useState(1.0)
   const audioRef = useRef<HTMLAudioElement | null>(null)
+  const [listening, setListening] = useState(false)
+  const [micEnabled, setMicEnabled] = useState(false)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const recognitionRef = useRef<any>(null)
+
+  // Speech-to-text — listen to the kid
+  function startListening() {
+    if (!micEnabled || speaking) return
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+    if (!SR) return
+    
+    if (recognitionRef.current) {
+      try { recognitionRef.current.stop() } catch { /* */ }
+    }
+    
+    const recognition = new SR()
+    recognition.continuous = false
+    recognition.interimResults = false
+    recognition.lang = 'en-NZ'
+    
+    recognition.onstart = () => setListening(true)
+    recognition.onend = () => setListening(false)
+    recognition.onerror = () => setListening(false)
+    
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    recognition.onresult = (event: any) => {
+      const transcript = event.results[0][0].transcript.trim()
+      if (transcript) {
+        // Check if it sounds like an answer or a help request
+        const helpWords = ['help', 'hint', 'don\'t know', 'stuck', 'confused', 'what', 'how do i', 'i don\'t get it']
+        const isHelp = helpWords.some(w => transcript.toLowerCase().includes(w))
+        
+        if (isHelp && !isRapidFire) {
+          // Kid is asking for help verbally
+          lastActivityRef.current = Date.now()
+          historyRef.current.push({ role: 'user', content: `${childName} said out loud: "${transcript}". They need help with "${state.question}". Be warm and give a hint.` })
+          fetchQuestion(state.phase)
+        } else if (state.question && !state.selectedAnswer) {
+          // Treat as an answer attempt
+          handleAnswer(transcript)
+        }
+      }
+    }
+    
+    recognitionRef.current = recognition
+    recognition.start()
+  }
+
+  // Auto-listen after Earni finishes speaking
+  useEffect(() => {
+    if (!speaking && micEnabled && state.question && !state.selectedAnswer && !paused) {
+      const timer = setTimeout(() => startListening(), 500)
+      return () => clearTimeout(timer)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [speaking, micEnabled, state.question, state.selectedAnswer, paused])
   const [showHintOffer, setShowHintOffer] = useState(false)
   const hintTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -226,6 +283,7 @@ export default function SessionPage() {
         setPaused(true)
         pausedTimeRef.current = Date.now()
         if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; setSpeaking(false) }
+        if (recognitionRef.current) { try { recognitionRef.current.stop() } catch { /* */ } }
       }
     }, 5000)
     return () => clearInterval(inactivityCheck)
@@ -471,6 +529,47 @@ export default function SessionPage() {
             {audioCheckPlaying ? '🗣️ Earni is talking...' : '🔊 Test my sound'}
           </button>
 
+          {/* Mic option */}
+          <div style={{
+            background: 'rgba(255,255,255,0.04)',
+            border: '1px solid rgba(255,255,255,0.08)',
+            borderRadius: '16px',
+            padding: '14px 20px',
+            marginBottom: '20px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+          }}>
+            <div>
+              <div style={{ fontSize: '14px', fontWeight: 700, color: 'white' }}>🎤 Let Earni listen</div>
+              <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.35)', marginTop: '2px' }}>Answer questions by speaking</div>
+            </div>
+            <button
+              onClick={() => setMicEnabled(m => !m)}
+              style={{
+                width: '48px',
+                height: '28px',
+                borderRadius: '14px',
+                border: 'none',
+                background: micEnabled ? '#2ec4b6' : 'rgba(255,255,255,0.15)',
+                cursor: 'pointer',
+                position: 'relative',
+                transition: 'background 0.2s',
+              }}
+            >
+              <div style={{
+                width: '22px',
+                height: '22px',
+                borderRadius: '50%',
+                background: 'white',
+                position: 'absolute',
+                top: '3px',
+                left: micEnabled ? '23px' : '3px',
+                transition: 'left 0.2s',
+              }} />
+            </button>
+          </div>
+
           <button
             onClick={() => setAudioChecked(true)}
             style={{
@@ -487,7 +586,7 @@ export default function SessionPage() {
               boxShadow: '0 8px 32px rgba(46,196,182,0.3)',
             }}
           >
-            I can hear Earni — let&apos;s go! →
+            {micEnabled ? "Let's go! →" : "I can hear Earni — let's go! →"}
           </button>
 
           <button
@@ -568,6 +667,19 @@ export default function SessionPage() {
           >
             {voiceEnabled ? (speaking ? '🗣️' : '🔊') : '🔇'}
           </button>
+          {micEnabled && (
+            <span style={{
+              background: listening ? 'rgba(239,68,68,0.15)' : 'rgba(255,255,255,0.06)',
+              border: `1px solid ${listening ? 'rgba(239,68,68,0.3)' : 'rgba(255,255,255,0.1)'}`,
+              borderRadius: '20px',
+              padding: '4px 10px',
+              fontSize: '13px',
+              color: listening ? '#ef4444' : 'rgba(255,255,255,0.3)',
+              animation: listening ? 'pulse 1.5s infinite' : 'none',
+            }}>
+              {listening ? '🎤' : '🎤'}
+            </span>
+          )}
           {voiceEnabled && (
             <button
               onClick={() => setVoiceSpeed(s => s >= 1.25 ? 0.75 : s + 0.25)}
