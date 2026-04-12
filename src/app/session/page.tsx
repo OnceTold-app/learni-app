@@ -29,10 +29,10 @@ interface SessionState {
 }
 
 const PHASE_LABELS: Record<Phase, string> = {
-  warmup: '⚡ Rapid Fire — Warm Up',
+  warmup: '⚡ Rapid Fire - Warm Up',
   lesson: '📚 Main Lesson',
   financial: '💰 Money Smarts',
-  closing: '⚡ Rapid Fire — Lock It In',
+  closing: '⚡ Rapid Fire - Lock It In',
   reward: '⭐ Stars & Jars',
 }
 
@@ -75,6 +75,7 @@ export default function SessionPage() {
 
   const historyRef = useRef<Array<{ role: 'user' | 'assistant'; content: string }>>([])
   const phaseStartRef = useRef(Date.now())
+  const sessionStartRef = useRef(Date.now())
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const fetchQuestion = useCallback(async (
@@ -150,25 +151,28 @@ export default function SessionPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Phase transition based on time
+  // Phase transition based on time - check every 3 seconds
   useEffect(() => {
-    const phaseElapsed = (Date.now() - phaseStartRef.current) / 60000
-    const limit = PHASE_TIMES[state.phase]
+    const phaseCheck = setInterval(() => {
+      const phaseElapsed = (Date.now() - phaseStartRef.current) / 60000
+      const limit = PHASE_TIMES[state.phase]
 
-    if (phaseElapsed >= limit && state.phase !== 'reward' && !state.loading) {
-      const nextPhase: Record<Phase, Phase> = {
-        warmup: 'lesson',
-        lesson: 'financial',
-        financial: 'closing',
-        closing: 'reward',
-        reward: 'reward',
+      if (phaseElapsed >= limit && state.phase !== 'reward' && !state.loading) {
+        const nextPhase: Record<Phase, Phase> = {
+          warmup: 'lesson',
+          lesson: 'financial',
+          financial: 'closing',
+          closing: 'reward',
+          reward: 'reward',
+        }
+        const next = nextPhase[state.phase]
+        phaseStartRef.current = Date.now()
+        historyRef.current = []
+        fetchQuestion(next)
       }
-      const next = nextPhase[state.phase]
-      phaseStartRef.current = Date.now()
-      historyRef.current = []
-      fetchQuestion(next)
-    }
-  }, [state.elapsedMinutes, state.phase, state.loading, fetchQuestion])
+    }, 3000)
+    return () => clearInterval(phaseCheck)
+  }, [state.phase, state.loading, fetchQuestion])
 
   function handleAnswer(selected: string) {
     if (state.loading || state.selectedAnswer) return
@@ -234,11 +238,13 @@ export default function SessionPage() {
           correctCount: state.correctCount,
           totalQuestions: state.totalQuestions,
           subjects: [subject],
-          duration: Math.floor((Date.now() - phaseStartRef.current) / 1000),
+          duration: Math.floor((Date.now() - sessionStartRef.current) / 1000),
           jarAllocation: { save: state.jarSave, spend: state.jarSpend, give: state.jarGive },
         }),
       })
-    } catch { /* Will retry later */ }
+    } catch (err) {
+      console.error('Session save failed:', err)
+    }
 
     // Redirect to kid hub or parent dashboard
     const childId = localStorage.getItem('learni_child_id')
@@ -358,7 +364,10 @@ export default function SessionPage() {
         {/* Teaching — no question, just Earni talking */}
         {isTeaching && (
           <button
-            onClick={() => fetchQuestion(state.phase)}
+            onClick={() => {
+              historyRef.current.push({ role: 'user', content: 'Got it, I understand. Continue.' })
+              fetchQuestion(state.phase)
+            }}
             style={{
               background: 'rgba(46,196,182,0.15)',
               border: '1px solid rgba(46,196,182,0.3)',
@@ -371,7 +380,7 @@ export default function SessionPage() {
               cursor: 'pointer',
             }}
           >
-            Got it — next →
+            Got it - next →
           </button>
         )}
 
@@ -668,7 +677,7 @@ export default function SessionPage() {
             boxShadow: '0 4px 20px rgba(245,166,35,0.4)',
             zIndex: 100,
           }}>
-            🏆 NEW PERSONAL BEST — {state.streakCount} in a row!
+            🏆 NEW PERSONAL BEST - {state.streakCount} in a row!
           </div>
         )}
       </div>

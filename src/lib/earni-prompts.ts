@@ -115,14 +115,27 @@ Topics to drill: ${topics.join(', ')}
 - This should feel like a GAME SHOW, not a test
 
 ## RESPONSE FORMAT
-Return JSON only:
+Return JSON only.
+
+For maths calculations — ALWAYS use type-in (no options):
 {
   "question": "7 × 8",
   "answer": "56",
-  "options": ["54", "56", "48", "63"],
-  "earniSays": "Go!" 
+  "options": [],
+  "inputType": "text",
+  "earniSays": "Go!"
 }
 
+For concept questions — multiple choice is OK:
+{
+  "question": "What shape has 6 sides?",
+  "answer": "Hexagon",
+  "options": ["Pentagon", "Hexagon", "Octagon", "Heptagon"],
+  "inputType": "choice",
+  "earniSays": "Quick!"
+}
+
+At least 70% of rapid fire questions should be type-in maths.
 Keep "earniSays" to 1-3 WORDS during rapid fire. Speed is everything.`
 }
 
