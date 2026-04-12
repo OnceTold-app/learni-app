@@ -32,6 +32,9 @@ interface LessonRequest {
   }
   // Parent-set focus areas
   focusAreas?: string[]
+  // Mastery data
+  weakTopics?: string[]
+  reviewTopics?: string[]
 }
 
 export async function POST(req: NextRequest) {
@@ -49,6 +52,8 @@ export async function POST(req: NextRequest) {
       currentCorrectAnswer,
       sessionStats = { correctCount: 0, totalQuestions: 0, streakCount: 0, personalBest: 0, starsEarned: 0 },
       focusAreas = [],
+      weakTopics = [],
+      reviewTopics = [],
     } = body
 
     // Build the system prompt based on phase
@@ -112,7 +117,7 @@ export async function POST(req: NextRequest) {
             ? `${childName} answered "${answer}" to "${currentQuestion}" — CORRECT! ${
                 phase === 'warmup' || phase === 'closing'
                   ? `Streak: ${sessionStats.streakCount + 1}. Celebrate briefly ("Nice one!", "You got it!") then give the next question. Don't repeat the same question back-to-back, but it's fine to revisit questions later in the session.`
-                  : `Stars: +4. Celebrate! Then give the next problem. Don't repeat the same question back-to-back, but revisiting topics later is fine.`
+                  : `Stars: +4. Celebrate! Then give the next problem. Don't repeat the same question back-to-back.${sessionStats.streakCount >= 3 ? ' The child is doing well — INCREASE the difficulty slightly. Challenge them!' : ''}${sessionStats.correctCount > 0 && sessionStats.totalQuestions > 3 && (sessionStats.correctCount / sessionStats.totalQuestions) < 0.4 ? ' The child is struggling — DECREASE difficulty. Give easier problems to rebuild confidence.' : ''}`
               }`
             : `${childName} answered "${answer}" to "${currentQuestion}" — INCORRECT. The correct answer was "${currentCorrectAnswer}". ${
                 phase === 'warmup' || phase === 'closing'
@@ -131,7 +136,7 @@ export async function POST(req: NextRequest) {
             ? `Start the closing rapid fire. This tests ONLY what ${childName} just learned TODAY in the ${subject} lesson. Only ask questions from today's lesson content — make sure it's locked in. Say "Last round — let's see if today's lesson stuck. No thinking, just knowing. Go." then give the first question.`
             : phase === 'financial'
               ? `Now teach a financial literacy concept connected to today's ${subject} lesson. ${childName} earned ${sessionStats.starsEarned} stars so far. TEACH the concept first with real examples using their star earnings, THEN ask questions. Use the teach → practice cycle.`
-              : `Start the main lesson on ${subject} for Year ${yearLevel}.${focusAreas.length > 0 ? ` PRIORITY FOCUS AREAS set by parent: ${focusAreas.join(', ')}. Build the lesson around these topics.` : ''} TEACH first — explain the concept clearly with a real-world example before asking any questions. The first 2-3 exchanges should be pure teaching with no questions. Say something like "Today we're going to learn about..."`,
+              : `Start the main lesson on ${subject} for Year ${yearLevel}.${focusAreas.length > 0 ? ` PRIORITY FOCUS AREAS set by parent: ${focusAreas.join(', ')}. Build the lesson around these topics.` : ''}${weakTopics.length > 0 ? ` WEAK AREAS from previous sessions: ${weakTopics.join(', ')}. Spend extra time on these — the child needs more practice here.` : ''}${reviewTopics.length > 0 ? ` DUE FOR REVIEW (haven't practiced recently): ${reviewTopics.join(', ')}. Work these in.` : ''} TEACH first — explain the concept clearly with a real-world example before asking any questions. The first 2-3 exchanges should be pure teaching with no questions. Say something like "Today we're going to learn about..."`,
       })
     }
 

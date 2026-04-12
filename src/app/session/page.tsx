@@ -51,6 +51,9 @@ export default function SessionPage() {
   const yearLevel = typeof window !== 'undefined' ? parseInt(localStorage.getItem('learni_year_level') || '5') : 5
   const subject = typeof window !== 'undefined' ? localStorage.getItem('learni_subject') || 'Maths' : 'Maths'
   const [focusAreas, setFocusAreas] = useState<string[]>([])
+  const [weakTopics, setWeakTopics] = useState<string[]>([])
+  const [reviewTopics, setReviewTopics] = useState<string[]>([])
+  const masteryResultsRef = useRef<Array<{ topic: string; correct: boolean }>>([])
   const [audioChecked, setAudioChecked] = useState(false)
   const [audioCheckPlaying, setAudioCheckPlaying] = useState(false)
 
@@ -214,8 +217,12 @@ export default function SessionPage() {
           yearLevel,
           subject,
           phase,
-          drillTopics: phase === 'warmup' ? (focusAreas.length > 0 ? focusAreas : ['times tables', 'number bonds']) : [subject],
+          drillTopics: phase === 'warmup'
+            ? (weakTopics.length > 0 ? weakTopics : focusAreas.length > 0 ? focusAreas : ['times tables', 'number bonds'])
+            : [subject],
           focusAreas,
+          weakTopics,
+          reviewTopics,
           history: historyRef.current.slice(-8),
           answer,
           currentQuestion,
@@ -288,13 +295,20 @@ export default function SessionPage() {
     return () => window.removeEventListener('beforeunload', saveOnExit)
   })
 
-  // Load focus areas
+  // Load focus areas + mastery data
   useEffect(() => {
     const childId = typeof window !== 'undefined' ? localStorage.getItem('learni_child_id') : null
     if (childId) {
       fetch(`/api/parent/focus?childId=${childId}`)
         .then(r => r.json())
         .then(d => setFocusAreas(d.focusAreas || []))
+        .catch(() => {})
+      fetch(`/api/kid/mastery?childId=${childId}`)
+        .then(r => r.json())
+        .then(d => {
+          setWeakTopics(d.weakTopics || [])
+          setReviewTopics(d.reviewTopics || [])
+        })
         .catch(() => {})
     }
   }, [])
@@ -391,6 +405,11 @@ export default function SessionPage() {
     const newPB = Math.max(state.personalBest, newStreak)
     const newStars = isCorrect ? state.starsEarned + 4 : state.starsEarned
 
+    // Track mastery
+    if (state.question) {
+      masteryResultsRef.current.push({ topic: subject, correct: isCorrect })
+    }
+
     // Sound effect
     playSound(isCorrect)
 
@@ -484,6 +503,17 @@ export default function SessionPage() {
     } catch (err) {
       console.error('Session save failed:', err)
     }
+
+    // Save mastery data
+    try {
+      if (masteryResultsRef.current.length > 0) {
+        await fetch('/api/kid/mastery', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ childId: localStorage.getItem('learni_child_id'), results: masteryResultsRef.current }),
+        })
+      }
+    } catch { /* best effort */ }
 
     // Redirect to kid hub or parent dashboard
     const childId = localStorage.getItem('learni_child_id')
