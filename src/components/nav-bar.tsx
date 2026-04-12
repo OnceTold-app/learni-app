@@ -200,7 +200,7 @@ export default function NavBar() {
                       fontFamily: "'Plus Jakarta Sans', sans-serif",
                     }}>
                       <span style={menuIconStyle}>👋</span>
-                      Switch user
+                      Log out
                     </button>
                   </div>
                 </div>
