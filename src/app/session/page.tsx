@@ -149,6 +149,9 @@ export default function SessionPage() {
   }, [speaking, micEnabled, state.question, state.selectedAnswer, paused])
   const [showHintOffer, setShowHintOffer] = useState(false)
   const hintTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [celebration, setCelebration] = useState<string | null>(null)
+  const [showConfetti, setShowConfetti] = useState(false)
+  const [shake, setShake] = useState(false)
 
   // Speak function - calls ElevenLabs TTS
   async function speak(text: string) {
@@ -356,6 +359,23 @@ export default function SessionPage() {
     // Sound effect
     playSound(isCorrect)
 
+    // Celebration effects
+    if (isCorrect) {
+      const celebrations = ['🎉', '⭐', '🔥', '💪', '🚀', '✨', '👏', '💥']
+      const streakCelebrations = ['🔥🔥🔥', '🚀 ON FIRE!', '⭐ UNSTOPPABLE!', '💪 BEAST MODE!']
+      if (newStreak >= 5 && newStreak % 5 === 0) {
+        setCelebration(streakCelebrations[Math.floor(Math.random() * streakCelebrations.length)])
+        setShowConfetti(true)
+        setTimeout(() => setShowConfetti(false), 2000)
+      } else {
+        setCelebration(celebrations[Math.floor(Math.random() * celebrations.length)])
+      }
+      setTimeout(() => setCelebration(null), 1200)
+    } else {
+      setShake(true)
+      setTimeout(() => setShake(false), 500)
+    }
+
     setState(s => ({
       ...s,
       selectedAnswer: selected,
@@ -378,22 +398,35 @@ export default function SessionPage() {
   function playSound(correct: boolean) {
     try {
       const ctx = new AudioContext()
-      const osc = ctx.createOscillator()
-      const gain = ctx.createGain()
-      osc.connect(gain)
-      gain.connect(ctx.destination)
       if (correct) {
-        osc.frequency.setValueAtTime(523, ctx.currentTime)
-        osc.frequency.setValueAtTime(659, ctx.currentTime + 0.1)
-        osc.frequency.setValueAtTime(784, ctx.currentTime + 0.2)
+        // Happy ascending chime
+        const notes = [523, 659, 784, 1047]
+        notes.forEach((freq, i) => {
+          const osc = ctx.createOscillator()
+          const gain = ctx.createGain()
+          osc.type = 'sine'
+          osc.connect(gain)
+          gain.connect(ctx.destination)
+          osc.frequency.setValueAtTime(freq, ctx.currentTime + i * 0.08)
+          gain.gain.setValueAtTime(0.2, ctx.currentTime + i * 0.08)
+          gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + i * 0.08 + 0.3)
+          osc.start(ctx.currentTime + i * 0.08)
+          osc.stop(ctx.currentTime + i * 0.08 + 0.3)
+        })
       } else {
-        osc.frequency.setValueAtTime(330, ctx.currentTime)
-        osc.frequency.setValueAtTime(277, ctx.currentTime + 0.15)
+        // Gentle low tone (not harsh)
+        const osc = ctx.createOscillator()
+        const gain = ctx.createGain()
+        osc.type = 'sine'
+        osc.connect(gain)
+        gain.connect(ctx.destination)
+        osc.frequency.setValueAtTime(280, ctx.currentTime)
+        osc.frequency.linearRampToValueAtTime(220, ctx.currentTime + 0.3)
+        gain.gain.setValueAtTime(0.15, ctx.currentTime)
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.4)
+        osc.start()
+        osc.stop(ctx.currentTime + 0.4)
       }
-      gain.gain.setValueAtTime(0.3, ctx.currentTime)
-      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.4)
-      osc.start()
-      osc.stop(ctx.currentTime + 0.4)
     } catch { /* Audio not available */ }
   }
 
@@ -698,14 +731,16 @@ export default function SessionPage() {
             </button>
           )}
           <span style={{
-            background: 'rgba(46,196,182,0.12)',
-            border: '1px solid rgba(46,196,182,0.2)',
+            background: celebration ? 'rgba(245,166,35,0.2)' : 'rgba(46,196,182,0.12)',
+            border: `1px solid ${celebration ? 'rgba(245,166,35,0.4)' : 'rgba(46,196,182,0.2)'}`,
             borderRadius: '20px',
             padding: '4px 12px',
             fontSize: '13px',
             fontWeight: 800,
             fontFamily: "'Nunito', sans-serif",
-            color: '#2ec4b6',
+            color: celebration ? '#f5a623' : '#2ec4b6',
+            transition: 'all 0.3s',
+            transform: celebration ? 'scale(1.15)' : 'scale(1)',
           }}>
             ⭐ {state.starsEarned}
           </span>
@@ -1126,6 +1161,41 @@ export default function SessionPage() {
           </div>
         )}
 
+        {/* Celebration popup */}
+        {celebration && (
+          <div style={{
+            position: 'fixed',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            fontSize: '72px',
+            zIndex: 150,
+            animation: 'celebPop 1s ease-out forwards',
+            pointerEvents: 'none',
+          }}>
+            {celebration}
+          </div>
+        )}
+
+        {/* Confetti */}
+        {showConfetti && (
+          <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 140, overflow: 'hidden' }}>
+            {Array.from({ length: 40 }).map((_, i) => (
+              <div key={i} style={{
+                position: 'absolute',
+                top: '-10px',
+                left: `${Math.random() * 100}%`,
+                width: `${6 + Math.random() * 8}px`,
+                height: `${6 + Math.random() * 8}px`,
+                background: ['#2ec4b6', '#f5a623', '#ff6b6b', '#a78bfa', '#4ade80', '#ff9080'][Math.floor(Math.random() * 6)],
+                borderRadius: Math.random() > 0.5 ? '50%' : '2px',
+                animation: `confettiFall ${1.5 + Math.random() * 1.5}s ease-in forwards`,
+                animationDelay: `${Math.random() * 0.5}s`,
+              }} />
+            ))}
+          </div>
+        )}
+
         {/* Pause overlay */}
         {paused && (
           <div style={{
@@ -1202,6 +1272,26 @@ export default function SessionPage() {
         @keyframes pulse0 { 0%,100%{transform:scaleY(1)} 50%{transform:scaleY(0.3)} }
         @keyframes pulse1 { 0%,100%{transform:scaleY(1)} 60%{transform:scaleY(0.3)} }
         @keyframes pulse2 { 0%,100%{transform:scaleY(1)} 70%{transform:scaleY(0.3)} }
+        @keyframes celebPop {
+          0% { transform: translate(-50%, -50%) scale(0.3); opacity: 1; }
+          50% { transform: translate(-50%, -50%) scale(1.3); opacity: 1; }
+          100% { transform: translate(-50%, -80%) scale(1); opacity: 0; }
+        }
+        @keyframes confettiFall {
+          0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+          100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+        }
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.5; }
+        }
+        @keyframes shakeIt {
+          0%, 100% { transform: translateX(0); }
+          20% { transform: translateX(-8px); }
+          40% { transform: translateX(8px); }
+          60% { transform: translateX(-6px); }
+          80% { transform: translateX(6px); }
+        }
       `}</style>
     </div>
   )
