@@ -265,6 +265,9 @@ export default function DashboardPage() {
               Start session with {child?.name || 'Earni'} →
             </a>
 
+            {/* Focus areas */}
+            <FocusAreas childId={child?.id || ''} childName={child?.name || ''} />
+
             {/* Recent sessions */}
             <h3 style={{ fontFamily: "'Nunito', sans-serif", fontWeight: 900, color: '#0d2b28', marginBottom: '12px' }}>
               Recent sessions
@@ -312,6 +315,112 @@ export default function DashboardPage() {
       <style jsx global>{`
         @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap');
       `}</style>
+    </div>
+  )
+}
+
+// Focus areas component
+function FocusAreas({ childId, childName }: { childId: string; childName: string }) {
+  const [areas, setAreas] = useState<string[]>([])
+  const [newArea, setNewArea] = useState('')
+  const [loaded, setLoaded] = useState(false)
+
+  useEffect(() => {
+    if (!childId) return
+    fetch(`/api/parent/focus?childId=${childId}`)
+      .then(r => r.json())
+      .then(d => { setAreas(d.focusAreas || []); setLoaded(true) })
+      .catch(() => setLoaded(true))
+  }, [childId])
+
+  async function save(updated: string[]) {
+    setAreas(updated)
+    const token = localStorage.getItem('learni_parent_token')
+    await fetch('/api/parent/focus', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      body: JSON.stringify({ childId, focusAreas: updated }),
+    })
+  }
+
+  function addArea() {
+    const trimmed = newArea.trim()
+    if (!trimmed || areas.includes(trimmed)) return
+    save([...areas, trimmed])
+    setNewArea('')
+  }
+
+  function removeArea(area: string) {
+    save(areas.filter(a => a !== area))
+  }
+
+  if (!loaded || !childId) return null
+
+  const SUGGESTIONS = ['Times tables', 'Fractions', 'Reading comprehension', 'Spelling', 'Division', 'Decimals', 'Word problems', 'Te Reo Māori', 'Descriptive writing', 'Telling time']
+  const unusedSuggestions = SUGGESTIONS.filter(s => !areas.includes(s))
+
+  return (
+    <div style={{ marginBottom: '24px' }}>
+      <h3 style={{ fontFamily: "'Nunito', sans-serif", fontWeight: 900, color: '#0d2b28', marginBottom: '8px' }}>
+        Focus areas for {childName}
+      </h3>
+      <p style={{ fontSize: '13px', color: '#5a8a84', marginBottom: '12px' }}>
+        Tell Earni what to prioritise in sessions
+      </p>
+
+      {/* Current focus areas */}
+      {areas.length > 0 && (
+        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '12px' }}>
+          {areas.map(area => (
+            <span key={area} style={{
+              display: 'inline-flex', alignItems: 'center', gap: '6px',
+              padding: '6px 12px', background: 'rgba(46,196,182,0.1)',
+              border: '1px solid rgba(46,196,182,0.2)', borderRadius: '20px',
+              fontSize: '13px', fontWeight: 600, color: '#1a9e92',
+            }}>
+              {area}
+              <button onClick={() => removeArea(area)} style={{
+                background: 'none', border: 'none', color: '#8abfba',
+                cursor: 'pointer', fontSize: '14px', padding: 0, lineHeight: 1,
+              }}>×</button>
+            </span>
+          ))}
+        </div>
+      )}
+
+      {/* Add custom */}
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '10px' }}>
+        <input
+          value={newArea}
+          onChange={e => setNewArea(e.target.value)}
+          onKeyDown={e => e.key === 'Enter' && addArea()}
+          placeholder="Add a focus area..."
+          style={{
+            flex: 1, padding: '8px 14px',
+            border: '1.5px solid rgba(13,43,40,0.1)', borderRadius: '10px',
+            fontSize: '13px', fontFamily: "'Plus Jakarta Sans', sans-serif",
+            outline: 'none', boxSizing: 'border-box',
+          }}
+        />
+        <button onClick={addArea} disabled={!newArea.trim()} style={{
+          padding: '8px 16px', background: newArea.trim() ? '#2ec4b6' : '#e0e0e0',
+          color: 'white', border: 'none', borderRadius: '10px',
+          fontSize: '13px', fontWeight: 700, cursor: newArea.trim() ? 'pointer' : 'default',
+        }}>Add</button>
+      </div>
+
+      {/* Quick suggestions */}
+      {unusedSuggestions.length > 0 && (
+        <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+          {unusedSuggestions.slice(0, 5).map(s => (
+            <button key={s} onClick={() => save([...areas, s])} style={{
+              padding: '4px 10px', background: '#f7fafa',
+              border: '1px solid rgba(13,43,40,0.06)', borderRadius: '14px',
+              fontSize: '11px', color: '#5a8a84', cursor: 'pointer', fontWeight: 500,
+            }}>{s}</button>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

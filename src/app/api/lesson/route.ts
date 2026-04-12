@@ -30,6 +30,8 @@ interface LessonRequest {
     personalBest: number
     starsEarned: number
   }
+  // Parent-set focus areas
+  focusAreas?: string[]
 }
 
 export async function POST(req: NextRequest) {
@@ -46,6 +48,7 @@ export async function POST(req: NextRequest) {
       currentQuestion,
       currentCorrectAnswer,
       sessionStats = { correctCount: 0, totalQuestions: 0, streakCount: 0, personalBest: 0, starsEarned: 0 },
+      focusAreas = [],
     } = body
 
     // Build the system prompt based on phase
@@ -114,7 +117,7 @@ export async function POST(req: NextRequest) {
             ? `Start the closing rapid fire. This tests ONLY what ${childName} just learned TODAY in the ${subject} lesson. Only ask questions from today's lesson content — make sure it's locked in. Say "Last round — let's see if today's lesson stuck. No thinking, just knowing. Go." then give the first question.`
             : phase === 'financial'
               ? `Now teach a financial literacy concept connected to today's ${subject} lesson. ${childName} earned ${sessionStats.starsEarned} stars so far. TEACH the concept first with real examples using their star earnings, THEN ask questions. Use the teach → practice cycle.`
-              : `Start the main lesson on ${subject} for Year ${yearLevel}. TEACH first — explain the concept clearly with a real-world example before asking any questions. The first 2-3 exchanges should be pure teaching with no questions. Say something like "Today we're going to learn about..."`,
+              : `Start the main lesson on ${subject} for Year ${yearLevel}.${focusAreas.length > 0 ? ` PRIORITY FOCUS AREAS set by parent: ${focusAreas.join(', ')}. Build the lesson around these topics.` : ''} TEACH first — explain the concept clearly with a real-world example before asking any questions. The first 2-3 exchanges should be pure teaching with no questions. Say something like "Today we're going to learn about..."`,
       })
     }
 

@@ -48,6 +48,7 @@ export default function SessionPage() {
   const childName = typeof window !== 'undefined' ? localStorage.getItem('learni_child_name') || 'Student' : 'Student'
   const yearLevel = typeof window !== 'undefined' ? parseInt(localStorage.getItem('learni_year_level') || '5') : 5
   const subject = typeof window !== 'undefined' ? localStorage.getItem('learni_subject') || 'Maths' : 'Maths'
+  const [focusAreas, setFocusAreas] = useState<string[]>([])
 
   const [state, setState] = useState<SessionState>({
     phase: 'warmup',
@@ -131,7 +132,8 @@ export default function SessionPage() {
           yearLevel,
           subject,
           phase,
-          drillTopics: phase === 'warmup' ? ['times tables', 'number bonds'] : [subject],
+          drillTopics: phase === 'warmup' ? (focusAreas.length > 0 ? focusAreas : ['times tables', 'number bonds']) : [subject],
+          focusAreas,
           history: historyRef.current.slice(-8),
           answer,
           currentQuestion,
@@ -188,6 +190,17 @@ export default function SessionPage() {
       }))
     }
   }, [childName, yearLevel, subject, state.correctCount, state.totalQuestions, state.streakCount, state.personalBest, state.starsEarned])
+
+  // Load focus areas
+  useEffect(() => {
+    const childId = typeof window !== 'undefined' ? localStorage.getItem('learni_child_id') : null
+    if (childId) {
+      fetch(`/api/parent/focus?childId=${childId}`)
+        .then(r => r.json())
+        .then(d => setFocusAreas(d.focusAreas || []))
+        .catch(() => {})
+    }
+  }, [])
 
   // Start session
   useEffect(() => {
