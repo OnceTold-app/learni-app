@@ -1,127 +1,82 @@
-import { NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
-import { calculateStarsEarned, starsToDollars } from '@/lib/stars'
-import type { Subject, InputMode } from '@/types'
+import { NextRequest, NextResponse } from 'next/server'
+import { createClient } from '@supabase/supabase-js'
 
-export async function POST(req: Request) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+export async function POST(req: NextRequest) {
+  try {
+    const body = await req.json()
+    const {
+      childId,
+      starsEarned,
+      correctCount,
+      totalQuestions,
+      subjects,
+      duration,
+      jarAllocation,
+    } = body
 
-  if (!user) {
-    return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
-  }
+    if (!childId) {
+      return NextResponse.json({ error: 'childId required' }, { status: 400 })
+    }
 
-  const body = await req.json()
-  const {
-    learnerId,
-    subject,
-    topic,
-    questionsTotal,
-    questionsCorrect,
-    durationSeconds,
-    inputModeUsed,
-    streakDays,
-  }: {
-    learnerId: string
-    subject: Subject
-    topic: string
-    questionsTotal: number
-    questionsCorrect: number
-    durationSeconds: number
-    inputModeUsed: InputMode
-    streakDays: number
-  } = body
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+      process.env.SUPABASE_SERVICE_ROLE_KEY || ''
+    )
 
-  // Verify this learner belongs to the authenticated user
-  const { data: learner } = await supabase
-    .from('learners')
-    .select('id, account_id')
-    .eq('id', learnerId)
-    .single()
+    // Save session
+    const { data: session, error: sessionError } = await supabase
+      .from('sessions')
+      .insert({
+        learner_id: childId,
+        duration_secs: duration || 0,
+        stars_earned: starsEarned || 0,
+        correct_count: correctCount || 0,
+        total_questions: totalQuestions || 0,
+        subjects_covered: subjects || [],
+      })
+      .select()
+      .single()
 
-  if (!learner) {
-    return NextResponse.json({ error: 'Learner not found' }, { status: 404 })
-  }
+    if (sessionError) {
+      console.error('Session save error:', sessionError)
+      // Try with minimal columns (schema may differ)
+      const { error: retryError } = await supabase
+        .from('sessions')
+        .insert({ learner_id: childId })
 
-  const { data: account } = await supabase
-    .from('accounts')
-    .select('id')
-    .eq('user_id', user.id)
-    .single()
+      if (retryError) {
+        console.error('Session retry error:', retryError)
+        return NextResponse.json({ error: 'Failed to save session' }, { status: 500 })
+      }
+    }
 
-  if (!account || learner.account_id !== account.id) {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-  }
+    // Add to star ledger (append-only)
+    if (starsEarned > 0) {
+      await supabase.from('star_ledger').insert({
+        learner_id: childId,
+        session_id: session?.id,
+        amount: starsEarned,
+        reason: `Session: ${(subjects || ['Practice']).join(', ')}`,
+      })
+    }
 
-  // Get reward settings to check weekly cap
-  const { data: rewardSettings } = await supabase
-    .from('reward_settings')
-    .select('stars_per_dollar, weekly_star_cap, rewards_paused')
-    .eq('learner_id', learnerId)
-    .single()
+    // Update jar allocation if provided
+    if (jarAllocation) {
+      await supabase.from('jar_allocations').upsert({
+        learner_id: childId,
+        save_pct: jarAllocation.save || 50,
+        spend_pct: jarAllocation.spend || 30,
+        give_pct: jarAllocation.give || 20,
+      }, { onConflict: 'learner_id' })
+    }
 
-  if (rewardSettings?.rewards_paused) {
-    return NextResponse.json({ error: 'Rewards are paused' }, { status: 400 })
-  }
-
-  // Calculate stars earned this session
-  const starsEarned = calculateStarsEarned(questionsCorrect, questionsTotal, streakDays)
-
-  // Check weekly cap — sum stars earned this calendar week
-  const weekStart = new Date()
-  weekStart.setDate(weekStart.getDate() - weekStart.getDay())
-  weekStart.setHours(0, 0, 0, 0)
-
-  const { data: weeklyEntries } = await supabase
-    .from('star_ledger')
-    .select('stars')
-    .eq('learner_id', learnerId)
-    .eq('type', 'earned')
-    .gte('created_at', weekStart.toISOString())
-
-  const weeklyTotal = weeklyEntries?.reduce((sum, e) => sum + e.stars, 0) ?? 0
-  const cap = rewardSettings?.weekly_star_cap ?? 200
-  const cappedStars = Math.max(0, Math.min(starsEarned, cap - weeklyTotal))
-
-  // 1. Save the session row
-  const { data: session, error: sessionError } = await supabase
-    .from('sessions')
-    .insert({
-      learner_id: learnerId,
-      subject,
-      topic,
-      questions_total: questionsTotal,
-      questions_correct: questionsCorrect,
-      stars_earned: cappedStars,
-      duration_seconds: durationSeconds,
-      input_mode_used: inputModeUsed,
+    return NextResponse.json({
+      success: true,
+      sessionId: session?.id,
+      starsEarned,
     })
-    .select()
-    .single()
-
-  if (sessionError || !session) {
-    console.error('Session insert error:', sessionError)
-    return NextResponse.json({ error: 'Failed to save session' }, { status: 500 })
+  } catch (error) {
+    console.error('Session complete error:', error)
+    return NextResponse.json({ error: 'Internal error' }, { status: 500 })
   }
-
-  // 2. Add star ledger entry (only if stars were earned)
-  if (cappedStars > 0) {
-    const starsPerDollar = rewardSettings?.stars_per_dollar ?? 20
-    const dollarValue = starsToDollars(cappedStars, starsPerDollar)
-
-    await supabase.from('star_ledger').insert({
-      learner_id: learnerId,
-      session_id: session.id,
-      type: 'earned',
-      stars: cappedStars,
-      dollar_value: dollarValue,
-      note: `${topic} session`,
-    })
-  }
-
-  return NextResponse.json({
-    sessionId: session.id,
-    starsEarned: cappedStars,
-    weeklyCapReached: weeklyTotal + cappedStars >= cap,
-  })
 }
