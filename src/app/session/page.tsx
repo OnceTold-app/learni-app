@@ -181,6 +181,8 @@ export default function SessionPage() {
   const [celebration, setCelebration] = useState<string | null>(null)
   const [showConfetti, setShowConfetti] = useState(false)
   const [shake, setShake] = useState(false)
+  const [apiError, setApiError] = useState(false)
+  const [, setRetryCount] = useState(0)
 
   // Speak function - calls ElevenLabs TTS
   async function speak(text: string) {
@@ -282,9 +284,9 @@ export default function SessionPage() {
     } catch {
       setState(s => ({
         ...s,
-        earniSays: "Hmm, I had a hiccup. Let me try that again.",
         loading: false,
       }))
+      setApiError(true)
     }
   }, [childName, yearLevel, subject, state.correctCount, state.totalQuestions, state.streakCount, state.personalBest, state.starsEarned])
 
@@ -773,6 +775,84 @@ export default function SessionPage() {
             }}
           >
             Continue without sound
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  // API error overlay
+  if (apiError) {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: '#0d2b28',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '24px',
+        fontFamily: "'Plus Jakarta Sans', sans-serif",
+      }}>
+        <div style={{
+          maxWidth: '360px',
+          width: '100%',
+          textAlign: 'center',
+          background: 'rgba(255,255,255,0.05)',
+          border: '1px solid rgba(255,255,255,0.1)',
+          borderRadius: '24px',
+          padding: '40px 32px',
+        }}>
+          <div style={{ fontSize: '56px', marginBottom: '16px' }}>😅</div>
+          <h2 style={{
+            fontFamily: "'Nunito', sans-serif",
+            fontWeight: 900,
+            fontSize: '22px',
+            color: 'white',
+            margin: '0 0 10px',
+          }}>Earni had a moment</h2>
+          <p style={{
+            fontSize: '14px',
+            color: 'rgba(255,255,255,0.5)',
+            margin: '0 0 28px',
+            lineHeight: 1.6,
+          }}>
+            Something went wrong connecting to Earni. Your progress is safe — let&apos;s try again.
+          </p>
+          <button
+            onClick={() => {
+              setApiError(false)
+              setRetryCount(c => c + 1)
+              fetchQuestion(state.phase)
+            }}
+            style={{
+              width: '100%',
+              padding: '16px',
+              background: 'linear-gradient(135deg, #2ec4b6, #1ab5a8)',
+              color: 'white',
+              border: 'none',
+              borderRadius: '100px',
+              fontFamily: "'Nunito', sans-serif",
+              fontWeight: 900,
+              fontSize: '16px',
+              cursor: 'pointer',
+              marginBottom: '12px',
+              boxShadow: '0 4px 20px rgba(46,196,182,0.3)',
+            }}
+          >
+            Try again →
+          </button>
+          <button
+            onClick={() => { window.location.href = '/kid-hub' }}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: 'rgba(255,255,255,0.3)',
+              fontSize: '13px',
+              cursor: 'pointer',
+              fontWeight: 600,
+            }}
+          >
+            Go back to Hub
           </button>
         </div>
       </div>

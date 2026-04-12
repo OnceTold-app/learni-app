@@ -19,6 +19,7 @@ export default function KidHubPage() {
   const [streak, setStreak] = useState(0)
   const [sessions, setSessions] = useState<SessionData[]>([])
   const [loading, setLoading] = useState(true)
+  const [statsError, setStatsError] = useState(false)
   const [needsBaseline, setNeedsBaseline] = useState(false)
   const [topicsMastered, setTopicsMastered] = useState(0)
   const [badges, setBadges] = useState<Array<{ id: string; name: string; emoji: string; desc: string; earned: boolean; isNew: boolean }>>([])
@@ -67,7 +68,9 @@ export default function KidHubPage() {
         const badgeData = await badgeRes.json()
         setBadges(badgeData.badges || [])
       }
-    } catch { /* silent */ }
+    } catch {
+      setStatsError(true)
+    }
     setLoading(false)
   }
 
@@ -77,6 +80,74 @@ export default function KidHubPage() {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0d2b28' }}>
         <div style={{ color: 'white', fontFamily: "'Nunito', sans-serif", fontSize: '20px', fontWeight: 900 }}>Loading...</div>
+      </div>
+    )
+  }
+
+  if (statsError) {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: 'linear-gradient(180deg, #0d2b28 0%, #143330 100%)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '24px',
+        fontFamily: "'Plus Jakarta Sans', sans-serif",
+      }}>
+        <div style={{
+          maxWidth: '340px',
+          width: '100%',
+          textAlign: 'center',
+          background: 'rgba(255,255,255,0.05)',
+          border: '1px solid rgba(255,255,255,0.1)',
+          borderRadius: '24px',
+          padding: '40px 32px',
+        }}>
+          <div style={{ fontSize: '52px', marginBottom: '16px' }}>😅</div>
+          <h2 style={{ fontFamily: "'Nunito', sans-serif", fontWeight: 900, fontSize: '20px', color: 'white', margin: '0 0 10px' }}>
+            Couldn&apos;t load your stats
+          </h2>
+          <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.5)', margin: '0 0 28px', lineHeight: 1.6 }}>
+            Something went wrong. Your stars and progress are safe — just give it another try.
+          </p>
+          <button
+            onClick={() => {
+              setStatsError(false)
+              setLoading(true)
+              const id = localStorage.getItem('learni_child_id')
+              if (id) fetchData(id)
+            }}
+            style={{
+              width: '100%',
+              padding: '16px',
+              background: 'linear-gradient(135deg, #2ec4b6, #1ab5a8)',
+              color: 'white',
+              border: 'none',
+              borderRadius: '100px',
+              fontFamily: "'Nunito', sans-serif",
+              fontWeight: 900,
+              fontSize: '16px',
+              cursor: 'pointer',
+              marginBottom: '12px',
+            }}
+          >
+            Try again →
+          </button>
+          <button
+            onClick={() => { window.location.href = '/start-session' }}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: 'rgba(255,255,255,0.3)',
+              fontSize: '13px',
+              cursor: 'pointer',
+              fontWeight: 600,
+            }}
+          >
+            Start a session anyway
+          </button>
+        </div>
       </div>
     )
   }

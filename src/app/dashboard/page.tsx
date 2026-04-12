@@ -27,6 +27,7 @@ export default function DashboardPage() {
   const [selectedChild, setSelectedChild] = useState<string | null>(null)
   const [sessions, setSessions] = useState<SessionSummary[]>([])
   const [loading, setLoading] = useState(true)
+  const [childrenError, setChildrenError] = useState(false)
   const [parentName, setParentName] = useState('')
 
   useEffect(() => {
@@ -52,7 +53,9 @@ export default function DashboardPage() {
       if (data.children?.length > 0) {
         setSelectedChild(data.children[0].id)
       }
-    } catch { /* */ }
+    } catch {
+      setChildrenError(true)
+    }
     setLoading(false)
   }
 
@@ -95,6 +98,52 @@ export default function DashboardPage() {
       <div style={{ maxWidth: '800px', margin: '0 auto', padding: '24px' }}>
         {loading ? (
           <p style={{ textAlign: 'center', color: '#5a8a84', padding: '48px 0' }}>Loading...</p>
+        ) : childrenError ? (
+          <div style={{ textAlign: 'center', padding: '48px 0' }}>
+            <div style={{ fontSize: '48px', marginBottom: '16px' }}>😅</div>
+            <h2 style={{ fontFamily: "'Nunito', sans-serif", fontWeight: 900, color: '#0d2b28', marginBottom: '8px' }}>
+              Couldn&apos;t load your children
+            </h2>
+            <p style={{ color: '#5a8a84', marginBottom: '24px', fontSize: '14px' }}>
+              Something went wrong connecting to Learni. Your data is safe.
+            </p>
+            <button
+              onClick={() => {
+                setChildrenError(false)
+                setLoading(true)
+                fetchChildren()
+              }}
+              style={{
+                display: 'inline-block',
+                background: '#2ec4b6',
+                color: 'white',
+                padding: '14px 28px',
+                borderRadius: '30px',
+                fontFamily: "'Nunito', sans-serif",
+                fontWeight: 900,
+                fontSize: '15px',
+                border: 'none',
+                cursor: 'pointer',
+                marginRight: '12px',
+              }}
+            >
+              Try again
+            </button>
+            <button
+              onClick={() => window.location.reload()}
+              style={{
+                background: 'none',
+                border: '1px solid rgba(13,43,40,0.12)',
+                color: '#5a8a84',
+                padding: '14px 20px',
+                borderRadius: '30px',
+                fontSize: '14px',
+                cursor: 'pointer',
+              }}
+            >
+              Refresh page
+            </button>
+          </div>
         ) : children.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '48px 0' }}>
             <div style={{ fontSize: '48px', marginBottom: '16px' }}>👋</div>
