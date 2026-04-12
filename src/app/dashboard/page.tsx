@@ -265,6 +265,29 @@ export default function DashboardPage() {
               Start session with {child?.name || 'Earni'} →
             </a>
 
+            {/* Progress report link */}
+            {child && (
+              <a
+                href={`/progress?childId=${child.id}`}
+                style={{
+                  display: 'block',
+                  background: 'white',
+                  color: '#0d2b28',
+                  padding: '14px',
+                  borderRadius: '12px',
+                  textAlign: 'center',
+                  fontFamily: "'Nunito', sans-serif",
+                  fontSize: '14px',
+                  fontWeight: 700,
+                  textDecoration: 'none',
+                  marginBottom: '24px',
+                  border: '1px solid rgba(13,43,40,0.08)',
+                }}
+              >
+                📊 View {child.name}&apos;s progress report
+              </a>
+            )}
+
             {/* Focus areas */}
             <FocusAreas childId={child?.id || ''} childName={child?.name || ''} />
 
