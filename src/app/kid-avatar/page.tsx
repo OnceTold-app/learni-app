@@ -45,8 +45,7 @@ export default function KidAvatarPage() {
     }
   }
 
-  // Render avatar preview
-  function AvatarPreview() {
+  function AvatarSVG({ size = 200 }: { size?: number }) {
     const hairPath = (() => {
       switch (hairStyle) {
         case 'short': return <ellipse cx="60" cy="28" rx="32" ry="18" fill={hairColor} />
@@ -73,23 +72,17 @@ export default function KidAvatarPage() {
     })()
 
     return (
-      <svg viewBox="0 0 120 120" width="160" height="160">
-        {/* Hair behind head */}
+      <svg viewBox="0 0 120 120" width={size} height={size}>
         {hairStyle === 'afro' && hairPath}
-        {/* Head */}
         <ellipse cx="60" cy="55" rx="30" ry="35" fill={skinTone} />
-        {/* Hair */}
         {hairStyle !== 'afro' && hairPath}
-        {/* Eyes */}
         <circle cx="47" cy="52" r="5" fill="white" />
         <circle cx="73" cy="52" r="5" fill="white" />
         <circle cx="47" cy="52" r="3" fill={eyeColor} />
         <circle cx="73" cy="52" r="3" fill={eyeColor} />
         <circle cx="48" cy="51" r="1" fill="white" />
         <circle cx="74" cy="51" r="1" fill="white" />
-        {/* Smile */}
         <path d="M 48 68 Q 60 78 72 68" fill="none" stroke="#333" strokeWidth="2" strokeLinecap="round" />
-        {/* Accessory */}
         {accElement}
       </svg>
     )
@@ -100,104 +93,211 @@ export default function KidAvatarPage() {
       minHeight: '100vh',
       background: 'linear-gradient(180deg, #0d2b28, #143330)',
       fontFamily: "'Plus Jakarta Sans', sans-serif",
-      padding: '24px',
     }}>
-      <div style={{ maxWidth: '480px', margin: '0 auto' }}>
-        <div style={{ textAlign: 'center', marginBottom: '24px', paddingTop: '16px' }}>
-          <h1 style={{ fontFamily: "'Nunito', sans-serif", fontSize: '26px', fontWeight: 900, color: 'white', marginBottom: '6px' }}>
-            Design your look, {childName}!
-          </h1>
-          <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '14px' }}>This is how Earni sees you</p>
-        </div>
-
-        {/* Preview */}
+      {/* Desktop: side by side. Mobile: stacked with sticky avatar */}
+      <div style={{
+        maxWidth: '900px',
+        margin: '0 auto',
+        padding: '24px',
+        display: 'flex',
+        gap: '32px',
+        minHeight: '100vh',
+      }}>
+        {/* LEFT: Controls (scrollable) */}
         <div style={{
-          display: 'flex',
-          justifyContent: 'center',
-          marginBottom: '28px',
+          flex: 1,
+          minWidth: 0,
+          paddingBottom: '100px',
         }}>
-          <div style={{
-            background: 'rgba(255,255,255,0.06)',
-            border: '1px solid rgba(255,255,255,0.1)',
-            borderRadius: '50%',
-            padding: '20px',
-            boxShadow: '0 0 40px rgba(46,196,182,0.1)',
-          }}>
-            <AvatarPreview />
+          <a href="/kid-hub" style={{ fontSize: '13px', color: 'rgba(255,255,255,0.3)', textDecoration: 'none' }}>← Back</a>
+          <h1 style={{ fontFamily: "'Nunito', sans-serif", fontSize: '24px', fontWeight: 900, color: 'white', marginTop: '12px', marginBottom: '24px' }}>
+            Design your look{childName ? `, ${childName}` : ''}!
+          </h1>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            {/* Skin tone */}
+            <Section title="Skin tone">
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                {SKIN_TONES.map(tone => (
+                  <ColorCircle key={tone} color={tone} selected={skinTone === tone} onClick={() => setSkinTone(tone)} />
+                ))}
+              </div>
+            </Section>
+
+            {/* Hair colour */}
+            <Section title="Hair colour">
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                {HAIR_COLORS.map(color => (
+                  <ColorCircle key={color} color={color} selected={hairColor === color} onClick={() => setHairColor(color)} />
+                ))}
+              </div>
+            </Section>
+
+            {/* Hair style */}
+            <Section title="Hair style">
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                {HAIR_STYLES.map(style => (
+                  <PillButton key={style} label={`${HAIR_EMOJIS[style]} ${style}`} selected={hairStyle === style} onClick={() => setHairStyle(style)} />
+                ))}
+              </div>
+            </Section>
+
+            {/* Eye colour */}
+            <Section title="Eye colour">
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                {EYE_COLORS.map(color => (
+                  <ColorCircle key={color} color={color} selected={eyeColor === color} onClick={() => setEyeColor(color)} />
+                ))}
+              </div>
+            </Section>
+
+            {/* Accessories */}
+            <Section title="Accessories">
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                {ACCESSORIES.map(acc => (
+                  <PillButton key={acc} label={`${ACC_EMOJIS[acc]} ${acc}`} selected={accessory === acc} onClick={() => setAccessory(acc)} />
+                ))}
+              </div>
+            </Section>
+          </div>
+
+          {/* Save — mobile only (desktop has it in the right panel) */}
+          <div className="mobile-save" style={{ marginTop: '24px' }}>
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              style={{
+                width: '100%',
+                padding: '16px',
+                background: saving ? 'rgba(46,196,182,0.4)' : 'linear-gradient(135deg, #2ec4b6, #1ab5a8)',
+                color: 'white',
+                border: 'none',
+                borderRadius: '30px',
+                fontFamily: "'Nunito', sans-serif",
+                fontSize: '18px',
+                fontWeight: 900,
+                cursor: saving ? 'not-allowed' : 'pointer',
+                boxShadow: '0 8px 32px rgba(46,196,182,0.3)',
+              }}
+            >
+              {saving ? 'Saving...' : "That's me! Let's go →"}
+            </button>
           </div>
         </div>
 
-        {/* Controls */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
-          {/* Skin tone */}
-          <Section title="Skin tone">
-            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-              {SKIN_TONES.map(tone => (
-                <ColorCircle key={tone} color={tone} selected={skinTone === tone} onClick={() => setSkinTone(tone)} />
-              ))}
-            </div>
-          </Section>
-
-          {/* Hair color */}
-          <Section title="Hair colour">
-            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-              {HAIR_COLORS.map(color => (
-                <ColorCircle key={color} color={color} selected={hairColor === color} onClick={() => setHairColor(color)} />
-              ))}
-            </div>
-          </Section>
-
-          {/* Hair style */}
-          <Section title="Hair style">
-            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-              {HAIR_STYLES.map(style => (
-                <PillButton key={style} label={`${HAIR_EMOJIS[style]} ${style}`} selected={hairStyle === style} onClick={() => setHairStyle(style)} />
-              ))}
-            </div>
-          </Section>
-
-          {/* Eye color */}
-          <Section title="Eye colour">
-            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-              {EYE_COLORS.map(color => (
-                <ColorCircle key={color} color={color} selected={eyeColor === color} onClick={() => setEyeColor(color)} />
-              ))}
-            </div>
-          </Section>
-
-          {/* Accessories */}
-          <Section title="Accessories">
-            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-              {ACCESSORIES.map(acc => (
-                <PillButton key={acc} label={`${ACC_EMOJIS[acc]} ${acc}`} selected={accessory === acc} onClick={() => setAccessory(acc)} />
-              ))}
-            </div>
-          </Section>
-        </div>
-
-        {/* Save */}
-        <button
-          onClick={handleSave}
-          disabled={saving}
-          style={{
+        {/* RIGHT: Avatar preview (sticky) */}
+        <div style={{
+          width: '300px',
+          flexShrink: 0,
+          position: 'sticky',
+          top: '76px',
+          height: 'fit-content',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: '24px',
+        }} className="avatar-panel">
+          <div style={{
+            background: 'rgba(255,255,255,0.04)',
+            border: '1px solid rgba(255,255,255,0.08)',
+            borderRadius: '24px',
+            padding: '32px',
+            textAlign: 'center',
             width: '100%',
-            padding: '18px',
-            background: saving ? 'rgba(46,196,182,0.4)' : 'linear-gradient(135deg, #2ec4b6, #1ab5a8)',
-            color: 'white',
-            border: 'none',
-            borderRadius: '30px',
-            fontFamily: "'Nunito', sans-serif",
-            fontSize: '18px',
-            fontWeight: 900,
-            cursor: saving ? 'not-allowed' : 'pointer',
-            marginTop: '28px',
-            marginBottom: '40px',
-            boxShadow: '0 8px 32px rgba(46,196,182,0.3)',
-          }}
-        >
-          {saving ? 'Saving...' : "That's me! Let's go →"}
-        </button>
+            boxSizing: 'border-box',
+          }}>
+            <div style={{
+              background: 'rgba(255,255,255,0.06)',
+              borderRadius: '50%',
+              width: '220px',
+              height: '220px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: '0 auto 16px',
+              boxShadow: '0 0 60px rgba(46,196,182,0.08)',
+            }}>
+              <AvatarSVG size={200} />
+            </div>
+            <div style={{ fontFamily: "'Nunito', sans-serif", fontSize: '18px', fontWeight: 900, color: 'white' }}>
+              {childName || 'You'}
+            </div>
+            <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.3)', marginTop: '4px' }}>
+              Looking good! 🔥
+            </div>
+          </div>
+
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="desktop-save"
+            style={{
+              width: '100%',
+              padding: '16px',
+              background: saving ? 'rgba(46,196,182,0.4)' : 'linear-gradient(135deg, #2ec4b6, #1ab5a8)',
+              color: 'white',
+              border: 'none',
+              borderRadius: '30px',
+              fontFamily: "'Nunito', sans-serif",
+              fontSize: '18px',
+              fontWeight: 900,
+              cursor: saving ? 'not-allowed' : 'pointer',
+              boxShadow: '0 8px 32px rgba(46,196,182,0.3)',
+            }}
+          >
+            {saving ? 'Saving...' : "That's me! →"}
+          </button>
+        </div>
       </div>
+
+      <style jsx global>{`
+        @media (max-width: 700px) {
+          .avatar-panel {
+            position: fixed !important;
+            top: auto !important;
+            bottom: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            width: 100% !important;
+            flex-direction: row !important;
+            background: rgba(13,43,40,0.95) !important;
+            backdrop-filter: blur(20px) !important;
+            -webkit-backdrop-filter: blur(20px) !important;
+            border-top: 1px solid rgba(255,255,255,0.08) !important;
+            padding: 12px 20px !important;
+            z-index: 100 !important;
+            gap: 12px !important;
+            box-sizing: border-box !important;
+          }
+          .avatar-panel > div:first-child {
+            padding: 8px !important;
+            width: auto !important;
+            border-radius: 16px !important;
+          }
+          .avatar-panel > div:first-child > div:first-child {
+            width: 60px !important;
+            height: 60px !important;
+            margin: 0 auto 0 !important;
+          }
+          .avatar-panel > div:first-child > div:nth-child(2),
+          .avatar-panel > div:first-child > div:nth-child(3) {
+            display: none !important;
+          }
+          .avatar-panel .desktop-save {
+            flex: 1 !important;
+            padding: 14px 20px !important;
+            font-size: 16px !important;
+          }
+          .mobile-save {
+            display: none !important;
+          }
+        }
+        @media (min-width: 701px) {
+          .mobile-save {
+            display: none !important;
+          }
+        }
+      `}</style>
     </div>
   )
 }
