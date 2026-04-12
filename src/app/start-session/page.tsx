@@ -335,7 +335,7 @@ export default function StartSessionPage() {
         </p>
 
         {/* Subject tabs */}
-        <div style={{
+        <div className="hide-scrollbar" style={{
           display: 'flex', gap: '8px', marginBottom: '20px',
           overflowX: 'auto', paddingBottom: '4px',
           scrollbarWidth: 'none',

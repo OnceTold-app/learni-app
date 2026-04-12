@@ -26,3 +26,26 @@ body {
 .font-display {
   font-family: var(--font-nunito), sans-serif;
 }
+
+/* ─── Mobile-first fixes ─────────────────────────────────────── */
+/* Prevent overflow on narrow screens */
+* { box-sizing: border-box; }
+body { overflow-x: hidden; }
+
+/* Auth / form card padding: 48px on desktop, 24px on mobile */
+@media (max-width: 480px) {
+  /* Form cards (login, signup, onboarding, etc.) */
+  [data-card] {
+    padding: 24px !important;
+    border-radius: 16px !important;
+  }
+
+  /* Session page visual maths containers */
+  [data-visual-container] {
+    padding: 12px !important;
+  }
+}
+
+/* Hide tab scrollbar visually */
+.hide-scrollbar::-webkit-scrollbar { display: none; }
+.hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }

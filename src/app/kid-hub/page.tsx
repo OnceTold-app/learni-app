@@ -165,7 +165,7 @@ export default function KidHubPage() {
         </div>
 
         {/* Stats */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', marginBottom: '24px' }}>
+        <div className="kid-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', marginBottom: '24px' }}>
           <div style={{
             background: 'rgba(255,255,255,0.06)',
             border: '1px solid rgba(255,255,255,0.08)',
@@ -327,6 +327,11 @@ export default function KidHubPage() {
           Switch user
         </button>
       </div>
+      <style jsx global>{`
+        @media (max-width: 400px) {
+          .kid-stats-grid { grid-template-columns: 1fr 1fr !important; }
+        }
+      `}</style>
     </div>
   )
 }

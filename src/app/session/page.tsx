@@ -1576,6 +1576,12 @@ export default function SessionPage() {
           margin: 0 auto;
           width: 100%;
         }
+        @media (max-width: 480px) {
+          .session-content {
+            padding: 16px !important;
+            gap: 16px !important;
+          }
+        }
       `}</style>
     </div>
   )

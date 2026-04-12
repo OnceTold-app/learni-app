@@ -45,7 +45,7 @@ export default function SubscribePage() {
       <div style={{
         background: 'white',
         borderRadius: '24px',
-        padding: '48px',
+        padding: 'clamp(24px, 6vw, 48px)',
         maxWidth: '480px',
         width: '100%',
         boxShadow: '0 8px 40px rgba(0,0,0,0.06)',

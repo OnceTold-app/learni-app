@@ -207,7 +207,7 @@ export default function DashboardPage() {
             </div>
 
             {/* Stats cards */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '24px' }}>
+            <div className="dashboard-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '24px' }}>
               <div style={{
                 background: 'white',
                 borderRadius: '16px',
@@ -337,6 +337,10 @@ export default function DashboardPage() {
 
       <style jsx global>{`
         @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap');
+        @media (max-width: 480px) {
+          .dashboard-stats-grid { grid-template-columns: 1fr 1fr !important; }
+          .dashboard-child-card { padding: 16px !important; }
+        }
       `}</style>
     </div>
   )
