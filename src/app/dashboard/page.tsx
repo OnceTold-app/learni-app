@@ -171,33 +171,58 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {/* Start session button */}
-            <a
-              href="/session"
-              onClick={() => {
-                if (child) {
-                  localStorage.setItem('learni_child_id', child.id)
-                  localStorage.setItem('learni_child_name', child.name)
-                  localStorage.setItem('learni_year_level', String(child.year_level))
-                }
-              }}
-              style={{
-                display: 'block',
-                background: '#2ec4b6',
-                color: 'white',
-                padding: '18px',
-                borderRadius: '16px',
-                textAlign: 'center',
-                fontFamily: "'Nunito', sans-serif",
-                fontSize: '18px',
-                fontWeight: 900,
-                textDecoration: 'none',
-                marginBottom: '24px',
-                boxShadow: '0 6px 20px rgba(46,196,182,0.3)',
-              }}
-            >
-              Start session with Earni →
-            </a>
+            {/* Action buttons */}
+            <div style={{ display: 'flex', gap: '12px', marginBottom: '24px' }}>
+              <a
+                href="/session"
+                onClick={() => {
+                  if (child) {
+                    localStorage.setItem('learni_child_id', child.id)
+                    localStorage.setItem('learni_child_name', child.name)
+                    localStorage.setItem('learni_year_level', String(child.year_level))
+                  }
+                }}
+                style={{
+                  flex: 1,
+                  display: 'block',
+                  background: '#2ec4b6',
+                  color: 'white',
+                  padding: '18px',
+                  borderRadius: '16px',
+                  textAlign: 'center',
+                  fontFamily: "'Nunito', sans-serif",
+                  fontSize: '18px',
+                  fontWeight: 900,
+                  textDecoration: 'none',
+                  boxShadow: '0 6px 20px rgba(46,196,182,0.3)',
+                }}
+              >
+                Start session with Earni →
+              </a>
+              {children.length < 4 && (
+                <a
+                  href="/onboarding"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    background: 'white',
+                    color: '#0d2b28',
+                    padding: '18px 24px',
+                    borderRadius: '16px',
+                    textAlign: 'center',
+                    fontFamily: "'Nunito', sans-serif",
+                    fontSize: '15px',
+                    fontWeight: 800,
+                    textDecoration: 'none',
+                    border: '1.5px solid rgba(13,43,40,0.1)',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  + Add child
+                </a>
+              )}
+            </div>
 
             {/* Recent sessions */}
             <h3 style={{ fontFamily: "'Nunito', sans-serif", fontWeight: 900, color: '#0d2b28', marginBottom: '12px' }}>
