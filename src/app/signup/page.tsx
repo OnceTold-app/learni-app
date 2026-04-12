@@ -55,6 +55,7 @@ export default function SignupPage() {
       if (authData.session) {
         localStorage.setItem('learni_parent_token', authData.session.access_token)
         localStorage.setItem('learni_parent_name', name)
+        localStorage.setItem('learni_parent_email', email)
         localStorage.setItem('learni_parent_id', authData.user?.id || '')
       }
 

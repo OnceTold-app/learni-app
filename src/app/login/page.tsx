@@ -23,6 +23,7 @@ export default function LoginPage() {
       // Store parent info
       localStorage.setItem('learni_parent_token', data.session?.access_token || '')
       localStorage.setItem('learni_parent_name', data.user?.user_metadata?.name || data.user?.user_metadata?.full_name || email.split('@')[0])
+      localStorage.setItem('learni_parent_email', email)
       localStorage.setItem('learni_parent_id', data.user?.id || '')
 
       window.location.href = '/dashboard'
