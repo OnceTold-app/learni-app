@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { getCurrentRank, getNextRank, getProgressToNextRank } from '@/lib/ranks'
+import { Skeleton, SkeletonStyles } from '@/components/ui/skeleton'
 
 interface SessionData {
   id: string
@@ -78,8 +79,45 @@ export default function KidHubPage() {
 
   if (loading) {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0d2b28' }}>
-        <div style={{ color: 'white', fontFamily: "'Nunito', sans-serif", fontSize: '20px', fontWeight: 900 }}>Loading...</div>
+      <div style={{
+        minHeight: '100vh',
+        background: 'linear-gradient(180deg, #0d2b28 0%, #143330 50%, #1a3d39 100%)',
+        padding: '24px',
+        paddingBottom: '120px',
+      }}>
+        <SkeletonStyles />
+        <div style={{ maxWidth: '500px', margin: '0 auto', paddingTop: '20px' }}>
+          {/* Avatar skeleton */}
+          <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+            <Skeleton width={120} height={120} borderRadius='50%' style={{ margin: '0 auto 16px' }} />
+            <Skeleton width='40%' height={28} borderRadius={8} style={{ margin: '0 auto 8px' }} />
+            <Skeleton width='25%' height={14} borderRadius={6} style={{ margin: '0 auto 6px' }} />
+            <Skeleton width='50%' height={6} borderRadius={3} style={{ margin: '6px auto 8px' }} />
+            <Skeleton width='30%' height={12} borderRadius={6} style={{ margin: '0 auto' }} />
+          </div>
+          {/* Stats grid skeleton */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', marginBottom: '24px' }}>
+            {[0,1,2].map(i => (
+              <div key={i} style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '16px', padding: '16px', textAlign: 'center' }}>
+                <Skeleton width='60%' height={28} borderRadius={6} style={{ margin: '0 auto 8px' }} />
+                <Skeleton width='40%' height={11} borderRadius={4} style={{ margin: '0 auto' }} />
+              </div>
+            ))}
+          </div>
+          {/* CTA skeleton */}
+          <Skeleton height={64} borderRadius={20} style={{ marginBottom: '24px' }} />
+          {/* Sessions skeleton */}
+          <Skeleton width='30%' height={14} borderRadius={6} style={{ marginBottom: '12px' }} />
+          {[0,1,2].map(i => (
+            <div key={i} style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '14px', padding: '14px 16px', marginBottom: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ flex: 1 }}>
+                <Skeleton width='55%' height={14} borderRadius={4} style={{ marginBottom: '6px' }} />
+                <Skeleton width='35%' height={11} borderRadius={4} />
+              </div>
+              <Skeleton width={40} height={14} borderRadius={4} />
+            </div>
+          ))}
+        </div>
       </div>
     )
   }

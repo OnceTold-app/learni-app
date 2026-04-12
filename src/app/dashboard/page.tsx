@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { SkeletonLight, SkeletonStyles } from '@/components/ui/skeleton'
 
 interface Child {
   id: string
@@ -97,7 +98,42 @@ export default function DashboardPage() {
 
       <div style={{ maxWidth: '800px', margin: '0 auto', padding: '24px' }}>
         {loading ? (
-          <p style={{ textAlign: 'center', color: '#5a8a84', padding: '48px 0' }}>Loading...</p>
+          <>
+            <SkeletonStyles />
+            {/* Children tabs skeleton */}
+            <div style={{ display: 'flex', gap: '10px', marginBottom: '24px', flexWrap: 'wrap' }}>
+              {[0,1].map(i => (
+                <div key={i} style={{ padding: '14px 20px', borderRadius: '16px', background: 'white', boxShadow: '0 2px 8px rgba(0,0,0,0.04)', display: 'flex', alignItems: 'center', gap: '12px', minWidth: '180px' }}>
+                  <SkeletonLight width={40} height={40} borderRadius='50%' />
+                  <div style={{ flex: 1 }}>
+                    <SkeletonLight width='70%' height={15} borderRadius={4} style={{ marginBottom: '6px' }} />
+                    <SkeletonLight width='50%' height={12} borderRadius={4} />
+                  </div>
+                </div>
+              ))}
+            </div>
+            {/* Stats cards skeleton */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '24px' }}>
+              {[0,1,2].map(i => (
+                <div key={i} style={{ background: 'white', borderRadius: '16px', padding: '20px', boxShadow: '0 2px 12px rgba(0,0,0,0.04)' }}>
+                  <SkeletonLight width='50%' height={11} borderRadius={4} style={{ marginBottom: '8px' }} />
+                  <SkeletonLight width='65%' height={32} borderRadius={6} />
+                </div>
+              ))}
+            </div>
+            {/* CTA + sessions skeleton */}
+            <SkeletonLight height={58} borderRadius={16} style={{ marginBottom: '24px' }} />
+            <SkeletonLight width='30%' height={18} borderRadius={6} style={{ marginBottom: '12px' }} />
+            {[0,1,2].map(i => (
+              <div key={i} style={{ background: 'white', borderRadius: '12px', padding: '14px 18px', marginBottom: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 1px 4px rgba(0,0,0,0.03)' }}>
+                <div style={{ flex: 1 }}>
+                  <SkeletonLight width='45%' height={14} borderRadius={4} style={{ marginBottom: '6px' }} />
+                  <SkeletonLight width='60%' height={12} borderRadius={4} />
+                </div>
+                <SkeletonLight width={40} height={18} borderRadius={4} />
+              </div>
+            ))}
+          </>
         ) : childrenError ? (
           <div style={{ textAlign: 'center', padding: '48px 0' }}>
             <div style={{ fontSize: '48px', marginBottom: '16px' }}>😅</div>

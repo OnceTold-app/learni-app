@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { SkeletonLight, SkeletonStyles } from '@/components/ui/skeleton'
 
 interface MasteryTopic {
   topic: string
@@ -60,9 +61,37 @@ export default function ProgressPage() {
   }, [])
 
   if (loading) {
-    return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f7fafa' }}>
-      <div style={{ color: '#5a8a84', fontFamily: "'Nunito', sans-serif" }}>Loading...</div>
-    </div>
+    return (
+      <div style={{ minHeight: '100vh', background: '#f7fafa', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+        <SkeletonStyles />
+        <div style={{ maxWidth: '700px', margin: '0 auto', padding: '24px' }}>
+          <SkeletonLight width={80} height={13} borderRadius={4} style={{ marginBottom: '20px' }} />
+          <SkeletonLight width='55%' height={28} borderRadius={8} style={{ marginBottom: '8px' }} />
+          <SkeletonLight width='35%' height={14} borderRadius={4} style={{ marginBottom: '28px' }} />
+          {/* Stats cards */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px', marginBottom: '28px' }}>
+            {[0,1,2,3].map(i => (
+              <div key={i} style={{ background: 'white', borderRadius: '14px', padding: '16px', boxShadow: '0 1px 4px rgba(0,0,0,0.04)', textAlign: 'center' }}>
+                <SkeletonLight width='60%' height={24} borderRadius={6} style={{ margin: '0 auto 8px' }} />
+                <SkeletonLight width='70%' height={11} borderRadius={4} style={{ margin: '0 auto' }} />
+              </div>
+            ))}
+          </div>
+          {/* Topic rows */}
+          <SkeletonLight width='30%' height={18} borderRadius={6} style={{ marginBottom: '16px' }} />
+          {[0,1,2,3,4,5].map(i => (
+            <div key={i} style={{ background: 'white', borderRadius: '12px', padding: '14px 18px', marginBottom: '8px', boxShadow: '0 1px 4px rgba(0,0,0,0.03)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+                <SkeletonLight width='35%' height={14} borderRadius={4} />
+                <SkeletonLight width={36} height={14} borderRadius={4} />
+              </div>
+              <SkeletonLight width='100%' height={6} borderRadius={3} style={{ marginBottom: '6px' }} />
+              <SkeletonLight width='45%' height={11} borderRadius={4} />
+            </div>
+          ))}
+        </div>
+      </div>
+    )
   }
 
   return (
