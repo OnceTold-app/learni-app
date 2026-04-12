@@ -73,13 +73,44 @@ export default function SessionPage() {
     elapsedMinutes: 0,
   })
 
-  const historyRef = useRef<Array<{ role: 'user' | 'assistant'; content: string }>>([])
+  const historyRef = useRef<Array<{ role: 'user' | 'assistant'; content: string }>>([]) 
   const phaseStartRef = useRef(Date.now())
   const sessionStartRef = useRef(Date.now())
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const lastActivityRef = useRef(Date.now())
   const pausedTimeRef = useRef(0)
   const [paused, setPaused] = useState(false)
+  const [speaking, setSpeaking] = useState(false)
+  const [voiceEnabled, setVoiceEnabled] = useState(true)
+  const audioRef = useRef<HTMLAudioElement | null>(null)
+
+  // Speak function — calls ElevenLabs TTS
+  async function speak(text: string) {
+    if (!voiceEnabled || !text) return
+    // Cancel any current speech
+    if (audioRef.current) {
+      audioRef.current.pause()
+      audioRef.current = null
+    }
+    setSpeaking(true)
+    try {
+      const res = await fetch('/api/speak', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text }),
+      })
+      if (!res.ok) throw new Error('TTS failed')
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      const audio = new Audio(url)
+      audioRef.current = audio
+      audio.onended = () => { setSpeaking(false); audioRef.current = null }
+      audio.onerror = () => { setSpeaking(false); audioRef.current = null }
+      await audio.play()
+    } catch {
+      setSpeaking(false)
+    }
+  }
 
   const fetchQuestion = useCallback(async (
     phase: Phase,
@@ -119,11 +150,12 @@ export default function SessionPage() {
         historyRef.current.push({ role: 'assistant', content: JSON.stringify(data) })
       }
 
+      const earniText = data.earniSays || ''
       setState(s => ({
         ...s,
         phase,
         phaseLabel: PHASE_LABELS[phase],
-        earniSays: data.earniSays || '',
+        earniSays: earniText,
         question: data.question || null,
         options: data.options || [],
         answer: data.answer || '',
@@ -132,6 +164,11 @@ export default function SessionPage() {
         sessionStarted: true,
         showJars: phase === 'reward',
       }))
+      // Speak Earni's words
+      if (earniText) {
+        const speakText = data.question ? `${earniText} ${data.question}` : earniText
+        speak(speakText)
+      }
     } catch {
       setState(s => ({
         ...s,
@@ -154,7 +191,7 @@ export default function SessionPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Inactivity detection — pause after 45 seconds of no interaction
+  // Inactivity detection - pause after 45 seconds of no interaction
   useEffect(() => {
     const inactivityCheck = setInterval(() => {
       if (paused) return
@@ -162,6 +199,7 @@ export default function SessionPage() {
       if (idle > 45000 && !state.loading && state.sessionStarted) {
         setPaused(true)
         pausedTimeRef.current = Date.now()
+        if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; setSpeaking(false) }
       }
     }, 5000)
     return () => clearInterval(inactivityCheck)
@@ -187,7 +225,7 @@ export default function SessionPage() {
     setPaused(false)
   }
 
-  // Phase transition based on time — check every 3 seconds
+  // Phase transition based on time - check every 3 seconds
   useEffect(() => {
     const phaseCheck = setInterval(() => {
       if (paused) return
@@ -337,6 +375,23 @@ export default function SessionPage() {
               🔥 {state.streakCount} in a row
             </span>
           )}
+          <button
+            onClick={() => {
+              setVoiceEnabled(v => !v)
+              if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; setSpeaking(false) }
+            }}
+            style={{
+              background: 'rgba(255,255,255,0.06)',
+              border: '1px solid rgba(255,255,255,0.1)',
+              borderRadius: '20px',
+              padding: '4px 10px',
+              fontSize: '13px',
+              cursor: 'pointer',
+              color: voiceEnabled ? '#2ec4b6' : 'rgba(255,255,255,0.3)',
+            }}
+          >
+            {voiceEnabled ? (speaking ? '🗣️' : '🔊') : '🔇'}
+          </button>
           <span style={{
             background: 'rgba(46,196,182,0.12)',
             border: '1px solid rgba(46,196,182,0.2)',
@@ -722,7 +777,7 @@ export default function SessionPage() {
                 marginBottom: '8px',
               }}>Session paused</h2>
               <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '15px', marginBottom: '32px', lineHeight: 1.5 }}>
-                Earni noticed you stepped away. No worries — your progress is saved. Ready to jump back in?
+                Earni noticed you stepped away. No worries - your progress is saved. Ready to jump back in?
               </p>
               <button
                 onClick={resumeSession}
