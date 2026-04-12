@@ -11,6 +11,7 @@ interface SessionState {
   earniSays: string
   question: string | null
   visual: Record<string, unknown> | null
+  checkIn: string[]
   options: string[]
   answer: string
   hint: string | null
@@ -63,6 +64,7 @@ export default function SessionPage() {
     earniSays: '',
     question: null,
     visual: null,
+    checkIn: [],
     options: [],
     answer: '',
     hint: null,
@@ -251,6 +253,7 @@ export default function SessionPage() {
         earniSays: earniText,
         question: data.question || null,
         visual: data.visual || null,
+        checkIn: data.checkIn || [],
         options: data.options || [],
         answer: data.answer || '',
         hint: data.hint || null,
@@ -902,28 +905,78 @@ export default function SessionPage() {
           </div>
         )}
 
-        {/* Teaching — Got it button */}
+        {/* Teaching — check-in response buttons */}
         {isTeaching && (
-          <button
-            onClick={() => {
-              lastActivityRef.current = Date.now()
-              historyRef.current.push({ role: 'user', content: 'Got it, I understand. Continue.' })
-              fetchQuestion(state.phase)
-            }}
-            style={{
-              background: 'rgba(46,196,182,0.15)',
-              border: '1px solid rgba(46,196,182,0.3)',
-              borderRadius: '30px',
-              padding: '14px 32px',
-              fontSize: '16px',
-              fontWeight: 800,
-              fontFamily: "'Nunito', sans-serif",
-              color: '#2ec4b6',
-              cursor: 'pointer',
-            }}
-          >
-            Got it - next →
-          </button>
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center' }}>
+            {state.checkIn && state.checkIn.length > 0 ? (
+              state.checkIn.map((option: string, i: number) => (
+                <button
+                  key={i}
+                  onClick={() => {
+                    lastActivityRef.current = Date.now()
+                    historyRef.current.push({ role: 'user', content: `${childName} responded: "${option}"` })
+                    fetchQuestion(state.phase)
+                  }}
+                  style={{
+                    background: i === 0 ? 'rgba(46,196,182,0.15)' : 'rgba(255,255,255,0.06)',
+                    border: i === 0 ? '1px solid rgba(46,196,182,0.3)' : '1px solid rgba(255,255,255,0.1)',
+                    borderRadius: '30px',
+                    padding: '12px 24px',
+                    fontSize: '14px',
+                    fontWeight: 700,
+                    fontFamily: "'Nunito', sans-serif",
+                    color: i === 0 ? '#2ec4b6' : 'rgba(255,255,255,0.6)',
+                    cursor: 'pointer',
+                  }}
+                >
+                  {option}
+                </button>
+              ))
+            ) : (
+              <>
+                <button
+                  onClick={() => {
+                    lastActivityRef.current = Date.now()
+                    historyRef.current.push({ role: 'user', content: `${childName} says they understand. Move to the next step or give a practice question.` })
+                    fetchQuestion(state.phase)
+                  }}
+                  style={{
+                    background: 'rgba(46,196,182,0.15)',
+                    border: '1px solid rgba(46,196,182,0.3)',
+                    borderRadius: '30px',
+                    padding: '12px 24px',
+                    fontSize: '14px',
+                    fontWeight: 700,
+                    fontFamily: "'Nunito', sans-serif",
+                    color: '#2ec4b6',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Makes sense! →
+                </button>
+                <button
+                  onClick={() => {
+                    lastActivityRef.current = Date.now()
+                    historyRef.current.push({ role: 'user', content: `${childName} is confused and needs a different explanation. Try a completely different approach — use a story, analogy, or different visual.` })
+                    fetchQuestion(state.phase)
+                  }}
+                  style={{
+                    background: 'rgba(255,255,255,0.06)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    borderRadius: '30px',
+                    padding: '12px 24px',
+                    fontSize: '14px',
+                    fontWeight: 700,
+                    fontFamily: "'Nunito', sans-serif",
+                    color: 'rgba(255,255,255,0.6)',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Explain differently
+                </button>
+              </>
+            )}
+          </div>
         )}
 
         {/* Type-in answer */}
