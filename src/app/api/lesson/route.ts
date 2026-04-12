@@ -109,18 +109,18 @@ export async function POST(req: NextRequest) {
       messages.push({
         role: 'user',
         content: phase === 'warmup'
-          ? `Start the warm-up rapid fire. ${childName}'s personal best is ${sessionStats.personalBest} correct in a row. Say something like "Right ${childName} — let's wake up that brain. Fast as you can. Go." then give the first question.`
+          ? `Start the warm-up rapid fire. This tests PREVIOUS lessons — NOT today's topic. Drill general knowledge: times tables, number bonds, basic facts ${childName} should already know for Year ${yearLevel}. Personal best is ${sessionStats.personalBest} correct in a row. Say something like "Right ${childName} — let's wake up that brain. Stuff you already know. Fast as you can. Go." then give the first question.`
           : phase === 'closing'
-            ? `Start the closing rapid fire on ${subject}. Say "Before you earn your stars — let's make sure it's locked in. No thinking, just knowing. Go." then give the first question.`
+            ? `Start the closing rapid fire. This tests ONLY what ${childName} just learned TODAY in the ${subject} lesson. Only ask questions from today's lesson content — make sure it's locked in. Say "Last round — let's see if today's lesson stuck. No thinking, just knowing. Go." then give the first question.`
             : phase === 'financial'
-              ? `Connect today's ${subject} lesson to a financial literacy concept. ${childName} earned ${sessionStats.starsEarned} stars so far today.`
-              : `Start the main lesson on ${subject} for Year ${yearLevel}. Introduce the concept conversationally, then give the first problem.`,
+              ? `Now teach a financial literacy concept connected to today's ${subject} lesson. ${childName} earned ${sessionStats.starsEarned} stars so far. TEACH the concept first with real examples using their star earnings, THEN ask questions. Use the teach → practice cycle.`
+              : `Start the main lesson on ${subject} for Year ${yearLevel}. TEACH first — explain the concept clearly with a real-world example before asking any questions. The first 2-3 exchanges should be pure teaching with no questions. Say something like "Today we're going to learn about..."`,
       })
     }
 
     const response = await client.messages.create({
       model: CLAUDE_MODEL,
-      max_tokens: 400,
+      max_tokens: 600,
       system: systemPrompt,
       messages,
     })

@@ -37,8 +37,8 @@ const PHASE_LABELS: Record<Phase, string> = {
 }
 
 const PHASE_TIMES: Record<Phase, number> = {
-  warmup: 4,
-  lesson: 15,
+  warmup: 3,
+  lesson: 12,
   financial: 5,
   closing: 5,
   reward: 3,
