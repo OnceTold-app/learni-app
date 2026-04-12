@@ -807,61 +807,72 @@ export default function SessionPage() {
         </div>
       </div>
 
-      {/* Main content */}
+      {/* Main content — full width layout */}
       <div style={{
         flex: 1,
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px',
-        gap: '24px',
-        maxWidth: '600px',
-        margin: '0 auto',
-        width: '100%',
+        padding: '0',
+        overflow: 'auto',
       }}>
-        {/* Earni avatar + speech */}
-        <div style={{ textAlign: 'center' }}>
+        {/* Earni speech bar — full width */}
+        {state.earniSays && (
           <div style={{
-            width: '72px',
-            height: '72px',
-            borderRadius: '50%',
-            background: 'linear-gradient(145deg, #2ec4b6, #1a9e92)',
+            padding: '16px 32px',
             display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '36px',
-            margin: '0 auto 16px',
-            boxShadow: '0 0 0 6px rgba(46,196,182,0.1)',
+            alignItems: 'flex-start',
+            gap: '14px',
+            background: 'rgba(255,255,255,0.03)',
+            borderBottom: '1px solid rgba(255,255,255,0.05)',
           }}>
-            🤖
-          </div>
-          {state.earniSays && (
             <div style={{
-              background: 'rgba(255,255,255,0.07)',
-              border: '1px solid rgba(255,255,255,0.1)',
-              borderRadius: '16px',
-              padding: '14px 20px',
+              width: '40px',
+              height: '40px',
+              borderRadius: '50%',
+              background: speaking ? 'linear-gradient(145deg, #1ab5a8, #2ec4b6)' : 'linear-gradient(145deg, #2ec4b6, #1a9e92)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '20px',
+              boxShadow: speaking ? '0 0 16px rgba(46,196,182,0.4)' : 'none',
+              transition: 'all 0.3s',
+              flexShrink: 0,
+            }}>
+              🤖
+            </div>
+            <div style={{
               fontSize: '16px',
               fontWeight: 600,
-              lineHeight: 1.55,
-              maxWidth: '400px',
-              margin: '0 auto',
+              lineHeight: 1.6,
               fontFamily: "'Nunito', sans-serif",
+              color: 'rgba(255,255,255,0.9)',
+              flex: 1,
+              paddingTop: '6px',
             }}>
               {state.earniSays}
             </div>
-          )}
-        </div>
+          </div>
+        )}
+
+        {/* Content area — visuals + questions side by side on desktop */}
+        <div className="session-content" style={{
+          flex: 1,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '32px',
+          padding: '24px 32px',
+          flexWrap: 'wrap',
+        }}>
 
         {/* Visual maths aid */}
         {state.visual && (
-          <div style={{ width: '100%', maxWidth: '400px' }}>
+          <div style={{ flex: '1 1 300px', maxWidth: '440px', minWidth: '280px' }}>
             <MathsVisual visual={state.visual as { type: string; [key: string]: unknown }} />
           </div>
         )}
 
-        {/* Teaching — no question, just Earni talking */}
+        {/* Teaching — Got it button */}
         {isTeaching && (
           <button
             onClick={() => {
@@ -891,8 +902,10 @@ export default function SessionPage() {
             background: 'rgba(255,255,255,0.04)',
             border: '1px solid rgba(255,255,255,0.08)',
             borderRadius: '20px',
-            padding: '24px',
-            width: '100%',
+            padding: '28px 32px',
+            flex: '1 1 340px',
+            maxWidth: '500px',
+            minWidth: '280px',
             textAlign: 'center',
           }}>
             <div style={{
@@ -1014,8 +1027,10 @@ export default function SessionPage() {
             background: 'rgba(255,255,255,0.04)',
             border: '1px solid rgba(255,255,255,0.08)',
             borderRadius: '20px',
-            padding: '24px',
-            width: '100%',
+            padding: '28px 32px',
+            flex: '1 1 340px',
+            maxWidth: '500px',
+            minWidth: '280px',
             textAlign: 'center',
           }}>
             <div style={{
@@ -1121,6 +1136,8 @@ export default function SessionPage() {
             )}
           </div>
         )}
+
+        </div>{/* end session-content */}
 
         {/* Jar allocation (reward phase) */}
         {state.showJars && (
@@ -1406,6 +1423,11 @@ export default function SessionPage() {
           40% { transform: translateX(8px); }
           60% { transform: translateX(-6px); }
           80% { transform: translateX(6px); }
+        }
+        .session-content {
+          max-width: 1000px;
+          margin: 0 auto;
+          width: 100%;
         }
       `}</style>
     </div>
