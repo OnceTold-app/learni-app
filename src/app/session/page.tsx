@@ -51,6 +51,8 @@ export default function SessionPage() {
   const yearLevel = typeof window !== 'undefined' ? parseInt(localStorage.getItem('learni_year_level') || '5') : 5
   const subject = typeof window !== 'undefined' ? localStorage.getItem('learni_subject') || 'Maths' : 'Maths'
   const [focusAreas, setFocusAreas] = useState<string[]>([])
+  const [audioChecked, setAudioChecked] = useState(false)
+  const [audioCheckPlaying, setAudioCheckPlaying] = useState(false)
 
   const [state, setState] = useState<SessionState>({
     phase: 'warmup',
@@ -208,9 +210,9 @@ export default function SessionPage() {
     }
   }, [])
 
-  // Start session
+  // Start session — only after audio check
   useEffect(() => {
-    if (!state.sessionStarted) {
+    if (!state.sessionStarted && audioChecked) {
       fetchQuestion('warmup')
       phaseStartRef.current = Date.now()
       timerRef.current = setInterval(() => {
@@ -219,7 +221,7 @@ export default function SessionPage() {
     }
     return () => { if (timerRef.current) clearInterval(timerRef.current) }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [audioChecked])
 
   // Inactivity detection - pause after 45 seconds of no interaction
   useEffect(() => {
@@ -377,6 +379,139 @@ export default function SessionPage() {
     if (!typedAnswer.trim() || state.loading || state.selectedAnswer) return
     handleAnswer(typedAnswer.trim())
     setTypedAnswer('')
+  }
+
+  async function handleAudioCheck() {
+    setAudioCheckPlaying(true)
+    try {
+      const res = await fetch('/api/speak', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: `Hey ${childName}! Can you hear me? If you can, we're all set. Let's do this!` }),
+      })
+      if (res.ok) {
+        const blob = await res.blob()
+        const url = URL.createObjectURL(blob)
+        const audio = new Audio(url)
+        audio.onended = () => setAudioCheckPlaying(false)
+        audio.onerror = () => setAudioCheckPlaying(false)
+        await audio.play()
+      } else {
+        setAudioCheckPlaying(false)
+      }
+    } catch {
+      setAudioCheckPlaying(false)
+    }
+  }
+
+  // Audio check screen
+  if (!audioChecked) {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: '#0d2b28',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontFamily: "'Plus Jakarta Sans', sans-serif",
+        padding: '24px',
+      }}>
+        <div style={{ maxWidth: '420px', width: '100%', textAlign: 'center' }}>
+          <div style={{
+            width: '100px',
+            height: '100px',
+            borderRadius: '50%',
+            background: 'linear-gradient(145deg, #2ec4b6, #1a9e92)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '50px',
+            margin: '0 auto 24px',
+            boxShadow: '0 0 40px rgba(46,196,182,0.2)',
+          }}>🤖</div>
+
+          <h1 style={{
+            fontFamily: "'Nunito', sans-serif",
+            fontSize: '26px',
+            fontWeight: 900,
+            color: 'white',
+            marginBottom: '8px',
+          }}>
+            Before we start, {childName}...
+          </h1>
+
+          <div style={{
+            background: 'rgba(245,166,35,0.1)',
+            border: '1px solid rgba(245,166,35,0.2)',
+            borderRadius: '16px',
+            padding: '16px 20px',
+            marginBottom: '24px',
+          }}>
+            <div style={{ fontSize: '24px', marginBottom: '6px' }}>🔊</div>
+            <p style={{ color: '#f5a623', fontSize: '15px', fontWeight: 600, margin: 0 }}>
+              Turn your volume up! Earni talks to you during the session.
+            </p>
+          </div>
+
+          <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '14px', marginBottom: '24px' }}>
+            Tap the button below to check your sound is working.
+          </p>
+
+          <button
+            onClick={handleAudioCheck}
+            disabled={audioCheckPlaying}
+            style={{
+              width: '100%',
+              padding: '16px',
+              background: audioCheckPlaying ? 'rgba(46,196,182,0.3)' : 'rgba(46,196,182,0.15)',
+              border: '1.5px solid rgba(46,196,182,0.3)',
+              borderRadius: '30px',
+              fontFamily: "'Nunito', sans-serif",
+              fontSize: '16px',
+              fontWeight: 900,
+              color: '#2ec4b6',
+              cursor: audioCheckPlaying ? 'default' : 'pointer',
+              marginBottom: '12px',
+            }}
+          >
+            {audioCheckPlaying ? '🗣️ Earni is talking...' : '🔊 Test my sound'}
+          </button>
+
+          <button
+            onClick={() => setAudioChecked(true)}
+            style={{
+              width: '100%',
+              padding: '18px',
+              background: 'linear-gradient(135deg, #2ec4b6, #1ab5a8)',
+              color: 'white',
+              border: 'none',
+              borderRadius: '30px',
+              fontFamily: "'Nunito', sans-serif",
+              fontSize: '18px',
+              fontWeight: 900,
+              cursor: 'pointer',
+              boxShadow: '0 8px 32px rgba(46,196,182,0.3)',
+            }}
+          >
+            I can hear Earni — let&apos;s go! →
+          </button>
+
+          <button
+            onClick={() => { setVoiceEnabled(false); setAudioChecked(true) }}
+            style={{
+              marginTop: '12px',
+              background: 'none',
+              border: 'none',
+              color: 'rgba(255,255,255,0.25)',
+              fontSize: '13px',
+              cursor: 'pointer',
+            }}
+          >
+            Continue without sound
+          </button>
+        </div>
+      </div>
+    )
   }
 
   return (
