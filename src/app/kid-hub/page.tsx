@@ -18,6 +18,7 @@ export default function KidHubPage() {
   const [streak, setStreak] = useState(0)
   const [sessions, setSessions] = useState<SessionData[]>([])
   const [loading, setLoading] = useState(true)
+  const [badges, setBadges] = useState<Array<{ id: string; name: string; emoji: string; desc: string; earned: boolean; isNew: boolean }>>([])
 
   useEffect(() => {
     const id = localStorage.getItem('learni_child_id')
@@ -39,6 +40,12 @@ export default function KidHubPage() {
         setStreak(data.streak || 0)
         setSessions(data.sessions || [])
         if (data.avatarUrl) setAvatarUrl(data.avatarUrl)
+      }
+      // Load achievements
+      const badgeRes = await fetch(`/api/kid/achievements?childId=${childId}`)
+      if (badgeRes.ok) {
+        const badgeData = await badgeRes.json()
+        setBadges(badgeData.badges || [])
       }
     } catch { /* silent */ }
     setLoading(false)
@@ -200,6 +207,33 @@ export default function KidHubPage() {
                   </div>
                 )
               })}
+            </div>
+          </div>
+        )}
+
+        {/* Achievements */}
+        {badges.length > 0 && (
+          <div style={{ marginTop: '24px' }}>
+            <h2 style={{ fontFamily: "'Nunito', sans-serif", fontSize: '16px', fontWeight: 800, color: 'rgba(255,255,255,0.5)', marginBottom: '12px' }}>Achievements</h2>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              {badges.map(b => (
+                <div key={b.id} style={{
+                  background: b.earned ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.02)',
+                  border: b.isNew ? '1.5px solid #f5a623' : b.earned ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(255,255,255,0.04)',
+                  borderRadius: '14px',
+                  padding: '10px 14px',
+                  textAlign: 'center',
+                  minWidth: '80px',
+                  opacity: b.earned ? 1 : 0.35,
+                  position: 'relative',
+                }}>
+                  {b.isNew && (
+                    <div style={{ position: 'absolute', top: '-6px', right: '-6px', background: '#f5a623', color: 'white', borderRadius: '10px', fontSize: '9px', fontWeight: 800, padding: '2px 6px' }}>NEW!</div>
+                  )}
+                  <div style={{ fontSize: '24px' }}>{b.emoji}</div>
+                  <div style={{ fontSize: '10px', fontWeight: 700, color: 'rgba(255,255,255,0.6)', marginTop: '4px' }}>{b.name}</div>
+                </div>
+              ))}
             </div>
           </div>
         )}
