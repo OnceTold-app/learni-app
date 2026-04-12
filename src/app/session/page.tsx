@@ -397,6 +397,12 @@ export default function SessionPage() {
         borderBottom: '1px solid rgba(255,255,255,0.08)',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <button
+            onClick={() => { setPaused(true); pausedTimeRef.current = Date.now(); if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; setSpeaking(false) } }}
+            style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', fontSize: '18px', cursor: 'pointer', padding: '4px' }}
+          >
+            ⏸
+          </button>
           <span style={{ fontSize: '14px', fontWeight: 900, fontFamily: "'Nunito', sans-serif" }}>
             {state.phaseLabel}
           </span>
