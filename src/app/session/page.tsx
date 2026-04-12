@@ -77,6 +77,9 @@ export default function SessionPage() {
   const phaseStartRef = useRef(Date.now())
   const sessionStartRef = useRef(Date.now())
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const lastActivityRef = useRef(Date.now())
+  const pausedTimeRef = useRef(0)
+  const [paused, setPaused] = useState(false)
 
   const fetchQuestion = useCallback(async (
     phase: Phase,
@@ -151,9 +154,43 @@ export default function SessionPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Phase transition based on time - check every 3 seconds
+  // Inactivity detection — pause after 45 seconds of no interaction
+  useEffect(() => {
+    const inactivityCheck = setInterval(() => {
+      if (paused) return
+      const idle = Date.now() - lastActivityRef.current
+      if (idle > 45000 && !state.loading && state.sessionStarted) {
+        setPaused(true)
+        pausedTimeRef.current = Date.now()
+      }
+    }, 5000)
+    return () => clearInterval(inactivityCheck)
+  }, [paused, state.loading, state.sessionStarted])
+
+  // Also pause on visibility change (tab switch, screen lock)
+  useEffect(() => {
+    function handleVisibility() {
+      if (document.hidden && !paused && state.sessionStarted) {
+        setPaused(true)
+        pausedTimeRef.current = Date.now()
+      }
+    }
+    document.addEventListener('visibilitychange', handleVisibility)
+    return () => document.removeEventListener('visibilitychange', handleVisibility)
+  }, [paused, state.sessionStarted])
+
+  function resumeSession() {
+    // Adjust phase start time by the paused duration so timer doesn't skip ahead
+    const pausedDuration = Date.now() - pausedTimeRef.current
+    phaseStartRef.current += pausedDuration
+    lastActivityRef.current = Date.now()
+    setPaused(false)
+  }
+
+  // Phase transition based on time — check every 3 seconds
   useEffect(() => {
     const phaseCheck = setInterval(() => {
+      if (paused) return
       const phaseElapsed = (Date.now() - phaseStartRef.current) / 60000
       const limit = PHASE_TIMES[state.phase]
 
@@ -172,10 +209,11 @@ export default function SessionPage() {
       }
     }, 3000)
     return () => clearInterval(phaseCheck)
-  }, [state.phase, state.loading, fetchQuestion])
+  }, [state.phase, state.loading, fetchQuestion, paused])
 
   function handleAnswer(selected: string) {
     if (state.loading || state.selectedAnswer) return
+    lastActivityRef.current = Date.now()
 
     const isCorrect = selected.toLowerCase().trim() === state.answer.toLowerCase().trim()
     const newStreak = isCorrect ? state.streakCount + 1 : 0
@@ -361,10 +399,11 @@ export default function SessionPage() {
           )}
         </div>
 
-        {/* Teaching — no question, just Earni talking */}
+        {/* Teaching - no question, just Earni talking */}
         {isTeaching && (
           <button
             onClick={() => {
+              lastActivityRef.current = Date.now()
               historyRef.current.push({ role: 'user', content: 'Got it, I understand. Continue.' })
               fetchQuestion(state.phase)
             }}
@@ -657,6 +696,55 @@ export default function SessionPage() {
               ))}
             </div>
             Earni is thinking...
+          </div>
+        )}
+
+        {/* Pause overlay */}
+        {paused && (
+          <div style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(13,43,40,0.95)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 200,
+          }}>
+            <div style={{ textAlign: 'center', maxWidth: '400px', padding: '24px' }}>
+              <div style={{ fontSize: '64px', marginBottom: '16px' }}>⏸️</div>
+              <h2 style={{
+                fontFamily: "'Nunito', sans-serif",
+                fontSize: '28px',
+                fontWeight: 900,
+                color: 'white',
+                marginBottom: '8px',
+              }}>Session paused</h2>
+              <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '15px', marginBottom: '32px', lineHeight: 1.5 }}>
+                Earni noticed you stepped away. No worries — your progress is saved. Ready to jump back in?
+              </p>
+              <button
+                onClick={resumeSession}
+                style={{
+                  padding: '16px 40px',
+                  background: 'linear-gradient(135deg, #2ec4b6, #1ab5a8)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '30px',
+                  fontFamily: "'Nunito', sans-serif",
+                  fontSize: '18px',
+                  fontWeight: 900,
+                  cursor: 'pointer',
+                  boxShadow: '0 8px 32px rgba(46,196,182,0.3)',
+                }}
+              >
+                I&apos;m back! →
+              </button>
+              <div style={{ marginTop: '16px' }}>
+                <a href="/kid-hub" style={{ color: 'rgba(255,255,255,0.25)', fontSize: '13px', textDecoration: 'none' }}>End session</a>
+              </div>
+            </div>
           </div>
         )}
 
