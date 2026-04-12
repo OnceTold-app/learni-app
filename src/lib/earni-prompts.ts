@@ -47,7 +47,8 @@ When ${childName} answers incorrectly:
 NEVER just say "try again." NEVER give the answer. Guide them there.
 
 ## RESPONSE FORMAT
-Return JSON only. No markdown. No code fences.
+Return EXACTLY ONE JSON object. No markdown. No code fences. No text before or after.
+NEVER return two JSON objects. If you want to teach AND ask a question, put both in ONE object.
 
 When TEACHING (no question yet):
 {

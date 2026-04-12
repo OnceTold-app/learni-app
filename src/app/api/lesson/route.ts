@@ -144,15 +144,53 @@ export async function POST(req: NextRequest) {
 
     const text = response.content[0].type === 'text' ? response.content[0].text : '{}'
 
-    // Try to parse JSON response
+    // Parse JSON response — handle multiple JSON objects from Claude
     try {
-      // Extract JSON from response (handle if Claude wraps it)
-      const jsonMatch = text.match(/\{[\s\S]*\}/)
-      const parsed = jsonMatch ? JSON.parse(jsonMatch[0]) : { earniSays: text }
+      // Try parsing the whole thing first
+      const parsed = JSON.parse(text)
       return NextResponse.json({ phase, ...parsed })
     } catch {
-      // If JSON parsing fails, return raw text
-      return NextResponse.json({ phase, earniSays: text })
+      // Find the first complete JSON object
+      let depth = 0
+      let start = -1
+      for (let i = 0; i < text.length; i++) {
+        if (text[i] === '{') {
+          if (depth === 0) start = i
+          depth++
+        } else if (text[i] === '}') {
+          depth--
+          if (depth === 0 && start >= 0) {
+            try {
+              const parsed = JSON.parse(text.slice(start, i + 1))
+              // If this is a teaching response with no question, check if there's a second JSON with the question
+              if (!parsed.question && parsed.earniSays) {
+                // Look for the next JSON object
+                const remaining = text.slice(i + 1)
+                let d2 = 0, s2 = -1
+                for (let j = 0; j < remaining.length; j++) {
+                  if (remaining[j] === '{') { if (d2 === 0) s2 = j; d2++ }
+                  else if (remaining[j] === '}') {
+                    d2--
+                    if (d2 === 0 && s2 >= 0) {
+                      try {
+                        const second = JSON.parse(remaining.slice(s2, j + 1))
+                        // Merge: use first earniSays, second's question/answer/visual
+                        return NextResponse.json({ phase, ...parsed, ...second, earniSays: parsed.earniSays + (second.earniSays ? ' ' + second.earniSays : '') })
+                      } catch { /* use first only */ }
+                      break
+                    }
+                  }
+                }
+              }
+              return NextResponse.json({ phase, ...parsed })
+            } catch { /* keep looking */ }
+            start = -1
+          }
+        }
+      }
+      // Last resort — strip JSON artifacts from text and return as earniSays
+      const cleaned = text.replace(/[{}"\[\]]/g, '').replace(/earniSays:|question:|answer:|options:|visual:|inputType:|stars:|phase:/g, '').trim()
+      return NextResponse.json({ phase, earniSays: cleaned || 'Let me think about that...' })
     }
   } catch (error) {
     console.error('Lesson API error:', error)
