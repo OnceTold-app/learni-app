@@ -23,31 +23,23 @@ export async function POST(req: NextRequest) {
       process.env.SUPABASE_SERVICE_ROLE_KEY || ''
     )
 
-    // Save session
+    // Save session (column names match actual schema)
     const { data: session, error: sessionError } = await supabase
       .from('sessions')
       .insert({
         learner_id: childId,
-        duration_secs: duration || 0,
+        duration_seconds: duration || 0,
         stars_earned: starsEarned || 0,
-        correct_count: correctCount || 0,
-        total_questions: totalQuestions || 0,
-        subjects_covered: subjects || [],
+        questions_correct: correctCount || 0,
+        questions_total: totalQuestions || 0,
+        subject: (subjects || ['Maths']).join(', '),
       })
       .select()
       .single()
 
     if (sessionError) {
       console.error('Session save error:', sessionError)
-      // Try with minimal columns (schema may differ)
-      const { error: retryError } = await supabase
-        .from('sessions')
-        .insert({ learner_id: childId })
-
-      if (retryError) {
-        console.error('Session retry error:', retryError)
-        return NextResponse.json({ error: 'Failed to save session' }, { status: 500 })
-      }
+      return NextResponse.json({ error: 'Failed to save session' }, { status: 500 })
     }
 
     // Add to star ledger (append-only)

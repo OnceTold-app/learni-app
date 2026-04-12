@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
   // Get sessions
   const { data: sessions } = await supabase
     .from('sessions')
-    .select('id, created_at, duration_secs, stars_earned, subjects_covered, correct_count, total_questions')
+    .select('id, created_at, duration_seconds, stars_earned, subject, questions_correct, questions_total')
     .eq('learner_id', childId)
     .order('created_at', { ascending: false })
     .limit(10)

@@ -15,11 +15,11 @@ interface Child {
 interface SessionSummary {
   id: string
   created_at: string
-  duration_secs: number
+  duration_seconds: number
   stars_earned: number
-  subjects_covered: string[]
-  correct_count: number
-  total_questions: number
+  subject: string
+  questions_correct: number
+  questions_total: number
 }
 
 export default function DashboardPage() {
@@ -288,12 +288,12 @@ export default function DashboardPage() {
                   }}>
                     <div>
                       <div style={{ fontSize: '14px', fontWeight: 700, color: '#0d2b28' }}>
-                        {s.subjects_covered?.join(', ') || 'Session'}
+                        {s.subject || 'Session'}
                       </div>
                       <div style={{ fontSize: '12px', color: '#5a8a84' }}>
                         {new Date(s.created_at).toLocaleDateString('en-NZ', { weekday: 'short', day: 'numeric', month: 'short' })}
-                        {' · '}{Math.round(s.duration_secs / 60)} min
-                        {' · '}{s.correct_count}/{s.total_questions} correct
+                        {' · '}{Math.round((s.duration_seconds || 0) / 60)} min
+                        {' · '}{s.questions_correct || 0}/{s.questions_total || 0} correct
                       </div>
                     </div>
                     <div style={{

@@ -6,8 +6,8 @@ interface SessionData {
   id: string
   created_at: string
   stars_earned: number
-  subjects_covered: string[]
-  duration_secs: number
+  subject: string
+  duration_seconds: number
 }
 
 export default function KidHubPage() {
@@ -175,7 +175,7 @@ export default function KidHubPage() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {sessions.slice(0, 5).map(s => {
                 const date = new Date(s.created_at)
-                const mins = Math.round((s.duration_secs || 0) / 60)
+                const mins = Math.round((s.duration_seconds || 0) / 60)
                 return (
                   <div key={s.id} style={{
                     background: 'rgba(255,255,255,0.05)',
@@ -188,7 +188,7 @@ export default function KidHubPage() {
                   }}>
                     <div>
                       <div style={{ fontSize: '14px', fontWeight: 700, color: 'rgba(255,255,255,0.8)' }}>
-                        {(s.subjects_covered || []).join(', ') || 'Session'}
+                        {s.subject || 'Session'}
                       </div>
                       <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)', marginTop: '2px' }}>
                         {date.toLocaleDateString('en-NZ', { day: 'numeric', month: 'short' })} · {mins} min
