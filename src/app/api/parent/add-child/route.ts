@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
   if (!account) return NextResponse.json({ error: 'Account not found' }, { status: 404 })
 
   const body = await req.json()
-  const { name, age, yearLevel, pin, language } = body
+  const { name, age, yearLevel, pin, language, sessionLanguage } = body
 
   if (!name || !yearLevel) {
     return NextResponse.json({ error: 'Name and year level required' }, { status: 400 })
@@ -50,8 +50,10 @@ export async function POST(req: NextRequest) {
       year_level: yearLevel,
       curriculum: 'nz',
       primary_language: language || 'en',
+      session_language: sessionLanguage || 'en',
       input_mode: 'tap',
       pin: pin || '0000',
+      has_onboarded: false,
     })
     .select()
     .single()

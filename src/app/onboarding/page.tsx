@@ -16,12 +16,23 @@ const LANGUAGES = [
   { value: 'other', label: 'Other' },
 ]
 
+const SESSION_LANGUAGES = [
+  { value: 'en', label: 'English' },
+  { value: 'mi', label: 'Te Reo Māori' },
+  { value: 'af', label: 'Afrikaans' },
+  { value: 'zh', label: 'Mandarin' },
+  { value: 'hi', label: 'Hindi' },
+  { value: 'fr', label: 'French' },
+  { value: 'es', label: 'Spanish' },
+]
+
 export default function OnboardingPage() {
   const [name, setName] = useState('')
   const [age, setAge] = useState('')
   const [yearLevel, setYearLevel] = useState('')
   const [pin, setPin] = useState('')
   const [language, setLanguage] = useState('en')
+  const [sessionLanguage, setSessionLanguage] = useState('en')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
@@ -49,6 +60,7 @@ export default function OnboardingPage() {
           yearLevel: parseInt(yearLevel),
           pin: pin || '0000',
           language,
+          sessionLanguage,
         }),
       })
 
@@ -152,13 +164,25 @@ export default function OnboardingPage() {
 
           <div>
             <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#0d2b28', marginBottom: '6px' }}>
-              Language at home
+              Language spoken at home
             </label>
             <select value={language} onChange={e => setLanguage(e.target.value)} style={{ ...inputStyle, cursor: 'pointer' }}>
               {LANGUAGES.map(l => (
                 <option key={l.value} value={l.value}>{l.label}</option>
               ))}
             </select>
+          </div>
+
+          <div>
+            <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#0d2b28', marginBottom: '6px' }}>
+              Earni should teach in
+            </label>
+            <select value={sessionLanguage} onChange={e => setSessionLanguage(e.target.value)} style={{ ...inputStyle, cursor: 'pointer' }}>
+              {SESSION_LANGUAGES.map(l => (
+                <option key={l.value} value={l.value}>{l.label}</option>
+              ))}
+            </select>
+            <p style={{ fontSize: '12px', color: '#8abfba', marginTop: '4px' }}>Earni adapts naturally — if your child mixes languages, Earni keeps up.</p>
           </div>
 
           <div>
