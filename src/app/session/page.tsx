@@ -253,6 +253,26 @@ export default function SessionPage() {
     }
   }, [childName, yearLevel, subject, state.correctCount, state.totalQuestions, state.streakCount, state.personalBest, state.starsEarned])
 
+  // Auto-save on tab close / navigate away
+  useEffect(() => {
+    function saveOnExit() {
+      const childId = localStorage.getItem('learni_child_id')
+      if (childId && state.totalQuestions > 0) {
+        navigator.sendBeacon('/api/session/complete', JSON.stringify({
+          childId,
+          starsEarned: state.starsEarned,
+          correctCount: state.correctCount,
+          totalQuestions: state.totalQuestions,
+          subjects: [subject],
+          duration: Math.floor((Date.now() - sessionStartRef.current) / 1000),
+          jarAllocation: { save: state.jarSave, spend: state.jarSpend, give: state.jarGive },
+        }))
+      }
+    }
+    window.addEventListener('beforeunload', saveOnExit)
+    return () => window.removeEventListener('beforeunload', saveOnExit)
+  })
+
   // Load focus areas
   useEffect(() => {
     const childId = typeof window !== 'undefined' ? localStorage.getItem('learni_child_id') : null
@@ -1239,7 +1259,30 @@ export default function SessionPage() {
                 I&apos;m back! →
               </button>
               <div style={{ marginTop: '16px' }}>
-                <a href="/kid-hub" style={{ color: 'rgba(255,255,255,0.25)', fontSize: '13px', textDecoration: 'none' }}>End session</a>
+                <button
+                  onClick={async () => {
+                    // Save session before leaving
+                    try {
+                      await fetch('/api/session/complete', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                          childId: localStorage.getItem('learni_child_id'),
+                          starsEarned: state.starsEarned,
+                          correctCount: state.correctCount,
+                          totalQuestions: state.totalQuestions,
+                          subjects: [subject],
+                          duration: Math.floor((Date.now() - sessionStartRef.current) / 1000),
+                          jarAllocation: { save: state.jarSave, spend: state.jarSpend, give: state.jarGive },
+                        }),
+                      })
+                    } catch { /* best effort */ }
+                    window.location.href = '/kid-hub'
+                  }}
+                  style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.25)', fontSize: '13px', cursor: 'pointer', textDecoration: 'none' }}
+                >
+                  End session
+                </button>
               </div>
             </div>
           </div>
