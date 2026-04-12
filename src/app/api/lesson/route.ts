@@ -92,21 +92,35 @@ export async function POST(req: NextRequest) {
     const messages: Array<{ role: 'user' | 'assistant'; content: string }> = [...history]
 
     if (answer && currentQuestion) {
-      const isCorrect = answer.toLowerCase().trim() === currentCorrectAnswer?.toLowerCase().trim()
-      messages.push({
-        role: 'user',
-        content: isCorrect
-          ? `${childName} answered "${answer}" to "${currentQuestion}" — CORRECT. ${
-              phase === 'warmup' || phase === 'closing'
-                ? `Streak: ${sessionStats.streakCount + 1}. Generate next rapid fire question immediately.`
-                : `Stars: +4. Generate the next problem.`
-            }`
-          : `${childName} answered "${answer}" to "${currentQuestion}" — INCORRECT. The correct answer was "${currentCorrectAnswer}". ${
-              phase === 'warmup' || phase === 'closing'
-                ? `Streak broken. Just say "Again." and give the same question back.`
-                : `Use the misconception engine: identify what they likely confused, explain from a different angle, then give a simpler version of the same concept.`
-            }`,
-      })
+      const trimmedAnswer = answer.toLowerCase().trim()
+      const trimmedCorrect = currentCorrectAnswer?.toLowerCase().trim() || ''
+      const isCorrect = trimmedAnswer === trimmedCorrect
+
+      // Detect if the child is asking for help instead of answering
+      const helpPhrases = ['help', 'hint', 'i dont know', "i don't know", 'idk', 'stuck', 'confused', 'what', 'how', 'why', 'explain', 'huh', '?', 'please help']
+      const isAskingForHelp = helpPhrases.some(p => trimmedAnswer.includes(p)) || trimmedAnswer === '?'
+
+      if (isAskingForHelp) {
+        messages.push({
+          role: 'user',
+          content: `${childName} is asking for help with "${currentQuestion}". They said: "${answer}". Be warm and encouraging. Give them a helpful hint WITHOUT giving the answer directly. Guide them toward the answer step by step. Remember: you're their supportive tutor, not a quiz master.`,
+        })
+      } else {
+        messages.push({
+          role: 'user',
+          content: isCorrect
+            ? `${childName} answered "${answer}" to "${currentQuestion}" — CORRECT! ${
+                phase === 'warmup' || phase === 'closing'
+                  ? `Streak: ${sessionStats.streakCount + 1}. Celebrate briefly ("Nice one!", "You got it!") then give the next question.`
+                  : `Stars: +4. Celebrate! Then give the next problem.`
+              }`
+            : `${childName} answered "${answer}" to "${currentQuestion}" — INCORRECT. The correct answer was "${currentCorrectAnswer}". ${
+                phase === 'warmup' || phase === 'closing'
+                  ? `Be kind: "Not quite! Let's try that one again." Give the same question back.`
+                  : `Use the misconception engine: be warm and encouraging, identify what they likely confused, explain from a different angle, then give a simpler version of the same concept. NEVER make them feel bad.`
+              }`,
+        })
+      }
     } else if (messages.length === 0) {
       // First question of this phase
       messages.push({

@@ -279,6 +279,15 @@ export default function SessionPage() {
     setShowHintOffer(false)
     if (hintTimerRef.current) clearTimeout(hintTimerRef.current)
 
+    // Check if kid is asking for help instead of answering
+    const helpWords = ['help', 'hint', 'idk', 'stuck', 'confused', "don't know", 'dont know', 'what', 'how do', 'explain', '?']
+    const isHelp = helpWords.some(w => selected.toLowerCase().includes(w))
+    if (isHelp && (state.phase === 'lesson' || state.phase === 'financial')) {
+      // Send to Claude as a help request, not a wrong answer
+      fetchQuestion(state.phase, selected, state.question || '', state.answer)
+      return
+    }
+
     const isCorrect = selected.toLowerCase().trim() === state.answer.toLowerCase().trim()
     const newStreak = isCorrect ? state.streakCount + 1 : 0
     const newPB = Math.max(state.personalBest, newStreak)
