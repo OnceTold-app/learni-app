@@ -181,15 +181,9 @@ export default function SessionPage() {
         const speakText = data.question ? `${earniText} ${data.question}` : earniText
         speak(speakText)
       }
-      // Start hint offer timer for lesson/financial questions (not rapid fire)
+      // Reset hint timer
       setShowHintOffer(false)
       if (hintTimerRef.current) clearTimeout(hintTimerRef.current)
-      if (data.question && phase !== 'warmup' && phase !== 'closing') {
-        hintTimerRef.current = setTimeout(() => {
-          setShowHintOffer(true)
-          speak('Need a hint?')
-        }, 8000)
-      }
     } catch {
       setState(s => ({
         ...s,
