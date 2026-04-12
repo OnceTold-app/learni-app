@@ -56,6 +56,8 @@ export default function SessionPage() {
   const [focusAreas, setFocusAreas] = useState<string[]>([])
   const [weakTopics, setWeakTopics] = useState<string[]>([])
   const [reviewTopics, setReviewTopics] = useState<string[]>([])
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [childProfile, setChildProfile] = useState<any>({})
   const masteryResultsRef = useRef<Array<{ topic: string; correct: boolean }>>([])
   const [audioChecked, setAudioChecked] = useState(false)
   const [audioCheckPlaying, setAudioCheckPlaying] = useState(false)
@@ -233,6 +235,7 @@ export default function SessionPage() {
           weakTopics,
           reviewTopics,
           baselineLevel: typeof window !== 'undefined' ? localStorage.getItem('learni_baseline_level') : null,
+          childProfile,
           history: historyRef.current.slice(-8),
           answer,
           currentQuestion,
@@ -336,6 +339,12 @@ export default function SessionPage() {
         .then(d => {
           setWeakTopics(d.weakTopics || [])
           setReviewTopics(d.reviewTopics || [])
+        })
+        .catch(() => {})
+      fetch(`/api/kid/stats?childId=${childId}`)
+        .then(r => r.json())
+        .then(d => {
+          if (d.childProfile) setChildProfile(d.childProfile)
         })
         .catch(() => {})
     }

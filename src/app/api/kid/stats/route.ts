@@ -64,16 +64,22 @@ export async function GET(req: NextRequest) {
     avatarUrl = profile.avatar_url || null
   }
 
-  // Also check learners table for avatar_data
-  if (!avatarUrl) {
-    const { data: learner } = await supabase
-      .from('learners')
-      .select('avatar_data')
-      .eq('id', childId)
-      .single()
-    if (learner?.avatar_data?.url) {
-      avatarUrl = learner.avatar_data.url
-    }
+  // Also check learners table for avatar_data + profile
+  const { data: learnerData } = await supabase
+    .from('learners')
+    .select('avatar_data, interests, personality, learning_challenges, parent_goals')
+    .eq('id', childId)
+    .single()
+
+  if (!avatarUrl && learnerData?.avatar_data?.url) {
+    avatarUrl = learnerData.avatar_data.url
+  }
+
+  const childProfile = {
+    interests: learnerData?.interests || [],
+    personality: learnerData?.personality || null,
+    challenges: learnerData?.learning_challenges || null,
+    parentGoals: learnerData?.parent_goals || null,
   }
 
   return NextResponse.json({
@@ -83,5 +89,6 @@ export async function GET(req: NextRequest) {
     sessionCount: (sessions || []).length,
     jars: jars || { save_pct: 50, spend_pct: 30, give_pct: 20 },
     avatarUrl,
+    childProfile,
   })
 }

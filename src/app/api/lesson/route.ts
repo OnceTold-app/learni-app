@@ -35,6 +35,13 @@ interface LessonRequest {
   // Mastery data
   weakTopics?: string[]
   reviewTopics?: string[]
+  // Child profile
+  childProfile?: {
+    interests?: string[]
+    personality?: string
+    challenges?: string
+    parentGoals?: string
+  }
 }
 
 export async function POST(req: NextRequest) {
@@ -54,7 +61,16 @@ export async function POST(req: NextRequest) {
       focusAreas = [],
       weakTopics = [],
       reviewTopics = [],
+      childProfile = {},
     } = body
+
+    // Build child context string
+    const profileContext = [
+      childProfile?.interests?.length ? `Interests: ${childProfile.interests.join(', ')}. Use these in examples!` : '',
+      childProfile?.personality ? `Personality: ${childProfile.personality}. Adapt your pace and style.` : '',
+      childProfile?.challenges ? `Learning note: ${childProfile.challenges}. Be extra patient and use more visuals.` : '',
+      childProfile?.parentGoals ? `Parent's goal: ${childProfile.parentGoals}` : '',
+    ].filter(Boolean).join(' ')
 
     // Build the system prompt based on phase
     let systemPrompt: string
@@ -63,7 +79,7 @@ export async function POST(req: NextRequest) {
         systemPrompt = rapidFirePrompt(childName, yearLevel, drillTopics.length > 0 ? drillTopics : ['times tables', 'number bonds'])
         break
       case 'lesson':
-        systemPrompt = tutorPrompt(childName, yearLevel, subject)
+        systemPrompt = tutorPrompt(childName, yearLevel, subject) + (profileContext ? `\n\n## CHILD PROFILE\n${profileContext}` : '')
         break
       case 'financial': {
         const today = new Date()
