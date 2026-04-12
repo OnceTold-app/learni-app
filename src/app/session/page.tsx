@@ -679,6 +679,31 @@ export default function SessionPage() {
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <button
+            onClick={async () => {
+              if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; setSpeaking(false) }
+              if (recognitionRef.current) { try { recognitionRef.current.stop() } catch { /* */ } }
+              try {
+                await fetch('/api/session/complete', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    childId: localStorage.getItem('learni_child_id'),
+                    starsEarned: state.starsEarned,
+                    correctCount: state.correctCount,
+                    totalQuestions: state.totalQuestions,
+                    subjects: [subject],
+                    duration: Math.floor((Date.now() - sessionStartRef.current) / 1000),
+                    jarAllocation: { save: state.jarSave, spend: state.jarSpend, give: state.jarGive },
+                  }),
+                })
+              } catch { /* */ }
+              window.location.href = '/kid-hub'
+            }}
+            style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.3)', fontSize: '13px', cursor: 'pointer', padding: '4px 8px', fontWeight: 600 }}
+          >
+            ← Leave
+          </button>
+          <button
             onClick={() => { setPaused(true); pausedTimeRef.current = Date.now(); if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; setSpeaking(false) } }}
             style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', fontSize: '18px', cursor: 'pointer', padding: '4px' }}
           >
