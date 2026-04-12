@@ -35,6 +35,7 @@ export async function POST(req: NextRequest) {
         questions_correct: correctCount || 0,
         questions_total: totalQuestions || 0,
         subject: (subjects || ['Maths']).join(', '),
+        topic: (subjects || ['Maths']).join(', '),
         completed_at: new Date().toISOString(),
       })
       .select()
