@@ -49,11 +49,23 @@ export async function GET(req: NextRequest) {
       .order('created_at', { ascending: false })
       .limit(1)
 
+    // Get avatar
+    let avatarUrl = null
+    const { data: learner } = await supabase
+      .from('learners')
+      .select('avatar_data')
+      .eq('id', child.id)
+      .single()
+    if (learner?.avatar_data?.url) {
+      avatarUrl = learner.avatar_data.url
+    }
+
     return {
       ...child,
       total_stars: totalStars,
-      streak_days: 0, // TODO: calculate from sessions
+      streak_days: 0,
       last_session: lastSession?.[0]?.created_at || null,
+      avatar_url: avatarUrl,
     }
   }))
 

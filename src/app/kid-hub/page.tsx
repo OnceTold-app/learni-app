@@ -70,8 +70,8 @@ export default function KidHubPage() {
             <img
               src={avatarUrl}
               alt={displayName}
-              width={80}
-              height={80}
+              width={120}
+              height={120}
               style={{
                 borderRadius: '50%',
                 background: 'rgba(255,255,255,0.06)',
@@ -82,8 +82,8 @@ export default function KidHubPage() {
             />
           ) : (
             <div style={{
-              width: '80px',
-              height: '80px',
+              width: '120px',
+              height: '120px',
               borderRadius: '50%',
               background: 'linear-gradient(145deg, #2ec4b6, #1a9e92)',
               display: 'flex',

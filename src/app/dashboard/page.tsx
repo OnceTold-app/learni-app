@@ -9,6 +9,7 @@ interface Child {
   total_stars: number
   streak_days: number
   last_session: string | null
+  avatar_url: string | null
 }
 
 interface SessionSummary {
@@ -134,21 +135,37 @@ export default function DashboardPage() {
                     transition: 'all 0.15s',
                   }}
                 >
-                  <div style={{
-                    width: '40px',
-                    height: '40px',
-                    borderRadius: '50%',
-                    background: c.id === selectedChild ? 'linear-gradient(145deg, #2ec4b6, #1a9e92)' : '#eef8f7',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '18px',
-                    fontWeight: 900,
-                    fontFamily: "'Nunito', sans-serif",
-                    color: c.id === selectedChild ? 'white' : '#1a9e92',
-                  }}>
-                    {c.name.charAt(0)}
-                  </div>
+                  {c.avatar_url ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={c.avatar_url}
+                      alt={c.name}
+                      width={40}
+                      height={40}
+                      style={{
+                        borderRadius: '50%',
+                        background: '#eef8f7',
+                        flexShrink: 0,
+                      }}
+                    />
+                  ) : (
+                    <div style={{
+                      width: '40px',
+                      height: '40px',
+                      borderRadius: '50%',
+                      background: c.id === selectedChild ? 'linear-gradient(145deg, #2ec4b6, #1a9e92)' : '#eef8f7',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '18px',
+                      fontWeight: 900,
+                      fontFamily: "'Nunito', sans-serif",
+                      color: c.id === selectedChild ? 'white' : '#1a9e92',
+                      flexShrink: 0,
+                    }}>
+                      {c.name.charAt(0)}
+                    </div>
+                  )}
                   <div style={{ textAlign: 'left', flex: 1 }}>
                     <div style={{ fontFamily: "'Nunito', sans-serif", fontWeight: 900, fontSize: '15px', color: '#0d2b28' }}>{c.name}</div>
                     <div style={{ fontSize: '12px', color: '#5a8a84' }}>Year {c.year_level} · ⭐ {c.total_stars} stars</div>
