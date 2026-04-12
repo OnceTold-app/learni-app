@@ -34,7 +34,7 @@ export default function KidLoginPage() {
       if (!data.child.hasOnboarded) {
         window.location.href = '/kid-welcome'
       } else {
-        window.location.href = '/session'
+        window.location.href = '/kid-hub'
       }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Something went wrong')

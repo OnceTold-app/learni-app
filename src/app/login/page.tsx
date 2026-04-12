@@ -54,7 +54,7 @@ export default function LoginPage() {
         if (!data.child.hasOnboarded) {
           window.location.href = '/kid-welcome'
         } else {
-          window.location.href = '/session'
+          window.location.href = '/kid-hub'
         }
       }
     } catch (err: unknown) {
