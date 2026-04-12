@@ -1,5 +1,5 @@
-// Homepage served via rewrite in next.config.ts → /index.html
-// This file exists to prevent Next.js from creating a default page
+import { redirect } from 'next/navigation'
+
 export default function Home() {
-  return null
+  redirect('/index.html')
 }
