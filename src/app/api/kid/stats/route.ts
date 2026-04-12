@@ -51,11 +51,37 @@ export async function GET(req: NextRequest) {
     .eq('learner_id', childId)
     .single()
 
+  // Get avatar
+  let avatarUrl = null
+  const { data: profile } = await supabase
+    .from('earni_profiles')
+    .select('*')
+    .eq('learner_id', childId)
+    .single()
+
+  if (profile) {
+    // Check if there's a stored URL or avatar_data on the learner
+    avatarUrl = profile.avatar_url || null
+  }
+
+  // Also check learners table for avatar_data
+  if (!avatarUrl) {
+    const { data: learner } = await supabase
+      .from('learners')
+      .select('avatar_data')
+      .eq('id', childId)
+      .single()
+    if (learner?.avatar_data?.url) {
+      avatarUrl = learner.avatar_data.url
+    }
+  }
+
   return NextResponse.json({
     totalStars: totalStars || sessionStars,
     streak,
     sessions: sessions || [],
     sessionCount: (sessions || []).length,
     jars: jars || { save_pct: 50, spend_pct: 30, give_pct: 20 },
+    avatarUrl,
   })
 }

@@ -13,6 +13,7 @@ interface SessionData {
 export default function KidHubPage() {
   const [childName, setChildName] = useState('')
   const [username, setUsername] = useState('')
+  const [avatarUrl, setAvatarUrl] = useState('')
   const [totalStars, setTotalStars] = useState(0)
   const [streak, setStreak] = useState(0)
   const [sessions, setSessions] = useState<SessionData[]>([])
@@ -25,6 +26,7 @@ export default function KidHubPage() {
     if (!id || !name) { window.location.href = '/login'; return }
     setChildName(name)
     setUsername(uname || '')
+    setAvatarUrl(localStorage.getItem('learni_avatar_url') || '')
     fetchData(id)
   }, [])
 
@@ -36,6 +38,7 @@ export default function KidHubPage() {
         setTotalStars(data.totalStars || 0)
         setStreak(data.streak || 0)
         setSessions(data.sessions || [])
+        if (data.avatarUrl) setAvatarUrl(data.avatarUrl)
       }
     } catch { /* silent */ }
     setLoading(false)
@@ -62,23 +65,40 @@ export default function KidHubPage() {
       <div style={{ maxWidth: '500px', margin: '0 auto' }}>
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: '32px', paddingTop: '20px' }}>
-          <div style={{
-            width: '80px',
-            height: '80px',
-            borderRadius: '50%',
-            background: 'linear-gradient(145deg, #2ec4b6, #1a9e92)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '36px',
-            fontWeight: 900,
-            color: 'white',
-            fontFamily: "'Nunito', sans-serif",
-            margin: '0 auto 16px',
-            boxShadow: '0 0 0 6px rgba(46,196,182,0.15)',
-          }}>
-            {displayName.charAt(0).toUpperCase()}
-          </div>
+          {avatarUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={avatarUrl}
+              alt={displayName}
+              width={80}
+              height={80}
+              style={{
+                borderRadius: '50%',
+                background: 'rgba(255,255,255,0.06)',
+                margin: '0 auto 16px',
+                display: 'block',
+                boxShadow: '0 0 0 6px rgba(46,196,182,0.15)',
+              }}
+            />
+          ) : (
+            <div style={{
+              width: '80px',
+              height: '80px',
+              borderRadius: '50%',
+              background: 'linear-gradient(145deg, #2ec4b6, #1a9e92)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '36px',
+              fontWeight: 900,
+              color: 'white',
+              fontFamily: "'Nunito', sans-serif",
+              margin: '0 auto 16px',
+              boxShadow: '0 0 0 6px rgba(46,196,182,0.15)',
+            }}>
+              {displayName.charAt(0).toUpperCase()}
+            </div>
+          )}
           <h1 style={{
             fontFamily: "'Nunito', sans-serif",
             fontSize: '28px',
