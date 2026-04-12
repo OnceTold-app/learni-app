@@ -1,0 +1,23 @@
+User-agent: *
+Allow: /
+Allow: /signup
+Allow: /login
+Allow: /subscribe
+Allow: /privacy
+Allow: /terms
+
+# Private app pages — no indexing needed
+Disallow: /dashboard
+Disallow: /onboarding
+Disallow: /manage-child
+Disallow: /progress
+Disallow: /kid-hub
+Disallow: /kid-login
+Disallow: /kid-welcome
+Disallow: /kid-avatar
+Disallow: /start-session
+Disallow: /session
+Disallow: /baseline
+Disallow: /api/
+
+Sitemap: https://learniapp.co/sitemap.xml
