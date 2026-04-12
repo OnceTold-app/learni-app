@@ -115,30 +115,70 @@ export default function DashboardPage() {
           </div>
         ) : (
           <>
-            {/* Child selector */}
-            {children.length > 1 && (
-              <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
-                {children.map(c => (
-                  <button
-                    key={c.id}
-                    onClick={() => setSelectedChild(c.id)}
-                    style={{
-                      padding: '8px 20px',
-                      borderRadius: '20px',
-                      border: 'none',
-                      background: c.id === selectedChild ? '#0d2b28' : 'white',
-                      color: c.id === selectedChild ? 'white' : '#0d2b28',
-                      fontFamily: "'Nunito', sans-serif",
-                      fontWeight: 800,
-                      fontSize: '14px',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    {c.name}
-                  </button>
-                ))}
-              </div>
-            )}
+            {/* Children list */}
+            <div style={{ display: 'flex', gap: '10px', marginBottom: '24px', flexWrap: 'wrap' }}>
+              {children.map(c => (
+                <button
+                  key={c.id}
+                  onClick={() => setSelectedChild(c.id)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    padding: '14px 20px',
+                    borderRadius: '16px',
+                    border: c.id === selectedChild ? '2px solid #2ec4b6' : '2px solid transparent',
+                    background: 'white',
+                    cursor: 'pointer',
+                    boxShadow: c.id === selectedChild ? '0 4px 16px rgba(46,196,182,0.15)' : '0 2px 8px rgba(0,0,0,0.04)',
+                    transition: 'all 0.15s',
+                  }}
+                >
+                  <div style={{
+                    width: '40px',
+                    height: '40px',
+                    borderRadius: '50%',
+                    background: c.id === selectedChild ? 'linear-gradient(145deg, #2ec4b6, #1a9e92)' : '#eef8f7',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '18px',
+                    fontWeight: 900,
+                    fontFamily: "'Nunito', sans-serif",
+                    color: c.id === selectedChild ? 'white' : '#1a9e92',
+                  }}>
+                    {c.name.charAt(0)}
+                  </div>
+                  <div style={{ textAlign: 'left' }}>
+                    <div style={{ fontFamily: "'Nunito', sans-serif", fontWeight: 900, fontSize: '15px', color: '#0d2b28' }}>{c.name}</div>
+                    <div style={{ fontSize: '12px', color: '#5a8a84' }}>Year {c.year_level} · ⭐ {c.total_stars} stars</div>
+                  </div>
+                </button>
+              ))}
+              {children.length < 4 && (
+                <a
+                  href="/onboarding"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px',
+                    padding: '14px 20px',
+                    borderRadius: '16px',
+                    border: '2px dashed rgba(13,43,40,0.12)',
+                    background: 'transparent',
+                    cursor: 'pointer',
+                    textDecoration: 'none',
+                    fontSize: '14px',
+                    fontWeight: 700,
+                    color: '#5a8a84',
+                    transition: 'all 0.15s',
+                  }}
+                >
+                  + Add child
+                </a>
+              )}
+            </div>
 
             {/* Stats cards */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '24px' }}>
@@ -171,58 +211,33 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {/* Action buttons */}
-            <div style={{ display: 'flex', gap: '12px', marginBottom: '24px' }}>
-              <a
-                href="/session"
-                onClick={() => {
-                  if (child) {
-                    localStorage.setItem('learni_child_id', child.id)
-                    localStorage.setItem('learni_child_name', child.name)
-                    localStorage.setItem('learni_year_level', String(child.year_level))
-                  }
-                }}
-                style={{
-                  flex: 1,
-                  display: 'block',
-                  background: '#2ec4b6',
-                  color: 'white',
-                  padding: '18px',
-                  borderRadius: '16px',
-                  textAlign: 'center',
-                  fontFamily: "'Nunito', sans-serif",
-                  fontSize: '18px',
-                  fontWeight: 900,
-                  textDecoration: 'none',
-                  boxShadow: '0 6px 20px rgba(46,196,182,0.3)',
-                }}
-              >
-                Start session with Earni →
-              </a>
-              {children.length < 4 && (
-                <a
-                  href="/onboarding"
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    background: 'white',
-                    color: '#0d2b28',
-                    padding: '18px 24px',
-                    borderRadius: '16px',
-                    textAlign: 'center',
-                    fontFamily: "'Nunito', sans-serif",
-                    fontSize: '15px',
-                    fontWeight: 800,
-                    textDecoration: 'none',
-                    border: '1.5px solid rgba(13,43,40,0.1)',
-                    whiteSpace: 'nowrap',
-                  }}
-                >
-                  + Add child
-                </a>
-              )}
-            </div>
+            {/* Start session button */}
+            <a
+              href="/session"
+              onClick={() => {
+                if (child) {
+                  localStorage.setItem('learni_child_id', child.id)
+                  localStorage.setItem('learni_child_name', child.name)
+                  localStorage.setItem('learni_year_level', String(child.year_level))
+                }
+              }}
+              style={{
+                display: 'block',
+                background: '#2ec4b6',
+                color: 'white',
+                padding: '18px',
+                borderRadius: '16px',
+                textAlign: 'center',
+                fontFamily: "'Nunito', sans-serif",
+                fontSize: '18px',
+                fontWeight: 900,
+                textDecoration: 'none',
+                marginBottom: '24px',
+                boxShadow: '0 6px 20px rgba(46,196,182,0.3)',
+              }}
+            >
+              Start session with {child?.name || 'Earni'} →
+            </a>
 
             {/* Recent sessions */}
             <h3 style={{ fontFamily: "'Nunito', sans-serif", fontWeight: 900, color: '#0d2b28', marginBottom: '12px' }}>
