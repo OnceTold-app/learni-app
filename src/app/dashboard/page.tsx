@@ -82,28 +82,13 @@ export default function DashboardPage() {
       background: '#f7fafa',
       fontFamily: "'Plus Jakarta Sans', sans-serif",
     }}>
-      {/* Header */}
+      {/* Hub title bar */}
       <div style={{
         background: '#0d2b28',
-        padding: '20px 24px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
+        padding: '14px 24px',
+        textAlign: 'center',
       }}>
-        <div>
-          <a href="/" style={{
-            fontFamily: "'Nunito', sans-serif",
-            fontSize: '20px',
-            fontWeight: 900,
-            color: 'white',
-            textDecoration: 'none',
-          }}>learni<span style={{ color: '#2ec4b6' }}>.</span></a>
-          <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '13px', marginLeft: '12px' }}>The Hub</span>
-        </div>
-        <a href="/dashboard" style={{ color: 'rgba(255,255,255,0.5)', fontSize: '13px', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-          <span style={{ width: '28px', height: '28px', borderRadius: '50%', background: 'rgba(46,196,182,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 800, color: '#2ec4b6' }}>{parentName.charAt(0).toUpperCase()}</span>
-          {parentName}
-        </a>
+        <span style={{ fontFamily: "'Nunito', sans-serif", fontSize: '14px', fontWeight: 800, color: 'rgba(255,255,255,0.6)', letterSpacing: '0.08em', textTransform: 'uppercase' as const }}>The Hub</span>
       </div>
 
       <div style={{ maxWidth: '800px', margin: '0 auto', padding: '24px' }}>

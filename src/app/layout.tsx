@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Nunito, Plus_Jakarta_Sans } from 'next/font/google'
 import './globals.css'
+import NavBar from '@/components/nav-bar'
 
 const nunito = Nunito({
   subsets: ['latin'],
@@ -16,7 +17,7 @@ const jakarta = Plus_Jakarta_Sans({
 })
 
 export const metadata: Metadata = {
-  title: 'Earni — Your child\'s AI study buddy',
+  title: 'Learni — Learn it. Earn it.',
   description: 'AI voice tutor that pays your child real money to learn. NZ Curriculum aligned. Year 1–13.',
 }
 
@@ -27,7 +28,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`${nunito.variable} ${jakarta.variable}`}>
-      <body className="antialiased">{children}</body>
+      <body className="antialiased" style={{ paddingTop: '52px' }}>
+        <NavBar />
+        {children}
+      </body>
     </html>
   )
 }
