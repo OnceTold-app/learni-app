@@ -1,0 +1,28 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --turq:       #2ec4b6;
+  --turq-deep:  #1a9e92;
+  --turq-soft:  #e6f9f7;
+  --gold:       #f5a623;
+  --ink:        #0d2b28;
+  --muted:      #5a8a84;
+  --off-white:  #f7fafa;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-jakarta), sans-serif;
+  color: var(--ink);
+  background: #ffffff;
+}
+
+/* Nunito for all display text */
+.font-display {
+  font-family: var(--font-nunito), sans-serif;
+}
