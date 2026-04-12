@@ -1,51 +1,147 @@
-import { NextResponse } from 'next/server'
-import { generateExplanation, generateGreeting, generateSessionSummary } from '@/lib/claude'
-import { createClient } from '@/lib/supabase/server'
+import { NextRequest, NextResponse } from 'next/server'
+import Anthropic from '@anthropic-ai/sdk'
+import { CLAUDE_MODEL } from '@/lib/claude'
+import { tutorPrompt, rapidFirePrompt, financialPrompt } from '@/lib/earni-prompts'
 
-export async function POST(req: Request) {
-  // Verify auth on every API route
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
-  if (!user) {
-    return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
+// Session phases
+type Phase = 'warmup' | 'lesson' | 'financial' | 'closing' | 'reward'
+
+interface LessonRequest {
+  childName: string
+  yearLevel: number
+  subject: string
+  phase: Phase
+  // For warmup/closing: previous topics to drill
+  drillTopics?: string[]
+  // For tracking conversation context
+  history?: Array<{ role: 'user' | 'assistant'; content: string }>
+  // Child's answer to evaluate
+  answer?: string
+  // Current question for answer evaluation
+  currentQuestion?: string
+  currentCorrectAnswer?: string
+  // Session stats
+  sessionStats?: {
+    correctCount: number
+    totalQuestions: number
+    streakCount: number
+    personalBest: number
+    starsEarned: number
   }
+}
 
-  const body = await req.json()
-  const { action, childName, yearLevel, question, correctAnswer, topic, streakDays, correct, total, starsEarned } = body
-
+export async function POST(req: NextRequest) {
   try {
-    switch (action) {
+    const body: LessonRequest = await req.json()
+    const {
+      childName,
+      yearLevel,
+      subject,
+      phase,
+      drillTopics = [],
+      history = [],
+      answer,
+      currentQuestion,
+      currentCorrectAnswer,
+      sessionStats = { correctCount: 0, totalQuestions: 0, streakCount: 0, personalBest: 0, starsEarned: 0 },
+    } = body
 
-      case 'explanation': {
-        if (!question || !correctAnswer || !childName || !yearLevel) {
-          return NextResponse.json({ error: 'Missing fields' }, { status: 400 })
-        }
-        const text = await generateExplanation(question, correctAnswer, childName, yearLevel)
-        return NextResponse.json({ text })
+    // Build the system prompt based on phase
+    let systemPrompt: string
+    switch (phase) {
+      case 'warmup':
+        systemPrompt = rapidFirePrompt(childName, yearLevel, drillTopics.length > 0 ? drillTopics : ['times tables', 'number bonds'])
+        break
+      case 'lesson':
+        systemPrompt = tutorPrompt(childName, yearLevel, subject)
+        break
+      case 'financial': {
+        const today = new Date()
+        const isFriday = today.getDay() === 5
+        systemPrompt = financialPrompt(childName, yearLevel, isFriday)
+        break
       }
-
-      case 'greeting': {
-        if (!childName || !topic) {
-          return NextResponse.json({ error: 'Missing fields' }, { status: 400 })
-        }
-        const text = await generateGreeting(childName, topic, streakDays ?? 0)
-        return NextResponse.json({ text })
-      }
-
-      case 'summary': {
-        if (!childName || !topic || correct == null || total == null || starsEarned == null) {
-          return NextResponse.json({ error: 'Missing fields' }, { status: 400 })
-        }
-        const text = await generateSessionSummary(childName, topic, correct, total, starsEarned)
-        return NextResponse.json({ text })
-      }
-
+      case 'closing':
+        systemPrompt = rapidFirePrompt(childName, yearLevel, [subject])
+        break
+      case 'reward':
+        // Reward phase doesn't need Claude — it's calculated
+        return NextResponse.json({
+          phase: 'reward',
+          starsEarned: sessionStats.starsEarned,
+          correctCount: sessionStats.correctCount,
+          totalQuestions: sessionStats.totalQuestions,
+          streakCount: sessionStats.streakCount,
+          personalBest: sessionStats.personalBest,
+          earniSays: sessionStats.correctCount > sessionStats.totalQuestions * 0.8
+            ? `Incredible session, ${childName}! ${sessionStats.starsEarned} stars — you were on fire today.`
+            : sessionStats.correctCount > sessionStats.totalQuestions * 0.5
+              ? `Solid work, ${childName}. ${sessionStats.starsEarned} stars earned. Every session you're getting stronger.`
+              : `${sessionStats.starsEarned} stars earned, ${childName}. The hard sessions are the ones where you grow the most. Proud of you for sticking with it.`,
+        })
       default:
-        return NextResponse.json({ error: 'Unknown action' }, { status: 400 })
+        return NextResponse.json({ error: 'Invalid phase' }, { status: 400 })
     }
-  } catch (err) {
-    console.error('Lesson API error:', err)
-    return NextResponse.json({ error: 'Internal error' }, { status: 500 })
+
+    // Build messages — include answer evaluation if provided
+    const messages: Array<{ role: 'user' | 'assistant'; content: string }> = [...history]
+
+    if (answer && currentQuestion) {
+      const isCorrect = answer.toLowerCase().trim() === currentCorrectAnswer?.toLowerCase().trim()
+      messages.push({
+        role: 'user',
+        content: isCorrect
+          ? `${childName} answered "${answer}" to "${currentQuestion}" — CORRECT. ${
+              phase === 'warmup' || phase === 'closing'
+                ? `Streak: ${sessionStats.streakCount + 1}. Generate next rapid fire question immediately.`
+                : `Stars: +4. Generate the next problem.`
+            }`
+          : `${childName} answered "${answer}" to "${currentQuestion}" — INCORRECT. The correct answer was "${currentCorrectAnswer}". ${
+              phase === 'warmup' || phase === 'closing'
+                ? `Streak broken. Just say "Again." and give the same question back.`
+                : `Use the misconception engine: identify what they likely confused, explain from a different angle, then give a simpler version of the same concept.`
+            }`,
+      })
+    } else if (messages.length === 0) {
+      // First question of this phase
+      messages.push({
+        role: 'user',
+        content: phase === 'warmup'
+          ? `Start the warm-up rapid fire. ${childName}'s personal best is ${sessionStats.personalBest} correct in a row. Say something like "Right ${childName} — let's wake up that brain. Fast as you can. Go." then give the first question.`
+          : phase === 'closing'
+            ? `Start the closing rapid fire on ${subject}. Say "Before you earn your stars — let's make sure it's locked in. No thinking, just knowing. Go." then give the first question.`
+            : phase === 'financial'
+              ? `Connect today's ${subject} lesson to a financial literacy concept. ${childName} earned ${sessionStats.starsEarned} stars so far today.`
+              : `Start the main lesson on ${subject} for Year ${yearLevel}. Introduce the concept conversationally, then give the first problem.`,
+      })
+    }
+
+    const response = await client.messages.create({
+      model: CLAUDE_MODEL,
+      max_tokens: 400,
+      system: systemPrompt,
+      messages,
+    })
+
+    const text = response.content[0].type === 'text' ? response.content[0].text : '{}'
+
+    // Try to parse JSON response
+    try {
+      // Extract JSON from response (handle if Claude wraps it)
+      const jsonMatch = text.match(/\{[\s\S]*\}/)
+      const parsed = jsonMatch ? JSON.parse(jsonMatch[0]) : { earniSays: text }
+      return NextResponse.json({ phase, ...parsed })
+    } catch {
+      // If JSON parsing fails, return raw text
+      return NextResponse.json({ phase, earniSays: text })
+    }
+  } catch (error) {
+    console.error('Lesson API error:', error)
+    return NextResponse.json(
+      { error: 'Something went wrong with the lesson' },
+      { status: 500 }
+    )
   }
 }

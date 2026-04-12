@@ -2,7 +2,7 @@ import Anthropic from '@anthropic-ai/sdk'
 
 // ─── NEVER hardcode the model string in other files ───
 // Always import CLAUDE_MODEL from here
-export const CLAUDE_MODEL = 'claude-haiku-4-5-20251001'
+export const CLAUDE_MODEL = 'claude-sonnet-4-6'
 
 const client = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
