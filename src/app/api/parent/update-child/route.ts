@@ -61,6 +61,8 @@ export async function POST(req: NextRequest) {
   if (updates.yearLevel !== undefined) allowed.year_level = updates.yearLevel
   if (updates.name !== undefined) allowed.name = updates.name
   if (updates.sessionLanguage !== undefined) allowed.session_language = updates.sessionLanguage
+  if (updates.baselineResults !== undefined) allowed.baseline_results = updates.baselineResults
+  if (updates.baselineDate !== undefined) allowed.baseline_date = updates.baselineDate
 
   if (Object.keys(allowed).length === 0) {
     return NextResponse.json({ error: 'No valid fields to update' }, { status: 400 })

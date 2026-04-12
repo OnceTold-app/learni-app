@@ -225,6 +225,7 @@ export default function SessionPage() {
           focusAreas,
           weakTopics,
           reviewTopics,
+          baselineLevel: typeof window !== 'undefined' ? localStorage.getItem('learni_baseline_level') : null,
           history: historyRef.current.slice(-8),
           answer,
           currentQuestion,

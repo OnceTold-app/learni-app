@@ -18,6 +18,7 @@ export default function KidHubPage() {
   const [streak, setStreak] = useState(0)
   const [sessions, setSessions] = useState<SessionData[]>([])
   const [loading, setLoading] = useState(true)
+  const [needsBaseline, setNeedsBaseline] = useState(false)
   const [badges, setBadges] = useState<Array<{ id: string; name: string; emoji: string; desc: string; earned: boolean; isNew: boolean }>>([])
 
   useEffect(() => {
@@ -39,6 +40,10 @@ export default function KidHubPage() {
         setTotalStars(data.totalStars || 0)
         setStreak(data.streak || 0)
         setSessions(data.sessions || [])
+        // Check if baseline needed (no sessions yet)
+        if (!data.sessions || data.sessions.length === 0) {
+          setNeedsBaseline(true)
+        }
         if (data.avatarUrl) setAvatarUrl(data.avatarUrl)
       }
       // Load achievements
@@ -153,6 +158,27 @@ export default function KidHubPage() {
             <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', marginTop: '4px', fontWeight: 600 }}>Sessions</div>
           </div>
         </div>
+
+        {/* Baseline prompt */}
+        {needsBaseline && (
+          <a
+            href="/baseline"
+            style={{
+              display: 'block',
+              background: 'rgba(245,166,35,0.1)',
+              border: '1.5px solid rgba(245,166,35,0.25)',
+              padding: '18px 20px',
+              borderRadius: '16px',
+              textDecoration: 'none',
+              marginBottom: '16px',
+              textAlign: 'center',
+            }}
+          >
+            <div style={{ fontSize: '24px', marginBottom: '6px' }}>🎯</div>
+            <div style={{ fontFamily: "'Nunito', sans-serif", fontSize: '16px', fontWeight: 900, color: '#f5a623', marginBottom: '4px' }}>Let&apos;s find your level!</div>
+            <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.4)' }}>Quick assessment so Earni knows where to start</div>
+          </a>
+        )}
 
         {/* Start session button */}
         <a
