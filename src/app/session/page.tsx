@@ -1206,6 +1206,38 @@ export default function SessionPage() {
           </div>
         )}
 
+        {/* Floating help button — always visible during lesson/financial when question is showing */}
+        {state.question && !state.selectedAnswer && !isRapidFire && !state.showJars && !state.loading && (
+          <button
+            onClick={() => {
+              lastActivityRef.current = Date.now()
+              historyRef.current.push({ role: 'user', content: `${childName} pressed the help button for "${state.question}". Give a warm, encouraging hint WITHOUT giving the answer. Guide them step by step.` })
+              fetchQuestion(state.phase)
+            }}
+            style={{
+              position: 'fixed',
+              bottom: '24px',
+              right: '24px',
+              padding: '12px 20px',
+              background: 'rgba(245,166,35,0.9)',
+              border: 'none',
+              borderRadius: '30px',
+              fontSize: '15px',
+              fontWeight: 800,
+              fontFamily: "'Nunito', sans-serif",
+              color: 'white',
+              cursor: 'pointer',
+              boxShadow: '0 4px 20px rgba(245,166,35,0.3)',
+              zIndex: 90,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+            }}
+          >
+            💡 Help
+          </button>
+        )}
+
         {/* Celebration popup */}
         {celebration && (
           <div style={{
