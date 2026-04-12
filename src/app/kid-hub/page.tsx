@@ -87,6 +87,10 @@ export default function KidHubPage() {
             marginBottom: '4px',
           }}>Hey {displayName}! 👋</h1>
           <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '14px' }}>Ready to learn and earn?</p>
+          <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', marginTop: '10px' }}>
+            <a href="/kid-welcome" style={{ fontSize: '12px', color: 'rgba(255,255,255,0.3)', textDecoration: 'none', padding: '4px 10px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.08)' }}>✏️ Username</a>
+            <a href="/kid-avatar" style={{ fontSize: '12px', color: 'rgba(255,255,255,0.3)', textDecoration: 'none', padding: '4px 10px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.08)' }}>🎨 My look</a>
+          </div>
         </div>
 
         {/* Stats */}
