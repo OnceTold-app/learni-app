@@ -59,6 +59,8 @@ export default function SessionPage() {
   const masteryResultsRef = useRef<Array<{ topic: string; correct: boolean }>>([])
   const [audioChecked, setAudioChecked] = useState(false)
   const [audioCheckPlaying, setAudioCheckPlaying] = useState(false)
+  const [accessBlocked, setAccessBlocked] = useState(false)
+  const [trialDaysLeft, setTrialDaysLeft] = useState<number | null>(null)
   const [questionsInPhase, setQuestionsInPhase] = useState(0)
 
   const [state, setState] = useState<SessionState>({
@@ -302,6 +304,24 @@ export default function SessionPage() {
     window.addEventListener('beforeunload', saveOnExit)
     return () => window.removeEventListener('beforeunload', saveOnExit)
   })
+
+  // Check account access
+  useEffect(() => {
+    const childId = typeof window !== 'undefined' ? localStorage.getItem('learni_child_id') : null
+    const token = typeof window !== 'undefined' ? localStorage.getItem('learni_parent_token') : null
+    const params = new URLSearchParams()
+    if (childId) params.set('childId', childId)
+    const headers: Record<string, string> = {}
+    if (token) headers['Authorization'] = `Bearer ${token}`
+
+    fetch(`/api/account/status?${params}`, { headers })
+      .then(r => r.json())
+      .then(d => {
+        if (!d.canAccess) setAccessBlocked(true)
+        if (d.isTrialing && d.daysLeft <= 3) setTrialDaysLeft(d.daysLeft)
+      })
+      .catch(() => {})
+  }, [])
 
   // Load focus areas + mastery data
   useEffect(() => {
@@ -567,6 +587,36 @@ export default function SessionPage() {
     } catch {
       setAudioCheckPlaying(false)
     }
+  }
+
+  // Trial expired paywall
+  if (accessBlocked) {
+    return (
+      <div style={{
+        minHeight: '100vh', background: '#0d2b28', display: 'flex',
+        alignItems: 'center', justifyContent: 'center',
+        fontFamily: "'Plus Jakarta Sans', sans-serif", padding: '24px',
+      }}>
+        <div style={{ maxWidth: '420px', width: '100%', textAlign: 'center' }}>
+          <div style={{ fontSize: '64px', marginBottom: '16px' }}>⏰</div>
+          <h1 style={{ fontFamily: "'Nunito', sans-serif", fontSize: '26px', fontWeight: 900, color: 'white', marginBottom: '8px' }}>
+            Your free trial has ended
+          </h1>
+          <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '15px', marginBottom: '28px', lineHeight: 1.6 }}>
+            {childName} was doing great! Subscribe to keep learning with Earni.
+          </p>
+          <a href="/subscribe" style={{
+            display: 'block', padding: '18px', background: 'linear-gradient(135deg, #2ec4b6, #1ab5a8)',
+            color: 'white', borderRadius: '30px', fontFamily: "'Nunito', sans-serif",
+            fontSize: '18px', fontWeight: 900, textDecoration: 'none',
+            boxShadow: '0 8px 32px rgba(46,196,182,0.3)', marginBottom: '12px',
+          }}>
+            Subscribe — $49/month →
+          </a>
+          <a href="/kid-hub" style={{ color: 'rgba(255,255,255,0.3)', fontSize: '13px', textDecoration: 'none' }}>Back to Hub</a>
+        </div>
+      </div>
+    )
   }
 
   // Audio check screen
