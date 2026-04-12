@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { stripe, PRICE_IDS, type PlanKey } from '@/lib/stripe'
+import { getStripe, PRICE_IDS, type PlanKey } from '@/lib/stripe'
 import { createClient } from '@/lib/supabase/server'
 
 export async function POST(req: Request) {
@@ -20,7 +20,7 @@ export async function POST(req: Request) {
   }
 
   // 3. Create Stripe checkout session
-  const session = await stripe.checkout.sessions.create({
+  const session = await getStripe().checkout.sessions.create({
     mode: 'subscription',
     payment_method_types: ['card'],
     line_items: [{ price: PRICE_IDS[plan], quantity: 1 }],

@@ -1,13 +1,10 @@
 import { NextResponse } from 'next/server'
-import { stripe } from '@/lib/stripe'
+import { getStripe } from '@/lib/stripe'
 import { createClient } from '@supabase/supabase-js'
 import type Stripe from 'stripe'
 
 // Use service role for webhook — bypasses RLS
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+function getSupabase() { return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL || "", process.env.SUPABASE_SERVICE_ROLE_KEY || "") }
 
 export async function POST(req: Request) {
   const body = await req.text()
@@ -20,7 +17,7 @@ export async function POST(req: Request) {
   // CRITICAL: always verify the Stripe signature — never skip this
   let event: Stripe.Event
   try {
-    event = stripe.webhooks.constructEvent(
+    event = getStripe().webhooks.constructEvent(
       body,
       signature,
       process.env.STRIPE_WEBHOOK_SECRET!
@@ -41,7 +38,7 @@ export async function POST(req: Request) {
 
       if (!supabaseUserId) break
 
-      await supabaseAdmin
+      await getSupabase()
         .from('accounts')
         .update({
           stripe_customer_id: customerId,
@@ -68,7 +65,7 @@ export async function POST(req: Request) {
       // Get plan from subscription metadata
       const plan = (subscription.metadata?.plan ?? 'starter') as string
 
-      await supabaseAdmin
+      await getSupabase()
         .from('accounts')
         .update({ subscription_status: mappedStatus, plan })
         .eq('stripe_customer_id', customerId)
@@ -80,7 +77,7 @@ export async function POST(req: Request) {
       const subscription = event.data.object as Stripe.Subscription
       const customerId = subscription.customer as string
 
-      await supabaseAdmin
+      await getSupabase()
         .from('accounts')
         .update({ subscription_status: 'cancelled', plan: 'free' })
         .eq('stripe_customer_id', customerId)
