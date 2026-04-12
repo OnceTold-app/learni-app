@@ -59,6 +59,17 @@ export default function SignupPage() {
         localStorage.setItem('learni_parent_id', authData.user?.id || '')
       }
 
+      // Send welcome email (fire and forget — don't block signup)
+      try {
+        await fetch('/api/auth/welcome', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, name }),
+        })
+      } catch (emailErr) {
+        console.warn('Welcome email failed (non-fatal):', emailErr)
+      }
+
       setSuccess(true)
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Something went wrong'
