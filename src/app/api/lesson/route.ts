@@ -137,7 +137,7 @@ export async function POST(req: NextRequest) {
 
     const response = await client.messages.create({
       model: CLAUDE_MODEL,
-      max_tokens: 600,
+      max_tokens: 800,
       system: systemPrompt,
       messages,
     })
