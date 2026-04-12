@@ -30,35 +30,12 @@ export default function KidHubPage() {
 
   async function fetchData(childId: string) {
     try {
-      // Fetch sessions via parent token if available, or direct
-      const token = localStorage.getItem('learni_parent_token')
-      const headers: Record<string, string> = {}
-      if (token) headers['Authorization'] = `Bearer ${token}`
-
-      const res = await fetch(`/api/parent/sessions?childId=${childId}`, { headers })
+      const res = await fetch(`/api/kid/stats?childId=${childId}`)
       if (res.ok) {
         const data = await res.json()
+        setTotalStars(data.totalStars || 0)
+        setStreak(data.streak || 0)
         setSessions(data.sessions || [])
-
-        // Calculate total stars
-        const stars = (data.sessions || []).reduce((sum: number, s: SessionData) => sum + (s.stars_earned || 0), 0)
-        setTotalStars(stars)
-
-        // Calculate streak (consecutive days with sessions)
-        const dates = (data.sessions || []).map((s: SessionData) => new Date(s.created_at).toDateString())
-        const uniqueDates = [...new Set(dates)]
-        let streakCount = 0
-        const today = new Date()
-        for (let i = 0; i < 365; i++) {
-          const d = new Date(today)
-          d.setDate(d.getDate() - i)
-          if (uniqueDates.includes(d.toDateString())) {
-            streakCount++
-          } else if (i > 0) {
-            break
-          }
-        }
-        setStreak(streakCount)
       }
     } catch { /* silent */ }
     setLoading(false)

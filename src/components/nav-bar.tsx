@@ -5,21 +5,29 @@ import { useEffect, useState, useRef } from 'react'
 export default function NavBar() {
   const [parentName, setParentName] = useState('')
   const [parentEmail, setParentEmail] = useState('')
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [isParent, setIsParent] = useState(false)
+  const [isKid, setIsKid] = useState(false)
+  const [kidName, setKidName] = useState('')
   const [menuOpen, setMenuOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    const name = localStorage.getItem('learni_parent_name')
+    const pName = localStorage.getItem('learni_parent_name')
     const email = localStorage.getItem('learni_parent_email') || ''
-    if (name) {
-      setParentName(name)
+    const cName = localStorage.getItem('learni_child_name')
+    const cUsername = localStorage.getItem('learni_child_username')
+
+    if (pName) {
+      setParentName(pName)
       setParentEmail(email)
-      setIsLoggedIn(true)
+      setIsParent(true)
+    }
+    if (cName) {
+      setKidName(cUsername || cName)
+      setIsKid(true)
     }
   }, [])
 
-  // Close menu when clicking outside
   useEffect(() => {
     function handleClick(e: MouseEvent) {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
@@ -42,6 +50,10 @@ export default function NavBar() {
     localStorage.removeItem('learni_session_language')
     window.location.href = '/'
   }
+
+  const isLoggedIn = isParent || isKid
+  const displayName = isKid ? kidName : parentName
+  const initial = displayName.charAt(0).toUpperCase()
 
   return (
     <nav style={{
@@ -90,7 +102,6 @@ export default function NavBar() {
                   cursor: 'pointer',
                   padding: '4px 8px',
                   borderRadius: '10px',
-                  transition: 'background 0.15s',
                 }}
               >
                 <span style={{
@@ -106,11 +117,10 @@ export default function NavBar() {
                   color: 'white',
                   fontFamily: "'Nunito', sans-serif",
                 }}>
-                  {parentName.charAt(0).toUpperCase()}
+                  {initial}
                 </span>
               </button>
 
-              {/* Dropdown menu */}
               {menuOpen && (
                 <div style={{
                   position: 'absolute',
@@ -124,15 +134,8 @@ export default function NavBar() {
                   animation: 'fadeIn 0.15s ease',
                 }}>
                   {/* Profile header */}
-                  <div style={{
-                    padding: '18px 20px',
-                    borderBottom: '1px solid rgba(0,0,0,0.06)',
-                  }}>
-                    <div style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '12px',
-                    }}>
+                  <div style={{ padding: '18px 20px', borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                       <div style={{
                         width: '40px',
                         height: '40px',
@@ -146,29 +149,42 @@ export default function NavBar() {
                         color: 'white',
                         fontFamily: "'Nunito', sans-serif",
                       }}>
-                        {parentName.charAt(0).toUpperCase()}
+                        {initial}
                       </div>
                       <div>
-                        <div style={{ fontFamily: "'Nunito', sans-serif", fontWeight: 800, fontSize: '14px', color: '#0d2b28' }}>{parentName}</div>
-                        {parentEmail && <div style={{ fontSize: '12px', color: '#5a8a84', marginTop: '1px' }}>{parentEmail}</div>}
+                        <div style={{ fontFamily: "'Nunito', sans-serif", fontWeight: 800, fontSize: '14px', color: '#0d2b28' }}>{displayName}</div>
+                        {isParent && parentEmail && <div style={{ fontSize: '12px', color: '#5a8a84', marginTop: '1px' }}>{parentEmail}</div>}
+                        {isKid && !isParent && <div style={{ fontSize: '12px', color: '#5a8a84', marginTop: '1px' }}>Kid account</div>}
                       </div>
                     </div>
                   </div>
 
                   {/* Menu items */}
                   <div style={{ padding: '6px 0' }}>
-                    <a href="/dashboard" style={menuItemStyle} onClick={() => setMenuOpen(false)}>
-                      <span style={menuIconStyle}>🏠</span>
-                      The Hub
-                    </a>
-                    <a href="/onboarding" style={menuItemStyle} onClick={() => setMenuOpen(false)}>
-                      <span style={menuIconStyle}>👶</span>
-                      Add a child
-                    </a>
-                    <a href="/kid-login" style={menuItemStyle} onClick={() => setMenuOpen(false)}>
-                      <span style={menuIconStyle}>🎮</span>
-                      Kid login
-                    </a>
+                    {isKid && (
+                      <a href="/kid-hub" style={menuItemStyle} onClick={() => setMenuOpen(false)}>
+                        <span style={menuIconStyle}>🏠</span>
+                        My Hub
+                      </a>
+                    )}
+                    {isParent && (
+                      <>
+                        <a href="/dashboard" style={menuItemStyle} onClick={() => setMenuOpen(false)}>
+                          <span style={menuIconStyle}>🏠</span>
+                          The Hub
+                        </a>
+                        <a href="/onboarding" style={menuItemStyle} onClick={() => setMenuOpen(false)}>
+                          <span style={menuIconStyle}>👶</span>
+                          Add a child
+                        </a>
+                      </>
+                    )}
+                    {isKid && (
+                      <a href="/kid-avatar" style={menuItemStyle} onClick={() => setMenuOpen(false)}>
+                        <span style={menuIconStyle}>🎨</span>
+                        Change my look
+                      </a>
+                    )}
                   </div>
 
                   {/* Sign out */}
@@ -184,7 +200,7 @@ export default function NavBar() {
                       fontFamily: "'Plus Jakarta Sans', sans-serif",
                     }}>
                       <span style={menuIconStyle}>👋</span>
-                      Sign out
+                      Switch user
                     </button>
                   </div>
                 </div>
@@ -192,21 +208,8 @@ export default function NavBar() {
             </div>
           ) : (
             <>
-              <a href="/login" style={{
-                fontSize: '13px',
-                fontWeight: 500,
-                color: '#5a8a84',
-                textDecoration: 'none',
-              }}>Log in</a>
-              <a href="/signup" style={{
-                background: '#0d2b28',
-                color: 'white',
-                padding: '8px 20px',
-                borderRadius: '30px',
-                fontSize: '13px',
-                fontWeight: 600,
-                textDecoration: 'none',
-              }}>Try free →</a>
+              <a href="/login" style={{ fontSize: '13px', fontWeight: 500, color: '#5a8a84', textDecoration: 'none' }}>Log in</a>
+              <a href="/signup" style={{ background: '#0d2b28', color: 'white', padding: '8px 20px', borderRadius: '30px', fontSize: '13px', fontWeight: 600, textDecoration: 'none' }}>Try free →</a>
             </>
           )}
         </div>
