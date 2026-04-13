@@ -336,6 +336,26 @@ export default function BaselinePage() {
               </div>
             )}
 
+            {/* Skip / I don't know button */}
+            {state.question && !selectedAnswer && !loading && (
+              <button
+                onClick={() => handleAnswer('I don\'t know')}
+                style={{
+                  marginTop: '12px',
+                  padding: '10px 20px',
+                  background: 'rgba(255,255,255,0.04)',
+                  border: '1px solid rgba(255,255,255,0.08)',
+                  borderRadius: '20px',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  color: 'rgba(255,255,255,0.35)',
+                  cursor: 'pointer',
+                }}
+              >
+                I don&apos;t know this yet — skip
+              </button>
+            )}
+
             {/* Loading */}
             {loading && (
               <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '14px' }}>
