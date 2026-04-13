@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { track } from '@/lib/posthog'
 
 export default function SubscribePage() {
   const [email, setEmail] = useState('')
@@ -15,6 +16,7 @@ export default function SubscribePage() {
 
   async function handleCheckout() {
     setLoading(true)
+    track('checkout_clicked', { child_count: childCount, monthly_price: monthlyPrice })
     try {
       const res = await fetch('/api/checkout', {
         method: 'POST',

@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { track, identify } from '@/lib/posthog'
 
 export default function SignupPage() {
   const [email, setEmail] = useState('')
@@ -9,6 +10,14 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
+
+  useEffect(() => {
+    // Capture referral code from URL (?ref=XXXXXX)
+    const params = new URLSearchParams(window.location.search)
+    const ref = params.get('ref')
+    if (ref) sessionStorage.setItem('learni_referral_code', ref)
+    track('viewed_signup')
+  }, [])
 
   async function handleSignup(e: React.FormEvent) {
     e.preventDefault()
@@ -35,6 +44,12 @@ export default function SignupPage() {
         const trialEnd = new Date()
         trialEnd.setDate(trialEnd.getDate() + 14)
 
+        // Generate unique 6-char referral code
+        const referralCode = Math.random().toString(36).substring(2, 8).toUpperCase()
+
+        // Check for referral code in session storage
+        const referredBy = sessionStorage.getItem('learni_referral_code') || null
+
         const { error: accountError } = await supabase
           .from('accounts')
           .insert({
@@ -44,10 +59,24 @@ export default function SignupPage() {
             plan: 'trial',
             subscription_status: 'trialing',
             trial_ends_at: trialEnd.toISOString(),
+            referral_code: referralCode,
+            referred_by: referredBy,
+            referral_free_month: false,
           })
 
         if (accountError && !accountError.message.includes('duplicate')) {
           console.error('Account creation error:', accountError)
+        }
+
+        // If referred by someone, track via API
+        if (referredBy) {
+          try {
+            await fetch('/api/referral/track', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ referral_code: referredBy, new_user_email: email }),
+            })
+          } catch { /* non-fatal */ }
         }
       }
 
@@ -57,6 +86,15 @@ export default function SignupPage() {
         localStorage.setItem('learni_parent_name', name)
         localStorage.setItem('learni_parent_email', email)
         localStorage.setItem('learni_parent_id', authData.user?.id || '')
+      }
+
+      // PostHog: identify and track signup
+      if (authData.user) {
+        identify(authData.user.id, { email, name, plan: 'trial' })
+        track('signed_up', { method: 'email', plan: 'trial' })
+        // Track referral if present
+        const ref = sessionStorage.getItem('learni_referral_code')
+        if (ref) track('signed_up_with_referral', { referral_code: ref })
       }
 
       // Send welcome email (fire and forget — don't block signup)
