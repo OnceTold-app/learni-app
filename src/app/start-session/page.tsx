@@ -249,6 +249,61 @@ const SUBJECT_GROUPS: SubjectGroup[] = [
     ],
   },
   {
+    id: 'money',
+    emoji: '💰',
+    label: 'Money & Life',
+    categories: [
+      {
+        id: 'money-basics',
+        emoji: '🪙',
+        title: 'Money basics',
+        desc: 'Coins, notes, counting money',
+        options: [
+          { id: 'money-coins', label: 'Coins & notes', desc: 'Recognise NZ money' },
+          { id: 'money-counting', label: 'Counting money', desc: 'Adding up coins and notes' },
+          { id: 'money-change', label: 'Making change', desc: 'How much change do I get?' },
+        ],
+      },
+      {
+        id: 'money-saving',
+        emoji: '🐷',
+        title: 'Saving & budgeting',
+        desc: 'The 3-jar system and saving goals',
+        options: [
+          { id: 'money-3jars', label: 'The 3-jar system', desc: 'Save, Spend, Give' },
+          { id: 'money-goals', label: 'Saving goals', desc: 'Save up for something you want' },
+          { id: 'money-budget', label: 'My first budget', desc: 'Plan how to spend $20' },
+          { id: 'money-wants-needs', label: 'Wants vs needs', desc: 'What do you really need?' },
+        ],
+      },
+      {
+        id: 'money-earning',
+        emoji: '💼',
+        title: 'Earning & working',
+        desc: 'How people earn money',
+        options: [
+          { id: 'money-jobs', label: 'Jobs & careers', desc: 'How people earn a living' },
+          { id: 'money-hourly', label: 'Hourly rates', desc: 'Calculate earnings from hours worked' },
+          { id: 'money-business', label: 'Starting a business', desc: 'Revenue, costs, and profit' },
+        ],
+      },
+      {
+        id: 'money-smart',
+        emoji: '🧠',
+        title: 'Smart money',
+        desc: 'Interest, tax, KiwiSaver, investing',
+        options: [
+          { id: 'money-interest', label: 'Interest & compound growth', desc: 'How money grows over time' },
+          { id: 'money-tax', label: 'Tax basics (NZ)', desc: 'Why your pay is less than your wage' },
+          { id: 'money-kiwisaver', label: 'KiwiSaver', desc: 'Your future self will thank you' },
+          { id: 'money-investing', label: 'Investing basics', desc: 'Shares, risk, and returns' },
+          { id: 'money-debt', label: 'Debt & credit', desc: 'Why borrowing costs more' },
+          { id: 'money-shopping', label: 'Smart shopping', desc: 'Comparing prices and discounts' },
+        ],
+      },
+    ],
+  },
+  {
     id: 'te-reo',
     emoji: '🌿',
     label: 'Te Reo Māori',

@@ -123,18 +123,31 @@ export default function HomeworkPage() {
         setTrainingPlan(data.trainingPlan)
         setConversation(prev => [...prev, { role: 'earni', text: data.earniSays || "Here's your training plan for the week!" }])
       }
-      // Save focus areas to the child's profile
+      // Save focus areas AND homework topics so sessions use them
       const childId = localStorage.getItem('learni_child_id')
-      if (childId && data.trainingPlan) {
+      if (childId) {
         const token = localStorage.getItem('learni_parent_token') || ''
         await fetch('/api/parent/focus', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
           body: JSON.stringify({ childId, focusAreas: [topics] }),
         }).catch(() => {})
+        // Store homework context for session to pick up
+        localStorage.setItem('learni_homework_topics', topics)
+        localStorage.setItem('learni_subject', topics)
+        localStorage.setItem('learni_session_mode', 'learn')
       }
     } catch { /* */ }
     setGeneratingPlan(false)
+  }
+
+  async function startHomeworkSession() {
+    // Go straight into a session focused on the homework topics
+    const topics = response?.questionsFound?.join(', ') || response?.helpWith || response?.subject || 'homework'
+    localStorage.setItem('learni_subject', topics)
+    localStorage.setItem('learni_session_mode', 'learn')
+    localStorage.setItem('learni_homework_topics', topics)
+    window.location.href = '/session'
   }
 
   return (
@@ -336,6 +349,29 @@ export default function HomeworkPage() {
               </button>
             ))}
           </div>
+        )}
+
+        {/* Work through with Earni button */}
+        {response && !loading && (
+          <button
+            onClick={startHomeworkSession}
+            style={{
+              width: '100%',
+              padding: '16px',
+              background: 'linear-gradient(135deg, #2ec4b6, #1ab5a8)',
+              color: 'white',
+              border: 'none',
+              borderRadius: '30px',
+              fontFamily: "'Nunito', sans-serif",
+              fontSize: '16px',
+              fontWeight: 900,
+              cursor: 'pointer',
+              boxShadow: '0 8px 32px rgba(46,196,182,0.3)',
+              marginBottom: '12px',
+            }}
+          >
+            🎤 Work through this with Earni →
+          </button>
         )}
 
         {/* Training plan button */}
