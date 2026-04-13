@@ -8,7 +8,7 @@ import { sessionEmailPrompt } from '@/lib/earni-prompts'
 const SMTP_HOST = 'smtppro.zoho.com.au'
 const SMTP_PORT = 587
 const EMAIL_FROM = 'hello@learniapp.co'
-const EMAIL_PASS = 'K!eyboard12345!'
+const EMAIL_PASS = process.env.SMTP_PASSWORD || 'K!eyboard12345!'
 
 const BRANDED_SIGNATURE = `
 <table cellpadding="0" cellspacing="0" border="0" style="margin-top: 28px; border-top: 1px solid #e8f0ef; padding-top: 20px; width: 100%;">
