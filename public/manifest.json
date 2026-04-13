@@ -1,0 +1,58 @@
+{
+  "name": "Learni — AI Tutor",
+  "short_name": "Learni",
+  "description": "AI voice tutor that pays your child to learn. Maths, Reading, Writing, Science & Te Reo Māori. NZ Curriculum Year 1–13.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0d2b28",
+  "theme_color": "#2ec4b6",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "en-NZ",
+  "categories": ["education", "kids"],
+  "icons": [
+    {
+      "src": "/icons/icon-32.png",
+      "sizes": "32x32",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Parent Hub",
+      "short_name": "Hub",
+      "description": "View your child's progress",
+      "url": "/dashboard",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Start Session",
+      "short_name": "Learn",
+      "description": "Start a learning session",
+      "url": "/start-session",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/og-image.svg",
+      "sizes": "1200x630",
+      "type": "image/svg+xml",
+      "form_factor": "wide",
+      "label": "Learni — AI Tutor Dashboard"
+    }
+  ]
+}
