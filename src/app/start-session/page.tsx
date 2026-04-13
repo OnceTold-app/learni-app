@@ -342,6 +342,7 @@ const SUBJECT_GROUPS: SubjectGroup[] = [
           { id: 'money-shopping', label: 'Smart shopping', desc: 'Comparing prices and discounts' },
           { id: 'money-inflation', label: 'Inflation', desc: 'Why things cost more every year' },
           { id: 'money-insurance', label: 'Insurance basics', desc: 'Protecting what matters' },
+          { id: 'money-income-types', label: '4 ways to earn', desc: 'Employee, self-employed, business owner, investor' },
         ],
       },
     ],
