@@ -16,12 +16,13 @@ export async function GET(req: NextRequest) {
   if (token) {
     const { data: { user } } = await supabase.auth.getUser(token)
     if (user) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data } = await supabase
         .from('accounts')
-        .select('id, plan, trial_ends_at, subscription_status')
+        .select('id, plan, trial_ends_at, subscription_status, referral_code, referral_free_month')
         .eq('user_id', user.id)
         .single()
-      account = data
+      account = data as any
     }
   } else if (childId) {
     // Get account via child
@@ -62,5 +63,7 @@ export async function GET(req: NextRequest) {
     daysLeft,
     plan: account.plan || 'trial',
     subscriptionStatus: account.subscription_status,
+    referralCode: (account as any).referral_code || null,
+    referralFreeMonth: (account as any).referral_free_month || false,
   })
 }

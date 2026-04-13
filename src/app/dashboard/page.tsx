@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { SkeletonLight, SkeletonStyles } from '@/components/ui/skeleton'
+import { track } from '@/lib/posthog'
 
 interface Child {
   id: string
@@ -30,6 +31,8 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true)
   const [childrenError, setChildrenError] = useState(false)
   const [parentName, setParentName] = useState('')
+  const [referralCode, setReferralCode] = useState<string | null>(null)
+  const [referralCopied, setReferralCopied] = useState(false)
 
   useEffect(() => {
     // Check auth
@@ -39,6 +42,14 @@ export default function DashboardPage() {
       return
     }
     setParentName(name)
+
+    // Fetch account status (includes referral code)
+    fetch('/api/account/status', {
+      headers: { 'Authorization': `Bearer ${localStorage.getItem('learni_parent_token')}` }
+    })
+      .then(r => r.json())
+      .then(d => { if (d.referralCode) setReferralCode(d.referralCode) })
+      .catch(() => {})
 
     // Fetch children
     fetchChildren()
@@ -373,6 +384,22 @@ export default function DashboardPage() {
               </a>
             )}
 
+            {/* Refer a friend */}
+            {referralCode && (
+              <ReferAFriend
+                referralCode={referralCode}
+                copied={referralCopied}
+                onCopy={() => {
+                  const url = `https://learniapp.co/signup?ref=${referralCode}`
+                  navigator.clipboard.writeText(url).then(() => {
+                    setReferralCopied(true)
+                    track('referral_link_copied', { referral_code: referralCode })
+                    setTimeout(() => setReferralCopied(false), 3000)
+                  })
+                }}
+              />
+            )}
+
             {/* Focus areas */}
             <FocusAreas childId={child?.id || ''} childName={child?.name || ''} />
 
@@ -427,6 +454,64 @@ export default function DashboardPage() {
           .dashboard-child-card { padding: 16px !important; }
         }
       `}</style>
+    </div>
+  )
+}
+
+// Refer a Friend component
+function ReferAFriend({ referralCode, copied, onCopy }: { referralCode: string; copied: boolean; onCopy: () => void }) {
+  const referralUrl = `https://learniapp.co/signup?ref=${referralCode}`
+  return (
+    <div style={{
+      background: 'linear-gradient(135deg, #0d2b28, #1a4a44)',
+      borderRadius: '16px',
+      padding: '20px 22px',
+      marginBottom: '20px',
+      color: 'white',
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
+        <span style={{ fontSize: '22px' }}>🎁</span>
+        <div>
+          <div style={{ fontFamily: "'Nunito', sans-serif", fontWeight: 900, fontSize: '16px' }}>Refer a friend — you both get a free month</div>
+          <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)', marginTop: '2px' }}>Share your link. When they sign up, we flag you both for a free month on your next bill.</div>
+        </div>
+      </div>
+      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+        <div style={{
+          flex: 1,
+          background: 'rgba(255,255,255,0.08)',
+          border: '1px solid rgba(255,255,255,0.12)',
+          borderRadius: '10px',
+          padding: '9px 12px',
+          fontSize: '12px',
+          color: 'rgba(255,255,255,0.6)',
+          fontFamily: 'monospace',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap' as const,
+        }}>{referralUrl}</div>
+        <button
+          onClick={onCopy}
+          style={{
+            background: copied ? '#1a9e92' : '#2ec4b6',
+            color: 'white',
+            border: 'none',
+            borderRadius: '10px',
+            padding: '9px 16px',
+            fontFamily: "'Nunito', sans-serif",
+            fontWeight: 800,
+            fontSize: '13px',
+            cursor: 'pointer',
+            whiteSpace: 'nowrap' as const,
+            transition: 'background 0.15s',
+          }}
+        >
+          {copied ? '✓ Copied!' : 'Copy link'}
+        </button>
+      </div>
+      <div style={{ marginTop: '8px', fontSize: '11px', color: 'rgba(255,255,255,0.3)' }}>
+        Your referral code: <span style={{ color: '#2ec4b6', fontWeight: 700, fontFamily: 'monospace' }}>{referralCode}</span>
+      </div>
     </div>
   )
 }
