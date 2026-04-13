@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Nunito, Plus_Jakarta_Sans } from 'next/font/google'
 import './globals.css'
 import NavBar from '@/components/nav-bar'
+import PostHogProvider from '@/components/posthog-provider'
 
 const nunito = Nunito({
   subsets: ['latin'],
@@ -67,6 +68,17 @@ export const metadata: Metadata = {
       'max-snippet': -1,
     },
   },
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'Learni',
+  },
+  other: {
+    'mobile-web-app-capable': 'yes',
+    'msapplication-TileColor': '#2ec4b6',
+    'theme-color': '#2ec4b6',
+  },
 }
 
 export default function RootLayout({
@@ -76,7 +88,19 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`${nunito.variable} ${jakarta.variable}`}>
+      <head>
+        <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-32.png" />
+        <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="Learni" />
+        <meta name="application-name" content="Learni" />
+        <meta name="msapplication-TileColor" content="#2ec4b6" />
+        <meta name="theme-color" content="#2ec4b6" />
+      </head>
       <body className="antialiased" style={{ paddingTop: '52px' }}>
+        <PostHogProvider />
         <NavBar />
         {children}
       </body>
