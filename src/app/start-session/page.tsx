@@ -31,6 +31,13 @@ const SUBJECT_GROUPS: SubjectGroup[] = [
     label: 'Maths',
     categories: [
       {
+        id: 'homework',
+        emoji: '📸',
+        title: 'Homework help',
+        desc: 'Take a photo — Earni helps you understand',
+        action: '/homework',
+      },
+      {
         id: 'baseline',
         emoji: '🎯',
         title: 'Find my level',
