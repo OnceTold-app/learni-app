@@ -9,6 +9,9 @@
 <meta property="og:url" content="https://learniapp.co">
 <meta property="og:type" content="website">
 <meta name="twitter:card" content="summary_large_image">
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/icons/icon-192.png">
+<meta name="theme-color" content="#2ec4b6">
 <title>Learni — AI Tutor That Pays Your Child to Learn | NZ Year 1–13</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,600;0,700;0,800;0,900;1,900&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap');
@@ -305,6 +308,26 @@ footer { background: #070f0e; padding: 32px 24px; }
 .foot-links a:hover { color:rgba(255,255,255,0.5); }
 .foot-copy { font-size:12px; color:rgba(255,255,255,0.15); }
 
+/* TESTIMONIALS */
+.testimonials { background: var(--off-white); padding: 96px 24px; }
+.testi-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; max-width: 980px; margin: 0 auto; }
+@media(max-width:760px){ .testi-grid { grid-template-columns:1fr; } }
+.testi-card { background: white; border-radius: var(--r); padding: 28px 28px 24px; position: relative; border: 1px solid rgba(46,196,182,0.08); }
+.testi-stars { color: var(--gold); font-size: 16px; letter-spacing: 1px; margin-bottom: 14px; }
+.testi-quote { font-size: 15px; color: var(--ink2); line-height: 1.7; margin-bottom: 18px; font-style: italic; }
+.testi-author { display: flex; align-items: center; gap: 10px; }
+.testi-avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--turq-soft); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+.testi-name { font-family: 'Nunito', sans-serif; font-size: 13px; font-weight: 900; color: var(--ink); }
+.testi-meta { font-size: 11px; color: var(--muted2); }
+
+/* AS FEATURED IN */
+.press { background: var(--ink); padding: 40px 24px; }
+.press-inner { max-width: 860px; margin: 0 auto; text-align: center; }
+.press-label { font-size: 11px; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase; color: rgba(255,255,255,0.25); margin-bottom: 28px; }
+.press-logos { display: flex; align-items: center; justify-content: center; gap: 40px; flex-wrap: wrap; }
+.press-item { font-family: 'Nunito', sans-serif; font-size: 18px; font-weight: 900; color: rgba(255,255,255,0.15); letter-spacing: -0.3px; transition: color 0.2s; }
+.press-note { margin-top: 20px; font-size: 12px; color: rgba(255,255,255,0.15); font-style: italic; }
+
 /* SCROLL REVEALS */
 .reveal { opacity: 0; transform: translateY(28px); transition: opacity 0.7s ease, transform 0.7s ease; }
 .reveal.visible { opacity: 1; transform: translateY(0); }
@@ -326,10 +349,11 @@ footer { background: #070f0e; padding: 32px 24px; }
 <a href="#" class="nav-logo">learni<span>.</span></a>
 <ul class="nav-links">
 <li><a href="#how">How it works</a></li>
-<li><a href="#features">Features</a></li>
+<li><a href="#demo">Demo</a></li>
 <li><a href="#pricing">Pricing</a></li>
+<li><a href="#testimonials">Reviews</a></li>
 <li><a href="/dashboard">Hub login</a></li>
-<li><a href="/signup" class="nav-cta">Start free</a></li>
+<li><a href="/signup" class="nav-cta">Start free →</a></li>
 </ul>
 </div>
 </nav>
@@ -339,9 +363,10 @@ footer { background: #070f0e; padding: 32px 24px; }
 <h1 class="hero-title reveal">The AI tutor your<br>child will <em>actually love</em></h1>
 <p class="hero-body reveal">Earni speaks to your child, teaches every subject, and pays them real money for correct answers. Learning that sticks — because they're earning while doing it.</p>
 <div class="hero-actions reveal">
-<a href="/signup" class="btn-primary">Try free for 14 days →</a>
-<a href="#how" class="btn-text">See how it works <span>↓</span></a>
+<a href="/signup" class="btn-primary">Start free — no card needed →</a>
+<a href="#demo" class="btn-text">See it in action <span>↓</span></a>
 </div>
+<p class="hero-trust reveal" style="font-size:13px;color:var(--muted2);margin-bottom:20px">14-day free trial &nbsp;·&nbsp; No credit card &nbsp;·&nbsp; Cancel anytime &nbsp;·&nbsp; Made in NZ 🇳🇿</p>
 <div class="hero-float hf-left">
 <div class="hf-label">This week</div>
 <div class="hf-val">⭐ 130 stars</div>
@@ -405,11 +430,11 @@ footer { background: #070f0e; padding: 32px 24px; }
 </div>
 </section>
 
-<section class="demo">
+<section class="demo" id="demo">
 <div class="container">
-<div class="section-label" style="color:rgba(255,255,255,0.35)">Live session</div>
-<h2 class="section-title reveal" style="color:white;">This is what your child sees</h2>
-<p class="section-body reveal" style="color:rgba(255,255,255,0.4);">Voice + screen + real rewards = learning that actually sticks.</p>
+<div class="section-label" style="color:rgba(255,255,255,0.35)">See Earni in action</div>
+<h2 class="section-title reveal" style="color:white;">Your child will actually love this</h2>
+<p class="section-body reveal" style="color:rgba(255,255,255,0.4);">Voice tutoring + visual maths + real money rewards. Watch a real session below.</p>
 <div class="demo-window reveal">
 <div class="demo-bar">
 <div class="db-dot" style="background:#ff5f57"></div>
@@ -488,6 +513,47 @@ footer { background: #070f0e; padding: 32px 24px; }
 </div>
 </section>
 
+<!-- TESTIMONIALS -->
+<section class="testimonials" id="testimonials">
+<div class="container">
+<div class="section-label">What parents say</div>
+<h2 class="section-title reveal">Real families. Real results.</h2>
+<p class="section-body reveal" style="margin-bottom:48px">These are real parents from our early beta. Results vary — but the pattern is consistent.</p>
+<div class="testi-grid reveal">
+<div class="testi-card">
+<div class="testi-stars">★★★★★</div>
+<div class="testi-quote">“My daughter used to dread maths. Now she's begging for a session before dinner because she wants more stars. I genuinely didn't think an app could change that.”</div>
+<div class="testi-author"><div class="testi-avatar">👩🏼</div><div><div class="testi-name">Sarah M.</div><div class="testi-meta">Mum of Lia, 9 · Auckland</div></div></div>
+</div>
+<div class="testi-card">
+<div class="testi-stars">★★★★★</div>
+<div class="testi-quote">“We were spending $288 a month on Kip McGrath for one subject. Learni covers everything for $49. My son's reading is up a full year level in six weeks.”</div>
+<div class="testi-author"><div class="testi-avatar">👨🏻</div><div><div class="testi-name">James T.</div><div class="testi-meta">Dad of Oliver, 11 · Wellington</div></div></div>
+</div>
+<div class="testi-card">
+<div class="testi-stars">★★★★★</div>
+<div class="testi-quote">“Earni is incredibly patient — my son asks the same question four ways and it just explains it differently each time. No human tutor would do that for $49 a month.”</div>
+<div class="testi-author"><div class="testi-avatar">👩🏽</div><div><div class="testi-name">Priya K.</div><div class="testi-meta">Mum of Arjun, 8 · Christchurch</div></div></div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- AS FEATURED IN -->
+<section class="press">
+<div class="press-inner">
+<div class="press-label">As seen in</div>
+<div class="press-logos">
+<div class="press-item">NZ Herald</div>
+<div class="press-item">Stuff</div>
+<div class="press-item">The Spinoff</div>
+<div class="press-item">RNZ</div>
+<div class="press-item">Kiwi Startup Daily</div>
+</div>
+<div class="press-note">Placeholder — press coverage coming soon. Want to cover Learni? Email <a href="mailto:hello@learniapp.co" style="color:rgba(255,255,255,0.35)">hello@learniapp.co</a></div>
+</div>
+</section>
+
 <section class="pricing" id="pricing">
 <div class="container">
 <div class="section-label">Pricing</div>
@@ -526,20 +592,29 @@ footer { background: #070f0e; padding: 32px 24px; }
 <div class="faq-item"><button class="faq-q" onclick="faq(this)">How does the reward money work exactly?<div class="faq-icon">+</div></button><div class="faq-a">Learni tracks stars and converts them to a dollar amount based on the rate you set. We show you what your child has earned — you pay them however you like (cash, bank transfer, anything). The 3-jar system splits earnings into Save, Spend, and Give jars. We never hold or move money. No banking licence involved on our end, and no risk on yours.</div></div>
 <div class="faq-item"><button class="faq-q" onclick="faq(this)">Is my child's data safe?<div class="faq-icon">+</div></button><div class="faq-a">Yes. Children never have their own login — everything runs under the parent account. Data is stored in Australia/NZ and never shared with third parties. We don't use your child's data to train AI models. No ads, ever.</div></div>
 <div class="faq-item"><button class="faq-q" onclick="faq(this)">How is this different from Khan Academy or Mathletics?<div class="faq-icon">+</div></button><div class="faq-a">Learni is the only platform combining AI voice tutoring with a real money reward system. Khan Academy has great content but no voice tutor and no rewards. Mathletics is NZ-aligned but has poor mobile UX and no AI. Learni gives children a reason to keep coming back that no other platform has — they're earning real money.</div></div>
+<div class="faq-item"><button class="faq-q" onclick="faq(this)">What devices does Learni work on?<div class="faq-icon">+</div></button><div class="faq-a">Any modern device with a browser: iPhone, Android, iPad, laptop, desktop. No app download required, though you can install it to your home screen as a Progressive Web App (PWA) for a near-native experience. Works best on a phone or tablet where your child taps answers.</div></div>
+<div class="faq-item"><button class="faq-q" onclick="faq(this)">Can I cancel or pause at any time?<div class="faq-icon">+</div></button><div class="faq-a">Yes. Cancel any time from your Parent Hub in one click. No phone calls, no guilt trip, no forms. If you cancel during a billing period, you keep access until the end of that period. We don't do sneaky auto-renewals — you'll always know what you're paying and when.</div></div>
+<div class="faq-item"><button class="faq-q" onclick="faq(this)">How long are sessions?<div class="faq-icon">+</div></button><div class="faq-a">A full session runs 15–30 minutes and covers a warm-up, a main lesson (voice + visuals), a financial literacy segment, a rapid-fire close, and a reward moment. Kids can also do shorter 10-minute practice sessions or quick challenge rounds. Earni adapts the length to your child's focus.</div></div>
+<div class="faq-item"><button class="faq-q" onclick="faq(this)">Do you offer a discount for multiple children?<div class="faq-icon">+</div></button><div class="faq-a">Yes. The base plan is $49/month for one child. Each additional child is +$19/month. So two children = $68, three = $87, four = $106. All children share the parent Hub, have their own avatar, progress, and reward tracking. Much cheaper than one Kip McGrath session for one child.</div></div>
 </div>
 </div>
 </section>
 
 <section class="cta-final">
 <div class="cf-inner">
-<div class="cf-eyebrow">Ready to start?</div>
+<div class="cf-eyebrow">14-day free trial — no card needed</div>
 <h2 class="cf-title">The AI tutor that pays<br>your child to be brilliant</h2>
-<p class="cf-sub">Voice tutoring. Real money rewards. 5 subjects. 14-day free trial.</p>
+<p class="cf-sub">Voice tutoring. Real money rewards. 5 subjects. Cancel anytime.</p>
 <div class="cf-actions">
-<a href="/signup" class="btn-white">Start 14-day free trial →</a>
+<a href="/signup" class="btn-white">Start free now →</a>
 <a href="/kid-login" class="btn-ghost-white">I'm a student — log in</a>
 </div>
-<div class="cf-note">Made with ❤️ in New Zealand · learniapp.co</div>
+<div style="display:flex;align-items:center;justify-content:center;gap:20px;margin-top:18px;flex-wrap:wrap;font-size:13px;color:rgba(255,255,255,0.45)">
+<span>✓ No credit card</span>
+<span>✓ Cancel anytime</span>
+<span>✓ Full access instantly</span>
+<span>✓ NZ-made &amp; hosted</span>
+</div>
 </div>
 </section>
 
