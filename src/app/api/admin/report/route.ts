@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
   } else {
     // Allow with admin secret for cron/scripts
     const secret = req.nextUrl.searchParams.get('secret')
-    if (secret !== process.env.ADMIN_REPORT_SECRET && secret !== 'momentum2026') {
+    if (secret !== process.env.ADMIN_REPORT_SECRET) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
   }

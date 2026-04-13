@@ -273,6 +273,27 @@ export default function KidHubPage() {
           </div>
         </div>
 
+        {/* Streak banner */}
+        {streak > 0 && (
+          <div style={{
+            background: 'linear-gradient(135deg, rgba(245,166,35,0.15), rgba(239,68,68,0.1))',
+            border: '1px solid rgba(245,166,35,0.25)',
+            borderRadius: '16px',
+            padding: '16px 20px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '12px',
+            marginBottom: '16px',
+          }}>
+            <span style={{ fontSize: '32px' }}>🔥</span>
+            <div>
+              <div style={{ fontFamily: "'Nunito', sans-serif", fontSize: '22px', fontWeight: 900, color: '#f5a623' }}>{streak} day streak!</div>
+              <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)' }}>Keep it going — don&apos;t break the chain!</div>
+            </div>
+          </div>
+        )}
+
         {/* Stats */}
         <div className="kid-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', marginBottom: '24px' }}>
           <div style={{

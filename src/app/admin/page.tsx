@@ -14,7 +14,8 @@ export default function AdminPage() {
     async function load() {
       try {
         const token = localStorage.getItem('learni_parent_token')
-        const res = await fetch('/api/admin/report?secret=momentum2026', {
+        const secret = new URLSearchParams(window.location.search).get('secret') || ''
+        const res = await fetch(`/api/admin/report?secret=${secret}`, {
           headers: token ? { 'Authorization': `Bearer ${token}` } : {},
         })
         if (!res.ok) throw new Error('Unauthorized')
@@ -148,7 +149,7 @@ export default function AdminPage() {
 
         {/* API endpoint note */}
         <div style={{ fontSize: '12px', color: '#8abfba', textAlign: 'center', marginTop: '20px' }}>
-          API: <code>/api/admin/report?secret=momentum2026</code> — use for automated reporting
+          Admin access requires authentication token
         </div>
       </div>
     </div>
