@@ -156,9 +156,12 @@ export async function POST(req: NextRequest) {
       })
     }
 
+    // Use faster model for rapid fire phases
+    const model = (phase === 'warmup' || phase === 'closing') ? 'claude-haiku-4-5-20251001' : CLAUDE_MODEL
+
     const response = await client.messages.create({
-      model: CLAUDE_MODEL,
-      max_tokens: 800,
+      model,
+      max_tokens: phase === 'warmup' || phase === 'closing' ? 300 : 500,
       system: systemPrompt,
       messages,
     })

@@ -478,21 +478,11 @@ export default function SessionPage() {
       starsEarned: newStars,
     }))
 
-    // Wait for Earni to finish speaking before advancing
-    // Don't auto-advance — let the speak() callback or a timer handle it
-    function advanceWhenReady() {
-      // If audio is still playing, wait for it to finish
-      if (audioRef.current && !audioRef.current.ended) {
-        audioRef.current.onended = () => {
-          fetchQuestion(state.phase, selected, state.question || '', state.answer)
-        }
-      } else {
-        fetchQuestion(state.phase, selected, state.question || '', state.answer)
-      }
-    }
-
-    const minDelay = (state.phase === 'warmup' || state.phase === 'closing') ? 1200 : 2500
-    setTimeout(advanceWhenReady, minDelay)
+    // Show result briefly, then advance — don't wait for voice to finish
+    const minDelay = (state.phase === 'warmup' || state.phase === 'closing') ? 800 : 1500
+    setTimeout(() => {
+      fetchQuestion(state.phase, selected, state.question || '', state.answer)
+    }, minDelay)
   }
 
   function playSound(correct: boolean) {
