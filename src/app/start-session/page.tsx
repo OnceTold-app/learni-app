@@ -316,6 +316,20 @@ const SUBJECT_GROUPS: SubjectGroup[] = [
         ],
       },
       {
+        id: 'money-goals',
+        emoji: '🎯',
+        title: 'Goals & dreams',
+        desc: 'Who do you want to be?',
+        options: [
+          { id: 'goals-dream-job', label: 'My dream job', desc: 'What do you want to be? Let\'s explore it' },
+          { id: 'goals-vision', label: 'My future self', desc: 'Imagine yourself at 25 — what does life look like?' },
+          { id: 'goals-short', label: 'Goals for this term', desc: 'What do you want to achieve in the next few months?' },
+          { id: 'goals-saving-for', label: 'What am I saving for?', desc: 'Set a real savings goal and make a plan' },
+          { id: 'goals-education', label: 'Education pathways', desc: 'Uni, trades, apprenticeships — what\'s the path?' },
+          { id: 'goals-role-models', label: 'Role models', desc: 'Who inspires you and why?' },
+        ],
+      },
+      {
         id: 'money-smart',
         emoji: '🧠',
         title: 'Smart money',
