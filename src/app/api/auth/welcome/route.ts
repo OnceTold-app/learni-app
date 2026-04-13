@@ -4,7 +4,7 @@ import nodemailer from 'nodemailer'
 const SMTP_HOST = 'smtppro.zoho.com.au'
 const SMTP_PORT = 587
 const EMAIL = 'hello@learniapp.co'
-const PASSWORD = process.env.SMTP_PASSWORD || 'K!eyboard12345!'
+const PASSWORD = process.env.SMTP_PASSWORD || ''
 
 export async function POST(request: Request) {
   try {
