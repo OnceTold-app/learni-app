@@ -156,13 +156,15 @@ export async function POST(req: NextRequest) {
       })
     }
 
-    // Use faster model for rapid fire phases
-    const model = (phase === 'warmup' || phase === 'closing') ? 'claude-haiku-4-5-20251001' : CLAUDE_MODEL
+    // Use Haiku for rapid fire + financial (cheaper + faster), Sonnet only for main lesson + homework
+    const model = (phase === 'warmup' || phase === 'closing' || phase === 'financial') ? 'claude-haiku-4-5-20251001' : CLAUDE_MODEL
 
     const response = await client.messages.create({
       model,
       max_tokens: phase === 'warmup' || phase === 'closing' ? 300 : 500,
-      system: systemPrompt,
+      // Enable prompt caching — system prompt is identical every call
+      // Cached reads cost 90% less than uncached
+      system: [{ type: 'text', text: systemPrompt, cache_control: { type: 'ephemeral' } }] as Parameters<typeof client.messages.create>[0]['system'],
       messages,
     })
 
