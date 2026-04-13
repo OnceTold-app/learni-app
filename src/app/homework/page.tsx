@@ -21,6 +21,9 @@ export default function HomeworkPage() {
   const [followUp, setFollowUp] = useState('')
   const [conversation, setConversation] = useState<Array<{ role: string; text: string }>>([])
   const fileRef = useRef<HTMLInputElement>(null)
+  const [listening, setListening] = useState(false)
+  const [trainingPlan, setTrainingPlan] = useState<string[] | null>(null)
+  const [generatingPlan, setGeneratingPlan] = useState(false)
 
   useEffect(() => {
     setChildName(localStorage.getItem('learni_child_name') || 'Student')
@@ -83,6 +86,57 @@ export default function HomeworkPage() {
     handleSubmit(q)
   }
 
+  function startListening() {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+    if (!SR) return
+    const recognition = new SR()
+    recognition.continuous = false
+    recognition.interimResults = false
+    recognition.lang = 'en-NZ'
+    recognition.onstart = () => setListening(true)
+    recognition.onend = () => setListening(false)
+    recognition.onerror = () => setListening(false)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    recognition.onresult = (event: any) => {
+      const transcript = event.results[0][0].transcript.trim()
+      if (transcript) {
+        setConversation(prev => [...prev, { role: 'kid', text: transcript }])
+        handleSubmit(transcript)
+      }
+    }
+    recognition.start()
+  }
+
+  async function generateTrainingPlan() {
+    if (!response) return
+    setGeneratingPlan(true)
+    try {
+      const topics = response.questionsFound?.join(', ') || response.helpWith || response.subject || 'homework'
+      const formData = new FormData()
+      formData.append('childName', childName)
+      formData.append('yearLevel', yearLevel)
+      formData.append('question', `Based on this homework about "${topics}", create a 5-day training plan. Each day should have a different focus that builds the skills needed. Day 1 = basics, Day 5 = challenge level. Return JSON: { "earniSays": "intro", "trainingPlan": ["Day 1: ...", "Day 2: ...", "Day 3: ...", "Day 4: ...", "Day 5: ..."], "checkIn": ["Start Day 1 now", "Save for later"] }`)
+      const res = await fetch('/api/homework', { method: 'POST', body: formData })
+      const data = await res.json()
+      if (data.trainingPlan) {
+        setTrainingPlan(data.trainingPlan)
+        setConversation(prev => [...prev, { role: 'earni', text: data.earniSays || "Here's your training plan for the week!" }])
+      }
+      // Save focus areas to the child's profile
+      const childId = localStorage.getItem('learni_child_id')
+      if (childId && data.trainingPlan) {
+        const token = localStorage.getItem('learni_parent_token') || ''
+        await fetch('/api/parent/focus', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify({ childId, focusAreas: [topics] }),
+        }).catch(() => {})
+      }
+    } catch { /* */ }
+    setGeneratingPlan(false)
+  }
+
   return (
     <div style={{
       minHeight: '100vh',
@@ -130,6 +184,32 @@ export default function HomeworkPage() {
             <input ref={fileRef} type="file" accept="image/*" capture="environment" onChange={handleFileChange} style={{ display: 'none' }} />
 
             <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.2)', fontSize: '13px', margin: '12px 0' }}>or</div>
+
+            {/* Voice input */}
+            <button
+              onClick={startListening}
+              disabled={listening}
+              style={{
+                width: '100%',
+                padding: '16px',
+                background: listening ? 'rgba(239,68,68,0.15)' : 'rgba(255,255,255,0.04)',
+                border: listening ? '1.5px solid rgba(239,68,68,0.3)' : '1.5px solid rgba(255,255,255,0.1)',
+                borderRadius: '16px',
+                cursor: listening ? 'default' : 'pointer',
+                textAlign: 'center',
+                marginBottom: '12px',
+              }}
+            >
+              <div style={{ fontSize: '24px', marginBottom: '4px' }}>{listening ? '🎤' : '🎙️'}</div>
+              <div style={{ fontFamily: "'Nunito', sans-serif", fontSize: '14px', fontWeight: 800, color: listening ? '#ef4444' : '#2ec4b6' }}>
+                {listening ? 'Listening...' : 'Read your question aloud'}
+              </div>
+              <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)', marginTop: '2px' }}>
+                {listening ? 'Speak now — Earni is listening' : 'Tap and read the question from your sheet'}
+              </div>
+            </button>
+
+            <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.2)', fontSize: '13px', margin: '8px 0' }}>or type it</div>
 
             <form onSubmit={(e) => { e.preventDefault(); handleFollowUp() }}>
               <input
@@ -258,13 +338,93 @@ export default function HomeworkPage() {
           </div>
         )}
 
+        {/* Training plan button */}
+        {response && !loading && !trainingPlan && (
+          <button
+            onClick={generateTrainingPlan}
+            disabled={generatingPlan}
+            style={{
+              width: '100%',
+              padding: '14px',
+              background: 'rgba(139,92,246,0.1)',
+              border: '1px solid rgba(139,92,246,0.25)',
+              borderRadius: '16px',
+              cursor: generatingPlan ? 'default' : 'pointer',
+              textAlign: 'center',
+              marginBottom: '16px',
+            }}
+          >
+            <div style={{ fontFamily: "'Nunito', sans-serif", fontSize: '14px', fontWeight: 800, color: '#a78bfa' }}>
+              {generatingPlan ? 'Creating your plan...' : '📅 Create a week of training from this homework'}
+            </div>
+            <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)', marginTop: '2px' }}>
+              5 days of focused practice to master these skills
+            </div>
+          </button>
+        )}
+
+        {/* Training plan display */}
+        {trainingPlan && (
+          <div style={{
+            background: 'rgba(139,92,246,0.08)',
+            border: '1px solid rgba(139,92,246,0.2)',
+            borderRadius: '16px',
+            padding: '18px 20px',
+            marginBottom: '16px',
+          }}>
+            <div style={{ fontFamily: "'Nunito', sans-serif", fontSize: '16px', fontWeight: 900, color: '#a78bfa', marginBottom: '12px' }}>
+              📅 Your Training Plan
+            </div>
+            {trainingPlan.map((day, i) => (
+              <div key={i} style={{
+                padding: '10px 14px',
+                background: 'rgba(255,255,255,0.03)',
+                borderRadius: '10px',
+                marginBottom: '6px',
+                fontSize: '14px',
+                color: 'rgba(255,255,255,0.7)',
+                lineHeight: 1.5,
+                display: 'flex',
+                gap: '10px',
+                alignItems: 'flex-start',
+              }}>
+                <span style={{ color: '#a78bfa', fontWeight: 800, flexShrink: 0, fontFamily: "'Nunito', sans-serif" }}>Day {i + 1}</span>
+                <span>{day.replace(/^Day \d+:?\s*/i, '')}</span>
+              </div>
+            ))}
+            <div style={{ marginTop: '12px', textAlign: 'center' }}>
+              <a href="/start-session" style={{
+                display: 'inline-block',
+                padding: '10px 24px',
+                background: '#a78bfa',
+                color: 'white',
+                borderRadius: '20px',
+                fontSize: '13px',
+                fontWeight: 800,
+                textDecoration: 'none',
+                fontFamily: "'Nunito', sans-serif",
+              }}>
+                Start Day 1 now →
+              </a>
+            </div>
+          </div>
+        )}
+
         {/* Follow-up input */}
         {response && !loading && (
           <form onSubmit={(e) => { e.preventDefault(); handleFollowUp() }} style={{ display: 'flex', gap: '8px' }}>
+            <button type="button" onClick={startListening} disabled={listening} style={{
+              padding: '12px',
+              background: listening ? 'rgba(239,68,68,0.15)' : 'rgba(255,255,255,0.06)',
+              border: listening ? '1px solid rgba(239,68,68,0.3)' : '1px solid rgba(255,255,255,0.1)',
+              borderRadius: '14px',
+              cursor: listening ? 'default' : 'pointer',
+              fontSize: '18px',
+            }}>{listening ? '🎤' : '🎙️'}</button>
             <input
               value={followUp}
               onChange={e => setFollowUp(e.target.value)}
-              placeholder="Ask Earni anything about this..."
+              placeholder="Ask or speak..."
               style={{
                 flex: 1, padding: '12px 16px',
                 background: 'rgba(255,255,255,0.06)',
