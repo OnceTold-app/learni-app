@@ -232,7 +232,7 @@ export default function SessionPage() {
           phase,
           drillTopics: phase === 'warmup'
             ? (weakTopics.length > 0 ? weakTopics : focusAreas.length > 0 ? focusAreas : subject !== 'Maths' ? [subject] : ['times tables', 'number bonds'])
-            : [subject],
+            : [sessionTopic || subject],
           focusAreas,
           weakTopics,
           reviewTopics,

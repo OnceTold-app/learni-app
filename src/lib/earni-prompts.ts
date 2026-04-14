@@ -1043,7 +1043,7 @@ export function getSubjectExtension(topicId: string, yearLevel: number): string 
   if (t.startsWith('reading-') || t.startsWith('vocab-')) {
     return readingSubjectPrompt(topicId.replace(/-/g, ' '))
   }
-  if (t.startsWith('writing-') || t.startsWith('spelling-')) {
+  if (t.startsWith('writing-') || t.startsWith('spelling-') || t.startsWith('grammar-')) {
     return writingSubjectPrompt(topicId.replace(/-/g, ' '))
   }
   if (t.startsWith('science-')) {

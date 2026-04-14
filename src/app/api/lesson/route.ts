@@ -79,7 +79,7 @@ export async function POST(req: NextRequest) {
         systemPrompt = rapidFirePrompt(childName, yearLevel, drillTopics.length > 0 ? drillTopics : ['times tables', 'number bonds'])
         break
       case 'lesson':
-        systemPrompt = tutorPrompt(childName, yearLevel, subject) + (profileContext ? `\n\n## CHILD PROFILE\n${profileContext}` : '')
+        systemPrompt = tutorPrompt(childName, yearLevel, subject, drillTopics[0] || '') + (profileContext ? `\n\n## CHILD PROFILE\n${profileContext}` : '')
         break
       case 'financial': {
         const today = new Date()
