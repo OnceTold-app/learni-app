@@ -106,6 +106,20 @@ export async function GET(req: NextRequest) {
   const mrr = activeSubscribers * 49 // Simplified — doesn't count add-on children
   const trialConversionRate = expired.length > 0 ? Math.round((active.length / (active.length + expired.length)) * 100) : 0
 
+  // Get feedback this week
+  const { data: feedback } = await supabase
+    .from('session_feedback')
+    .select('rating, earni_rating, free_text, created_at')
+    .gte('created_at', weekAgo)
+    .order('created_at', { ascending: false })
+
+  const avgRating = feedback && feedback.length > 0
+    ? (feedback.reduce((s, f) => s + (f.rating || 0), 0) / feedback.filter(f => f.rating).length).toFixed(1)
+    : 'No feedback yet'
+  const avgEarni = feedback && feedback.length > 0
+    ? (feedback.reduce((s, f) => s + (f.earni_rating || 0), 0) / feedback.filter(f => f.earni_rating).length).toFixed(1)
+    : 'No feedback yet'
+
   return NextResponse.json({
     generated: now.toISOString(),
     overview: {
@@ -135,6 +149,12 @@ export async function GET(req: NextRequest) {
       trialConversionRate: `${trialConversionRate}%`,
     },
     learners: learnerBreakdown,
+    feedback: {
+      thisWeek: (feedback || []).length,
+      avgSessionRating: avgRating,
+      avgEarniRating: avgEarni,
+      recentComments: (feedback || []).filter(f => f.free_text).slice(0, 5).map(f => f.free_text),
+    },
     accounts: (allAccounts || []).map(a => ({
       email: a.email,
       name: a.full_name,

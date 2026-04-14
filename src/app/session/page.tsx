@@ -53,6 +53,8 @@ export default function SessionPage() {
   const subject = typeof window !== 'undefined' ? localStorage.getItem('learni_subject') || 'Maths' : 'Maths'
   const sessionMode = typeof window !== 'undefined' ? localStorage.getItem('learni_session_mode') || 'full' : 'full'
   const sessionTopic = typeof window !== 'undefined' ? localStorage.getItem('learni_session_topic') || '' : ''
+  // learnerId for spaced repetition question bank
+  const learnerId = typeof window !== 'undefined' ? localStorage.getItem('learni_child_id') || '' : ''
   const [focusAreas, setFocusAreas] = useState<string[]>([])
   const [weakTopics, setWeakTopics] = useState<string[]>([])
   const [reviewTopics, setReviewTopics] = useState<string[]>([])
@@ -181,6 +183,12 @@ export default function SessionPage() {
   const [celebration, setCelebration] = useState<string | null>(null)
   const [showConfetti, setShowConfetti] = useState(false)
   const [shake, setShake] = useState(false)
+  const [showFeedback, setShowFeedback] = useState(false)
+  const [feedbackRating, setFeedbackRating] = useState(0)
+  const [feedbackEarni, setFeedbackEarni] = useState(0)
+  const [feedbackText, setFeedbackText] = useState('')
+  const [feedbackSubmitted, setFeedbackSubmitted] = useState(false)
+  const [lastSessionId, setLastSessionId] = useState<string | null>(null)
   const [apiError, setApiError] = useState(false)
   const [, setRetryCount] = useState(0)
 
@@ -230,6 +238,9 @@ export default function SessionPage() {
           yearLevel,
           subject,
           phase,
+          // Question bank: pass topicId and learnerId for bank-first serving
+          topicId: sessionTopic || null,
+          learnerId: learnerId || null,
           drillTopics: phase === 'warmup'
             ? (weakTopics.length > 0 ? weakTopics : focusAreas.length > 0 ? focusAreas : subject !== 'Maths' ? [subject] : ['times tables', 'number bonds'])
             : [sessionTopic || subject],
@@ -520,6 +531,26 @@ export default function SessionPage() {
     } catch { /* Audio not available */ }
   }
 
+  async function submitFeedback(skip = false) {
+    if (!skip && feedbackRating > 0) {
+      try {
+        await fetch('/api/feedback', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            sessionId: lastSessionId,
+            learnerId: localStorage.getItem('learni_child_id'),
+            rating: feedbackRating,
+            earniRating: feedbackEarni,
+            freeText: feedbackText || null,
+            submittedBy: 'kid',
+          }),
+        })
+      } catch { /* best effort */ }
+    }
+    window.location.href = '/kid-hub'
+  }
+
   async function handleJarSubmit() {
     // Save session to Supabase
     try {
@@ -551,9 +582,9 @@ export default function SessionPage() {
       }
     } catch { /* best effort */ }
 
-    // Redirect to kid hub or parent dashboard
-    const childId = localStorage.getItem('learni_child_id')
-    window.location.href = childId ? '/kid-hub' : '/dashboard'
+    // Show feedback screen instead of immediately redirecting
+    if (data?.sessionId) setLastSessionId(data.sessionId)
+    setShowFeedback(true)
   }
 
   const [typedAnswer, setTypedAnswer] = useState('')
@@ -1544,6 +1575,91 @@ export default function SessionPage() {
           >
             💡 Help
           </button>
+        )}
+
+        {/* Feedback screen — full overlay after jars */}
+        {showFeedback && (
+          <div style={{
+            position: 'fixed', inset: 0,
+            background: '#0d2b28',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            zIndex: 300, padding: '24px',
+          }}>
+            <div style={{ maxWidth: '440px', width: '100%', textAlign: 'center' }}>
+              <div style={{ fontSize: '56px', marginBottom: '12px' }}>🎉</div>
+              <h2 style={{ fontFamily: "'Nunito', sans-serif", fontSize: '24px', fontWeight: 900, color: 'white', marginBottom: '4px' }}>
+                Session done!
+              </h2>
+              <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '14px', marginBottom: '28px' }}>
+                Quick question before you go...
+              </p>
+
+              {/* Session rating */}
+              <div style={{ marginBottom: '20px' }}>
+                <div style={{ fontSize: '14px', fontWeight: 700, color: 'rgba(255,255,255,0.6)', marginBottom: '10px' }}>How was the session?</div>
+                <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                  {['😢', '😕', '😐', '😊', '🤩'].map((emoji, i) => (
+                    <button key={i} onClick={() => setFeedbackRating(i + 1)} style={{
+                      fontSize: '28px', padding: '10px', borderRadius: '14px', border: 'none',
+                      background: feedbackRating === i + 1 ? 'rgba(46,196,182,0.2)' : 'rgba(255,255,255,0.05)',
+                      cursor: 'pointer', transition: 'all 0.15s',
+                      outline: feedbackRating === i + 1 ? '2px solid #2ec4b6' : 'none',
+                    }}>{emoji}</button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Earni rating */}
+              <div style={{ marginBottom: '20px' }}>
+                <div style={{ fontSize: '14px', fontWeight: 700, color: 'rgba(255,255,255,0.6)', marginBottom: '10px' }}>How was Earni as a tutor?</div>
+                <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                  {['1', '2', '3', '4', '5'].map((n, i) => (
+                    <button key={i} onClick={() => setFeedbackEarni(i + 1)} style={{
+                      width: '40px', height: '40px', borderRadius: '50%', border: 'none',
+                      background: feedbackEarni === i + 1 ? '#2ec4b6' : 'rgba(255,255,255,0.08)',
+                      color: feedbackEarni === i + 1 ? 'white' : 'rgba(255,255,255,0.5)',
+                      fontFamily: "'Nunito', sans-serif", fontSize: '16px', fontWeight: 900,
+                      cursor: 'pointer',
+                    }}>{n}</button>
+                  ))}
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: 'rgba(255,255,255,0.2)', marginTop: '4px', padding: '0 4px' }}>
+                  <span>Not great</span><span>Amazing!</span>
+                </div>
+              </div>
+
+              {/* Optional text */}
+              <textarea
+                value={feedbackText}
+                onChange={e => setFeedbackText(e.target.value)}
+                placeholder="Anything you want to tell Earni? (optional)"
+                rows={2}
+                style={{
+                  width: '100%', padding: '12px 14px', marginBottom: '16px',
+                  background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)',
+                  borderRadius: '12px', fontSize: '14px', color: 'white',
+                  fontFamily: "'Plus Jakarta Sans', sans-serif", resize: 'none', outline: 'none',
+                  boxSizing: 'border-box',
+                }}
+              />
+
+              <button onClick={() => submitFeedback(false)} style={{
+                width: '100%', padding: '16px', background: 'linear-gradient(135deg, #2ec4b6, #1ab5a8)',
+                color: 'white', border: 'none', borderRadius: '30px',
+                fontFamily: "'Nunito', sans-serif", fontSize: '17px', fontWeight: 900,
+                cursor: 'pointer', marginBottom: '10px',
+                boxShadow: '0 8px 32px rgba(46,196,182,0.3)',
+              }}>
+                Done! Go to my Hub →
+              </button>
+              <button onClick={() => submitFeedback(true)} style={{
+                background: 'none', border: 'none', color: 'rgba(255,255,255,0.25)',
+                fontSize: '13px', cursor: 'pointer',
+              }}>
+                Skip feedback
+              </button>
+            </div>
+          </div>
         )}
 
         {/* Celebration popup */}

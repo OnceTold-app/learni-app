@@ -1,9 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
+import { createClient } from '@supabase/supabase-js'
 import { CLAUDE_MODEL } from '@/lib/claude'
 import { tutorPrompt, rapidFirePrompt, financialPrompt } from '@/lib/earni-prompts'
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+)
 
 // Session phases
 type Phase = 'warmup' | 'lesson' | 'financial' | 'closing' | 'reward'
@@ -13,6 +19,9 @@ interface LessonRequest {
   yearLevel: number
   subject: string
   phase: Phase
+  // Question bank: topic key + learner for spaced repetition
+  topicId?: string
+  learnerId?: string
   // For warmup/closing: previous topics to drill
   drillTopics?: string[]
   // For tracking conversation context
@@ -52,6 +61,8 @@ export async function POST(req: NextRequest) {
       yearLevel,
       subject,
       phase,
+      topicId,
+      learnerId,
       drillTopics = [],
       history = [],
       answer,
@@ -63,6 +74,73 @@ export async function POST(req: NextRequest) {
       reviewTopics = [],
       childProfile = {},
     } = body
+
+    // ─── Question Bank Helpers ────────────────────────────────────────────────
+    async function fetchBankQuestion(tid: string, year: number): Promise<Record<string, unknown> | null> {
+      try {
+        let query = supabase
+          .from('question_bank')
+          .select('*')
+          .eq('topic_id', tid)
+          .eq('year_level', year)
+
+        // Try unseen questions first
+        if (learnerId) {
+          const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
+          const { data: history } = await supabase
+            .from('learner_question_history')
+            .select('question_id')
+            .eq('learner_id', learnerId)
+            .gte('seen_at', sevenDaysAgo)
+          const seenIds = history?.map((h: { question_id: string }) => h.question_id) || []
+          if (seenIds.length > 0) {
+            const { data: unseen } = await query
+              .not('id', 'in', `(${seenIds.join(',')})`)
+              .limit(20)
+            if (unseen && unseen.length > 0) {
+              const q = unseen[Math.floor(Math.random() * unseen.length)]
+              if (learnerId) {
+                void (async () => { try { await supabase.from('learner_question_history').insert({ learner_id: learnerId, question_id: q.id, seen_at: new Date().toISOString(), was_correct: null, attempts: 1 }) } catch { /* ignore */ } })()
+              }
+              return q
+                })
+          }
+        }
+        // Fallback: any question
+        const { data: any } = await query.limit(20)
+        if (any && any.length > 0) {
+          const q = any[Math.floor(Math.random() * any.length)]
+          return q
+        }
+        return null
+      } catch { return null }
+    }
+
+    async function fetchConceptBank(tid: string, year: number): Promise<Record<string, unknown> | null> {
+      try {
+        const { data: exact } = await supabase
+          .from('concept_bank').select('*')
+          .eq('topic_id', tid).eq('year_level', year).limit(1).single()
+        if (exact) return exact
+        const { data: nearby } = await supabase
+          .from('concept_bank').select('*').eq('topic_id', tid)
+          .order('year_level', { ascending: true }).limit(10)
+        if (nearby && nearby.length > 0) {
+          return nearby.reduce((p: { year_level: number }, c: { year_level: number }) =>
+            Math.abs(c.year_level - year) < Math.abs(p.year_level - year) ? c : p
+          )
+        }
+        return null
+      } catch { return null }
+    }
+
+    // Celebration lines for correct answers (avoid Claude call)
+    const celebrations = [
+      `Nailed it! ⭐`, `Yes! That's exactly right! 🎉`, `Boom! ${childName} knows their stuff! 🔥`,
+      `Ka pai! (That's Māori for 'well done') ✨`, `Correct! You're on a roll! 💪`,
+      `That's it! Nice work! ⚡`, `Yes! Keep that momentum going! 🌟`, `Spot on! Legend! 🏆`,
+    ]
+    function randomCelebration() { return celebrations[Math.floor(Math.random() * celebrations.length)] }
 
     // Build child context string
     const profileContext = [
@@ -176,6 +254,79 @@ Example opening: "Hey ${childName}! Today we're going to learn about [topic]. He
 Remember: you're a tutor, not a quiz machine. Teach first. Questions come AFTER understanding.`,
       })
     }
+
+    // ─── Question Bank Interception — serve from bank when possible ─────────
+    // Compute answer evaluation flags early so we can use them for bank routing
+    const trimmedAnswer = answer?.toLowerCase().trim() || ''
+    const trimmedCorrect = currentCorrectAnswer?.toLowerCase().trim() || ''
+    const isCorrect = answer && currentQuestion ? trimmedAnswer === trimmedCorrect : false
+    const helpPhrases = ['help', 'hint', 'i dont know', "i don't know", 'idk', 'stuck', 'confused', 'explain', 'please help']
+    const isAskingForHelp = answer ? (helpPhrases.some(p => trimmedAnswer.includes(p)) || trimmedAnswer === '?') : false
+    const isFirstMessage = history.length === 0 && !answer
+
+    if (topicId && phase !== 'reward') {
+      // LESSON: first message → serve concept bank teaching content
+      if (phase === 'lesson' && isFirstMessage) {
+        const concept = await fetchConceptBank(topicId, yearLevel)
+        if (concept) {
+          const q = await fetchBankQuestion(topicId, yearLevel)
+          const teachText = `Hey ${childName}! Today we're learning about **${concept.concept_name}**. 📚\n\n${concept.explanation_1}\n\n💡 *${concept.analogy}*\n\nDoes that make sense? Once you're ready, let's try a question!`
+          if (q) {
+            return NextResponse.json({
+              phase, source: 'bank',
+              earniSays: teachText,
+              question: null, answer: null, visual: concept.visual_suggestion || null,
+              conceptData: concept,
+            })
+          }
+          return NextResponse.json({ phase, source: 'bank', earniSays: teachText, question: null, visual: concept.visual_suggestion || null })
+        }
+        // Concept bank empty → fall through to Claude
+      }
+
+      // WARMUP/CLOSING/LESSON: correct answer → celebrate + next bank question
+      if (isCorrect && !isAskingForHelp) {
+        const q = await fetchBankQuestion(topicId, yearLevel)
+        if (q) {
+          const celebration = randomCelebration()
+          return NextResponse.json({
+            phase, source: 'bank',
+            earniSays: `${celebration} Next one:`,
+            question: q.question, answer: q.answer,
+            options: q.options || [], visual: q.visual || null,
+            inputType: q.input_type || 'text',
+            hint: q.hint_1 || null,
+            hint2: q.hint_2 || null,
+            hint3: q.hint_3 || null,
+            questionId: q.id,
+          })
+        }
+        // Bank empty → fall through to Claude
+      }
+
+      // WARMUP/CLOSING: first question → serve from bank with greeting
+      if (isFirstMessage && (phase === 'warmup' || phase === 'closing')) {
+        const q = await fetchBankQuestion(topicId, yearLevel)
+        if (q) {
+          const greeting = phase === 'warmup'
+            ? `Let's warm up your brain, ${childName}! Ready? 🔥 Personal best: ${sessionStats.personalBest} — let's beat it!`
+            : `Last round — let's see if today's lesson stuck. No thinking, just knowing. Go! ⚡`
+          return NextResponse.json({
+            phase, source: 'bank',
+            earniSays: `${greeting}\n\n`,
+            question: q.question, answer: q.answer,
+            options: q.options || [], visual: q.visual || null,
+            inputType: q.input_type || 'text',
+            hint: q.hint_1 || null,
+            hint2: q.hint_2 || null,
+            hint3: q.hint_3 || null,
+            questionId: q.id,
+          })
+        }
+        // Bank empty → fall through to Claude
+      }
+    }
+    // ─── End Question Bank Interception ──────────────────────────────────────
 
     // Use Haiku for rapid fire + financial (cheaper + faster), Sonnet only for main lesson + homework
     const model = (phase === 'warmup' || phase === 'closing' || phase === 'financial') ? 'claude-haiku-4-5-20251001' : CLAUDE_MODEL
