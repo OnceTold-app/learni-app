@@ -147,7 +147,13 @@ export async function POST(req: NextRequest) {
       messages.push({
         role: 'user',
         content: phase === 'warmup'
-          ? `Start the warm-up rapid fire. This tests PREVIOUS lessons — NOT today's topic. Drill a WIDE VARIETY: times tables (different numbers each time), number bonds, addition, subtraction, basic facts ${childName} should already know for Year ${yearLevel}. Don't repeat the same question back-to-back. Mix up the numbers and operations. It's fine to revisit a question later in the session. Personal best is ${sessionStats.personalBest} correct in a row. Say something encouraging like "Hey ${childName} — let's warm up that amazing brain! Ready?" then give the first question.`
+          ? (() => {
+              const isMaths = !subject || subject === 'Maths' || subject.toLowerCase().includes('maths') || subject.toLowerCase().includes('math')
+              const drillDesc = isMaths
+                ? 'times tables, number bonds, addition, subtraction, basic maths facts'
+                : `${subject} review questions — quick recall on what they already know`
+              return `Start the warm-up rapid fire. Drill: ${drillDesc} for Year ${yearLevel}. Quick questions, one at a time, don't repeat back-to-back. Personal best: ${sessionStats.personalBest}. Say something like "Let's warm up your brain, ${childName}! Ready?" then give the first question.`
+            })()
           : phase === 'closing'
             ? `Start the closing rapid fire. This tests ONLY what ${childName} just learned TODAY in the ${subject} lesson. Only ask questions from today's lesson content — make sure it's locked in. Say "Last round — let's see if today's lesson stuck. No thinking, just knowing. Go." then give the first question.`
             : phase === 'financial'
