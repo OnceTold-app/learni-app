@@ -23,6 +23,15 @@ export default function KidLoginPage() {
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
 
+      // Cancel any pending daily summary (they came back within 10 mins)
+      try {
+        await fetch('/api/session/daily-summary', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ childId: data.child.id }),
+        })
+      } catch { /* ignore */ }
+
       // Store child info
       localStorage.setItem('learni_child_id', data.child.id)
       localStorage.setItem('learni_child_name', data.child.name)
