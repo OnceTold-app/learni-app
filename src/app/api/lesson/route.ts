@@ -158,7 +158,19 @@ export async function POST(req: NextRequest) {
             ? `Start the closing rapid fire. This tests ONLY what ${childName} just learned TODAY in the ${subject} lesson. Only ask questions from today's lesson content — make sure it's locked in. Say "Last round — let's see if today's lesson stuck. No thinking, just knowing. Go." then give the first question.`
             : phase === 'financial'
               ? `Now teach a financial literacy concept connected to today's ${subject} lesson. ${childName} earned ${sessionStats.starsEarned} stars so far. TEACH the concept first with real examples using their star earnings, THEN ask questions. Use the teach → practice cycle.`
-              : `Start the main lesson on ${subject} for Year ${yearLevel}.${focusAreas.length > 0 ? ` PRIORITY FOCUS AREAS set by parent: ${focusAreas.join(', ')}. Build the lesson around these topics.` : ''}${weakTopics.length > 0 ? ` WEAK AREAS from previous sessions: ${weakTopics.join(', ')}. Spend extra time on these — the child needs more practice here.` : ''}${reviewTopics.length > 0 ? ` DUE FOR REVIEW (haven't practiced recently): ${reviewTopics.join(', ')}. Work these in.` : ''} TEACH first — explain the concept clearly with a real-world example before asking any questions. The first 2-3 exchanges should be pure teaching with no questions. Say something like "Today we're going to learn about..."`,
+              : `You are tutoring ${childName} (Year ${yearLevel}) in: ${subject}.
+${focusAreas.length > 0 ? `Parent's priority topics: ${focusAreas.join(', ')}. ` : ''}${weakTopics.length > 0 ? `Needs extra help with: ${weakTopics.join(', ')}. ` : ''}
+
+START BY TEACHING. Do NOT ask a question yet.
+Your first message should:
+1. Welcome them warmly and tell them what you're going to learn today
+2. Explain the concept clearly with a real-world analogy or story
+3. Show an example (use the visual field for maths)
+4. End with a check-in: ask if it makes sense before moving to practice
+
+Example opening: "Hey ${childName}! Today we're going to learn about [topic]. Here's what's cool about it..."
+
+Remember: you're a tutor, not a quiz machine. Teach first. Questions come AFTER understanding.`,
       })
     }
 
