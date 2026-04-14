@@ -121,10 +121,13 @@ export async function POST(req: NextRequest) {
       const helpPhrases = ['help', 'hint', 'i dont know', "i don't know", 'idk', 'stuck', 'confused', 'what', 'how', 'why', 'explain', 'huh', '?', 'please help']
       const isAskingForHelp = helpPhrases.some(p => trimmedAnswer.includes(p)) || trimmedAnswer === '?'
 
+      // Reinforce subject on EVERY message so Claude never drifts
+      const subjectNote = `[SUBJECT: ${subject}. Stay on this subject for the ENTIRE session. Never switch to maths or anything else unless the subject IS maths.]`
+
       if (isAskingForHelp) {
         messages.push({
           role: 'user',
-          content: `${childName} is asking for help with "${currentQuestion}". They said: "${answer}". Be warm and encouraging. Give them a helpful hint WITHOUT giving the answer directly. Guide them toward the answer step by step. Remember: you're their supportive tutor, not a quiz master.`,
+          content: `${childName} needs help with "${currentQuestion}". They said: "${answer}". Give a warm hint for ${subject} WITHOUT the answer. Guide them step by step. ${subjectNote}`,
         })
       } else {
         messages.push({
@@ -132,14 +135,14 @@ export async function POST(req: NextRequest) {
           content: isCorrect
             ? `${childName} answered "${answer}" to "${currentQuestion}" — CORRECT! ${
                 phase === 'warmup' || phase === 'closing'
-                  ? `Streak: ${sessionStats.streakCount + 1}. Celebrate briefly ("Nice one!", "You got it!") then give the next question. Don't repeat the same question back-to-back, but it's fine to revisit questions later in the session.`
-                  : `Stars: +4. Celebrate! Then give the next problem. Don't repeat the same question back-to-back.${sessionStats.streakCount >= 3 ? ' The child is doing well — INCREASE the difficulty slightly. Challenge them!' : ''}${sessionStats.correctCount > 0 && sessionStats.totalQuestions > 3 && (sessionStats.correctCount / sessionStats.totalQuestions) < 0.4 ? ' The child is struggling — DECREASE difficulty. Give easier problems to rebuild confidence.' : ''}`
-              }`
-            : `${childName} answered "${answer}" to "${currentQuestion}" — INCORRECT. The correct answer was "${currentCorrectAnswer}". ${
+                  ? `Celebrate then give the next ${subject} question.`
+                  : `Celebrate! Then give the next ${subject} problem. Increase difficulty if streak >= 3. ${sessionStats.streakCount >= 3 ? 'INCREASE difficulty.' : ''}${sessionStats.correctCount > 0 && sessionStats.totalQuestions > 3 && (sessionStats.correctCount / sessionStats.totalQuestions) < 0.4 ? ' DECREASE difficulty.' : ''}`
+              } ${subjectNote}`
+            : `${childName} answered "${answer}" to "${currentQuestion}" — INCORRECT. Correct: "${currentCorrectAnswer}". ${
                 phase === 'warmup' || phase === 'closing'
-                  ? `Be kind: "Not quite! The answer was ${currentCorrectAnswer}." Then give a different question (not the same one straight away).`
-                  : `Use the misconception engine: be warm and encouraging, identify what they likely confused, explain from a different angle, then give a simpler version. Don't give the exact same question straight away. NEVER make them feel bad.`
-              }`,
+                  ? `Kindly correct, then give a different ${subject} question.`
+                  : `Use the misconception engine for ${subject}: re-explain differently, give a simpler ${subject} example. Never make them feel bad.`
+              } ${subjectNote}`,
         })
       }
     } else if (messages.length === 0) {
