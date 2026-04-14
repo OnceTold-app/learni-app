@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+function getSupabase() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+}
 
 /**
  * GET /api/question?topicId=times-all&yearLevel=5&learnerId=xxx
@@ -14,6 +16,7 @@ const supabase = createClient(
  */
 export async function GET(req: NextRequest) {
   try {
+    const supabase = getSupabase()
     const { searchParams } = new URL(req.url)
     const topicId = searchParams.get('topicId')
     const yearLevel = parseInt(searchParams.get('yearLevel') || '0')
@@ -59,7 +62,6 @@ export async function GET(req: NextRequest) {
         .limit(20)
 
       if (unseenQuestions && unseenQuestions.length > 0) {
-        // Pick a random one from the results
         question = unseenQuestions[Math.floor(Math.random() * unseenQuestions.length)]
       }
     }
@@ -78,13 +80,18 @@ export async function GET(req: NextRequest) {
 
     // Record that this learner has seen this question (fire and forget)
     if (learnerId && question.id) {
-      supabase.from('learner_question_history').insert({
-        learner_id: learnerId,
-        question_id: question.id,
-        seen_at: new Date().toISOString(),
-        was_correct: null,
-        attempts: 1,
-      }).then(() => {}).catch(() => {})
+      void (async () => {
+        try {
+          const sb = getSupabase()
+          await sb.from('learner_question_history').insert({
+            learner_id: learnerId,
+            question_id: question.id,
+            seen_at: new Date().toISOString(),
+            was_correct: null,
+            attempts: 1,
+          })
+        } catch { /* ignore */ }
+      })()
     }
 
     return NextResponse.json({
@@ -103,6 +110,7 @@ export async function GET(req: NextRequest) {
  */
 export async function PATCH(req: NextRequest) {
   try {
+    const supabase = getSupabase()
     const { learnerId, questionId, wasCorrect } = await req.json()
     if (!learnerId || !questionId) {
       return NextResponse.json({ error: 'learnerId and questionId required' }, { status: 400 })
