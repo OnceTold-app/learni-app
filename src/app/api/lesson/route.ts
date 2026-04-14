@@ -6,10 +6,12 @@ import { tutorPrompt, rapidFirePrompt, financialPrompt } from '@/lib/earni-promp
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+function getSupabase() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+}
 
 // Session phases
 type Phase = 'warmup' | 'lesson' | 'financial' | 'closing' | 'reward'
@@ -76,6 +78,7 @@ export async function POST(req: NextRequest) {
     } = body
 
     // ─── Question Bank Helpers ────────────────────────────────────────────────
+    const supabase = getSupabase()
     async function fetchBankQuestion(tid: string, year: number): Promise<Record<string, unknown> | null> {
       try {
         let query = supabase
@@ -103,7 +106,7 @@ export async function POST(req: NextRequest) {
                 void (async () => { try { await supabase.from('learner_question_history').insert({ learner_id: learnerId, question_id: q.id, seen_at: new Date().toISOString(), was_correct: null, attempts: 1 }) } catch { /* ignore */ } })()
               }
               return q
-                })
+            }
           }
         }
         // Fallback: any question
@@ -264,7 +267,7 @@ Remember: you're a tutor, not a quiz machine. Teach first. Questions come AFTER 
     const isAskingForHelp = answer ? (helpPhrases.some(p => trimmedAnswer.includes(p)) || trimmedAnswer === '?') : false
     const isFirstMessage = history.length === 0 && !answer
 
-    if (topicId && phase !== 'reward') {
+    if (topicId) {
       // LESSON: first message → serve concept bank teaching content
       if (phase === 'lesson' && isFirstMessage) {
         const concept = await fetchConceptBank(topicId, yearLevel)
