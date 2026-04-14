@@ -435,7 +435,18 @@ export default function KidHubPage() {
 
         {/* Sign out */}
         <button
-          onClick={() => {
+          onClick={async () => {
+            const childId = localStorage.getItem('learni_child_id')
+            if (childId) {
+              // Schedule daily summary email (fires after 10 min if they don't return)
+              try {
+                await fetch('/api/session/daily-summary', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ childId }),
+                })
+              } catch { /* fire and forget */ }
+            }
             localStorage.removeItem('learni_child_id')
             localStorage.removeItem('learni_child_name')
             localStorage.removeItem('learni_child_username')
@@ -465,3 +476,4 @@ export default function KidHubPage() {
     </div>
   )
 }
+
