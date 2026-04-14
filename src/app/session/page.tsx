@@ -553,8 +553,9 @@ export default function SessionPage() {
 
   async function handleJarSubmit() {
     // Save session to Supabase
+    let sessionId: string | null = null
     try {
-      await fetch('/api/session/complete', {
+      const sessionRes = await fetch('/api/session/complete', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -567,6 +568,8 @@ export default function SessionPage() {
           jarAllocation: { save: state.jarSave, spend: state.jarSpend, give: state.jarGive },
         }),
       })
+      const sessionData = await sessionRes.json()
+      sessionId = sessionData?.sessionId || null
     } catch (err) {
       console.error('Session save failed:', err)
     }
@@ -583,7 +586,7 @@ export default function SessionPage() {
     } catch { /* best effort */ }
 
     // Show feedback screen instead of immediately redirecting
-    if (data?.sessionId) setLastSessionId(data.sessionId)
+    if (sessionId) setLastSessionId(sessionId)
     setShowFeedback(true)
   }
 
