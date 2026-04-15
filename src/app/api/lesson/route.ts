@@ -79,43 +79,70 @@ export async function POST(req: NextRequest) {
 
     // ─── Question Bank Helpers ────────────────────────────────────────────────
     const supabase = getSupabase()
+
+    // Extract questions already asked this session from conversation history
+    const sessionAskedQuestions = new Set<string>()
+    for (const msg of history) {
+      if (msg.role === 'assistant') {
+        try {
+          const parsed = JSON.parse(msg.content)
+          if (parsed.question) sessionAskedQuestions.add(parsed.question.toLowerCase().trim())
+        } catch { /* not JSON, skip */ }
+      }
+    }
+    // Also add currentQuestion if present
+    if (currentQuestion) sessionAskedQuestions.add(currentQuestion.toLowerCase().trim())
+
     async function fetchBankQuestion(tid: string, year: number): Promise<Record<string, unknown> | null> {
       try {
-        let query = supabase
+        const baseQuery = supabase
           .from('question_bank')
           .select('*')
           .eq('topic_id', tid)
           .eq('year_level', year)
 
-        // Try unseen questions first
+        // Build combined exclusion list: 7-day history + current session
+        const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
+        let dbSeenIds: string[] = []
         if (learnerId) {
-          const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
-          const { data: history } = await supabase
+          const { data: dbHistory } = await supabase
             .from('learner_question_history')
             .select('question_id')
             .eq('learner_id', learnerId)
             .gte('seen_at', sevenDaysAgo)
-          const seenIds = history?.map((h: { question_id: string }) => h.question_id) || []
-          if (seenIds.length > 0) {
-            const { data: unseen } = await query
-              .not('id', 'in', `(${seenIds.join(',')})`)
-              .limit(20)
-            if (unseen && unseen.length > 0) {
-              const q = unseen[Math.floor(Math.random() * unseen.length)]
-              if (learnerId) {
-                void (async () => { try { await supabase.from('learner_question_history').insert({ learner_id: learnerId, question_id: q.id, seen_at: new Date().toISOString(), was_correct: null, attempts: 1 }) } catch { /* ignore */ } })()
-              }
-              return q
-            }
-          }
+          dbSeenIds = dbHistory?.map((h: { question_id: string }) => h.question_id) || []
         }
-        // Fallback: any question
-        const { data: any } = await query.limit(20)
-        if (any && any.length > 0) {
-          const q = any[Math.floor(Math.random() * any.length)]
-          return q
+
+        // Get a pool of candidates, filter out session-asked questions client-side
+        let candidates: Record<string, unknown>[] = []
+        if (dbSeenIds.length > 0) {
+          const { data: unseen } = await baseQuery
+            .not('id', 'in', `(${dbSeenIds.join(',')})`)
+            .limit(40)
+          candidates = unseen || []
         }
-        return null
+        // Fallback: use all questions if unseen pool is empty
+        if (candidates.length === 0) {
+          const { data: all } = await baseQuery.limit(40)
+          candidates = all || []
+        }
+
+        // Filter out questions asked this session
+        const fresh = candidates.filter((q: Record<string, unknown>) => {
+          const qText = ((q.question as string) || '').toLowerCase().trim()
+          return !sessionAskedQuestions.has(qText)
+        })
+
+        const pool = fresh.length > 0 ? fresh : candidates // fallback to any if all seen
+        if (pool.length === 0) return null
+
+        const q = pool[Math.floor(Math.random() * pool.length)]
+
+        // Record in history
+        if (learnerId) {
+          void (async () => { try { await supabase.from('learner_question_history').insert({ learner_id: learnerId, question_id: q.id, seen_at: new Date().toISOString(), was_correct: null, attempts: 1 }) } catch { /* ignore */ } })()
+        }
+        return q
       } catch { return null }
     }
 
