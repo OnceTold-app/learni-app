@@ -2,12 +2,24 @@
 
 import { useState, useEffect } from 'react'
 
+const LANGUAGES = [
+  { value: 'en', label: 'English' },
+  { value: 'mi', label: 'Te Reo Māori' },
+  { value: 'af', label: 'Afrikaans' },
+  { value: 'zh', label: 'Mandarin' },
+  { value: 'hi', label: 'Hindi' },
+  { value: 'sm', label: 'Samoan' },
+  { value: 'fr', label: 'French' },
+  { value: 'es', label: 'Spanish' },
+]
+
 export default function ManageChildPage() {
   const [childId, setChildId] = useState('')
   const [name, setName] = useState('')
   const [username, setUsername] = useState('')
   const [pin, setPin] = useState('')
   const [yearLevel, setYearLevel] = useState('')
+  const [sessionLanguage, setSessionLanguage] = useState('en')
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
@@ -31,6 +43,7 @@ export default function ManageChildPage() {
       setName(child.name)
       setUsername(child.username || '')
       setYearLevel(String(child.year_level))
+      setSessionLanguage(child.session_language || 'en')
     }
   }
 
@@ -44,6 +57,7 @@ export default function ManageChildPage() {
     if (field === 'username') updates.username = value
     if (field === 'yearLevel') updates.yearLevel = parseInt(value)
     if (field === 'name') updates.name = value
+    if (field === 'sessionLanguage') updates.session_language = value
 
     try {
       const res = await fetch('/api/parent/update-child', {
@@ -168,6 +182,18 @@ export default function ManageChildPage() {
                 ))}
               </select>
               <button onClick={() => handleSave('yearLevel', yearLevel)} disabled={loading} style={btnStyle}>Save</button>
+            </div>
+          </div>
+
+          {/* Teaching language */}
+          <div style={{ background: 'white', borderRadius: '14px', padding: '16px 20px', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
+            <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#5a8a84', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Teaching language</label>
+            <p style={{ fontSize: '11px', color: '#8abfba', marginTop: '-4px', marginBottom: '8px' }}>What language Earni teaches in</p>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <select value={sessionLanguage} onChange={e => setSessionLanguage(e.target.value)} style={{ ...inputStyle, cursor: 'pointer' }}>
+                {LANGUAGES.map(l => <option key={l.value} value={l.value}>{l.label}</option>)}
+              </select>
+              <button onClick={() => handleSave('sessionLanguage', sessionLanguage)} disabled={loading} style={btnStyle}>Save</button>
             </div>
           </div>
 
