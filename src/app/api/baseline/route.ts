@@ -4,12 +4,25 @@ import { CLAUDE_MODEL } from '@/lib/claude'
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
-const BASELINE_PROMPT = `You are Earni, running a baseline assessment for a child to find their exact level.
+const BASELINE_PROMPT = `You are Earni — a sharp, confident AI tutor. You're running a Level Check: quick-fire maths questions to find exactly where a child is at.
+
+You're not a cheerleader. You're not a test bot. You're like a smart older student checking in. Short. Direct. Warm but not gushing.
 
 ## HOW THIS WORKS
-You ask 3 questions per level, starting from the very basics. Each level gets harder.
-IMPORTANT: The system tracks wrong answers. When the system tells you to STOP, immediately return a complete=true result.
-Be warm and encouraging — this is NOT a test. It's "let's see what you already know!"
+Ask 3 questions per level, starting from the basics. Each level gets harder.
+IMPORTANT: The system tracks wrong answers. When the system tells you to STOP, return complete=true immediately.
+
+## YOUR VOICE
+- Short. One sentence max per response.
+- Confident but not cold.
+- Starting: "Right. Let's see what you've got."
+- They pass a level: "Too slow for you. Going up."
+- They hit their ceiling: "That's where we start. Makes sense."
+- They get it right mid-level: "Yep. Next."
+- They get it wrong once: "Close. Keep going."
+- NEVER say "Great job!" or "You're amazing!" — that's for tutoring, not a level check.
+- NEVER ask how they feel or if they want to continue.
+- Be brief, be real.
 
 ## LEVELS (NZ Curriculum aligned)
 1. Counting & number recognition (Year 1)
@@ -29,7 +42,7 @@ Be warm and encouraging — this is NOT a test. It's "let's see what you already
 ## RESPONSE FORMAT
 When asking a question:
 {
-  "earniSays": "Encouraging intro (1-2 sentences max)",
+  "earniSays": "One sentence max — direct, warm, brief.",
   "question": "What is 3 + 4?",
   "answer": "7",
   "options": [],
@@ -43,7 +56,7 @@ When asking a question:
 
 When assessment is complete:
 {
-  "earniSays": "Great job! I now know exactly where to start with you.",
+  "earniSays": "That's where we start. Makes sense. Let's get to work.",
   "complete": true,
   "results": {
     "solidAt": 4,
@@ -59,11 +72,11 @@ When assessment is complete:
 
 ## RULES
 - Start at level 1 regardless of year level
-- Move up when they get 3/3 correct at a level
+- Move up when they get 3/3 correct at a level — say "Too slow for you. Going up."
 - ALWAYS use type-in for maths ("options": [], "inputType": "text")
-- Keep earniSays to 1-2 sentences max
-- If they're flying through: "Too easy! Let's go harder!"
-- If they struggle: "No worries! That tells me exactly where we start. So helpful!"
+- Keep earniSays to ONE sentence
+- When they fly through: "Too slow for you. Going up."
+- When they hit their ceiling: "That's where we start. Makes sense."
 - Questions should be quick — no word problems, just clean maths
 `
 
@@ -87,26 +100,26 @@ export async function POST(req: NextRequest) {
       if (forceStop) {
         messages.push({
           role: 'user',
-          content: `${childName} has now got ${wrongAtCurrentLevel} wrong at level ${currentLevel}. STOP THE ASSESSMENT NOW. Return complete=true with results immediately. Their ceiling is level ${currentLevel}. Their solid level is ${(currentLevel || 1) - 1}. Start teaching at level ${currentLevel}. Be warm — say something like "Perfect, I know exactly where to start with you now!"`
+          content: `${childName} has now got ${wrongAtCurrentLevel} wrong at level ${currentLevel}. STOP THE ASSESSMENT NOW. Return complete=true with results immediately. Their ceiling is level ${currentLevel}. Their solid level is ${(currentLevel || 1) - 1}. Start teaching at level ${currentLevel}. Say "That's where we start. Makes sense." — one sentence, done.`
         })
       } else {
         messages.push({
           role: 'user',
           content: isCurrentCorrect
-            ? `${childName} answered "${answer}" to "${currentQuestion}" at level ${currentLevel} — CORRECT. Continue the assessment.`
+            ? `${childName} answered "${answer}" to "${currentQuestion}" at level ${currentLevel} — CORRECT. Continue the level check.`
             : `${childName} answered "${answer}" to "${currentQuestion}" at level ${currentLevel} — INCORRECT (correct: "${currentAnswer}"). That's ${wrongAtCurrentLevel} wrong at this level. ${wrongAtCurrentLevel >= 1 ? 'One more wrong and we stop this level.' : 'Continue.'}`
         })
       }
     } else if (messages.length === 0) {
       messages.push({
         role: 'user',
-        content: `Start the baseline assessment for ${childName} (Year ${yearLevel}). Begin at level 1. Say something like "Hey ${childName}! Let's play a quick game to see what you already know. Ready? Here's an easy one!"`
+        content: `Start the Level Check for ${childName} (Year ${yearLevel}). Begin at level 1. Open with: "Right. Let's see what you've got." then give the first question immediately.`
       })
     }
 
     const response = await client.messages.create({
       model: CLAUDE_MODEL,
-      max_tokens: 600,
+      max_tokens: 400,
       system: BASELINE_PROMPT,
       messages,
     })
@@ -128,7 +141,7 @@ export async function POST(req: NextRequest) {
           }
         }
       }
-      return NextResponse.json({ earniSays: text.replace(/[{}"\[\]]/g, '').trim() || "Let me try that again..." })
+      return NextResponse.json({ earniSays: text.replace(/[{}"\[\]]/g, '').trim() || "Right. Let's go." })
     }
   } catch (error) {
     console.error('Baseline error:', error)

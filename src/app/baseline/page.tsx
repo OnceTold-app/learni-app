@@ -40,10 +40,12 @@ export default function BaselinePage() {
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null)
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null)
   const [loading, setLoading] = useState(true)
-  const [correctCount, setCorrectCount] = useState(0)
+  const [starCount, setStarCount] = useState(0)
   const [totalCount, setTotalCount] = useState(0)
   const [wrongAtLevel, setWrongAtLevel] = useState(0)
+  const [levelFlash, setLevelFlash] = useState<{ level: number; visible: boolean } | null>(null)
   const historyRef = useRef<Array<{ role: 'user' | 'assistant'; content: string }>>([])
+  const prevLevelRef = useRef<number>(0)
 
   async function fetchQuestion(answer?: string, currentQuestion?: string, currentAnswer?: string, currentLevel?: number, currentWrongAtLevel?: number) {
     setLoading(true)
@@ -70,6 +72,14 @@ export default function BaselinePage() {
 
       // Reset wrong count when level changes
       if (data.level && data.level !== state.level) setWrongAtLevel(0)
+
+      // Level-up flash: show when level increases
+      if (data.level && prevLevelRef.current > 0 && data.level > prevLevelRef.current) {
+        setLevelFlash({ level: data.level, visible: true })
+        setTimeout(() => setLevelFlash(null), 1500)
+      }
+      if (data.level) prevLevelRef.current = data.level
+
       setState({
         earniSays: data.earniSays || '',
         question: data.question || null,
@@ -89,7 +99,7 @@ export default function BaselinePage() {
         speakText(data.earniSays)
       }
     } catch {
-      setState(s => ({ ...s, earniSays: "Hmm, let me try that again." }))
+      setState(s => ({ ...s, earniSays: "Right. Let's try again." }))
     }
     setLoading(false)
   }
@@ -127,10 +137,10 @@ export default function BaselinePage() {
     setSelectedAnswer(ans)
     setIsCorrect(correct)
     setTotalCount(t => t + 1)
-    if (correct) setCorrectCount(c => c + 1)
+    if (correct) setStarCount(c => c + 1)
 
     setTimeout(() => {
-      fetchQuestion(ans, state.question || '', state.answer, state.level)
+      fetchQuestion(ans, state.question || '', state.answer, state.level, newWrongAtLevel)
     }, 1200)
   }
 
@@ -184,9 +194,27 @@ export default function BaselinePage() {
         borderBottom: '1px solid rgba(255,255,255,0.08)',
       }}>
         <span style={{ fontSize: '14px', fontWeight: 900, fontFamily: "'Nunito', sans-serif" }}>
-          🎯 Baseline Assessment
+          🎯 Level Check
         </span>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          {/* Star counter */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '4px',
+            background: 'rgba(245,166,35,0.12)',
+            border: '1px solid rgba(245,166,35,0.25)',
+            borderRadius: '20px',
+            padding: '4px 10px',
+          }}>
+            <span style={{ fontSize: '14px' }}>⭐</span>
+            <span style={{
+              fontSize: '13px',
+              fontWeight: 900,
+              color: '#f5a623',
+              fontFamily: "'Nunito', sans-serif",
+            }}>{starCount}</span>
+          </div>
           {state.levelName && (
             <span style={{
               background: 'rgba(46,196,182,0.12)',
@@ -201,7 +229,7 @@ export default function BaselinePage() {
             </span>
           )}
           <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.4)' }}>
-            {correctCount}/{totalCount}
+            {starCount}/{totalCount}
           </span>
         </div>
       </div>
@@ -210,6 +238,30 @@ export default function BaselinePage() {
       <div style={{ height: '3px', background: 'rgba(255,255,255,0.05)' }}>
         <div style={{ height: '100%', background: '#2ec4b6', width: `${progressPct}%`, transition: 'width 0.5s' }} />
       </div>
+
+      {/* Level-up flash overlay */}
+      {levelFlash && levelFlash.visible && (
+        <div style={{
+          position: 'fixed',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          background: 'rgba(46,196,182,0.95)',
+          color: 'white',
+          borderRadius: '20px',
+          padding: '20px 36px',
+          fontSize: '22px',
+          fontWeight: 900,
+          fontFamily: "'Nunito', sans-serif",
+          zIndex: 100,
+          boxShadow: '0 8px 40px rgba(46,196,182,0.5)',
+          animation: 'levelFlash 1.5s ease-in-out forwards',
+          textAlign: 'center',
+          pointerEvents: 'none',
+        }}>
+          Level {levelFlash.level} ✓
+        </div>
+      )}
 
       {/* Main content */}
       <div style={{
@@ -227,11 +279,27 @@ export default function BaselinePage() {
         {/* Complete screen */}
         {state.complete && state.results ? (
           <div style={{ textAlign: 'center', width: '100%' }}>
-            <div style={{ fontSize: '64px', marginBottom: '16px' }}>🎯</div>
-            <h1 style={{ fontFamily: "'Nunito', sans-serif", fontSize: '28px', fontWeight: 900, marginBottom: '8px' }}>
-              All done, {childName}!
+            <div style={{ fontSize: '64px', marginBottom: '12px' }}>🎯</div>
+            <h1 style={{ fontFamily: "'Nunito', sans-serif", fontSize: '28px', fontWeight: 900, marginBottom: '6px' }}>
+              Level check done.
             </h1>
-            <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '15px', marginBottom: '28px' }}>
+            {/* Stars earned summary */}
+            <div style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px',
+              background: 'rgba(245,166,35,0.12)',
+              border: '1px solid rgba(245,166,35,0.25)',
+              borderRadius: '20px',
+              padding: '8px 20px',
+              marginBottom: '16px',
+            }}>
+              <span style={{ fontSize: '20px' }}>⭐</span>
+              <span style={{ fontFamily: "'Nunito', sans-serif", fontWeight: 900, fontSize: '18px', color: '#f5a623' }}>
+                {starCount} stars earned
+              </span>
+            </div>
+            <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: '15px', marginBottom: '28px', lineHeight: 1.5 }}>
               {state.earniSays}
             </p>
 
@@ -244,33 +312,33 @@ export default function BaselinePage() {
               marginBottom: '20px',
             }}>
               <div style={{ marginBottom: '16px' }}>
-                <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '4px' }}>Solid foundation</div>
-                <div style={{ fontSize: '18px', fontWeight: 900, fontFamily: "'Nunito', sans-serif", color: '#22c55e' }}>
+                <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.35)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '6px' }}>You&apos;ve got this solid</div>
+                <div style={{ fontSize: '20px', fontWeight: 900, fontFamily: "'Nunito', sans-serif", color: '#22c55e' }}>
                   ✅ {state.results.solidName}
                 </div>
               </div>
               <div style={{ marginBottom: '16px' }}>
-                <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '4px' }}>We&apos;ll start teaching from</div>
-                <div style={{ fontSize: '18px', fontWeight: 900, fontFamily: "'Nunito', sans-serif", color: '#2ec4b6' }}>
+                <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.35)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '6px' }}>We start here</div>
+                <div style={{ fontSize: '20px', fontWeight: 900, fontFamily: "'Nunito', sans-serif", color: '#2ec4b6' }}>
                   📚 {state.results.startTeachingName}
                 </div>
               </div>
               {state.results.strengths.length > 0 && (
                 <div style={{ marginBottom: '12px' }}>
-                  <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', fontWeight: 600, marginBottom: '6px' }}>Strengths</div>
+                  <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.35)', fontWeight: 700, marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Strong</div>
                   <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                     {state.results.strengths.map(s => (
-                      <span key={s} style={{ padding: '4px 10px', background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.2)', borderRadius: '12px', fontSize: '12px', color: '#22c55e', fontWeight: 600 }}>{s}</span>
+                      <span key={s} style={{ padding: '4px 10px', background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.2)', borderRadius: '12px', fontSize: '12px', color: '#22c55e', fontWeight: 700 }}>{s}</span>
                     ))}
                   </div>
                 </div>
               )}
               {state.results.gaps.length > 0 && (
                 <div>
-                  <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', fontWeight: 600, marginBottom: '6px' }}>Areas to build</div>
+                  <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.35)', fontWeight: 700, marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>To build</div>
                   <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                     {state.results.gaps.map(g => (
-                      <span key={g} style={{ padding: '4px 10px', background: 'rgba(245,166,35,0.1)', border: '1px solid rgba(245,166,35,0.2)', borderRadius: '12px', fontSize: '12px', color: '#f5a623', fontWeight: 600 }}>{g}</span>
+                      <span key={g} style={{ padding: '4px 10px', background: 'rgba(245,166,35,0.1)', border: '1px solid rgba(245,166,35,0.2)', borderRadius: '12px', fontSize: '12px', color: '#f5a623', fontWeight: 700 }}>{g}</span>
                     ))}
                   </div>
                 </div>
@@ -282,7 +350,7 @@ export default function BaselinePage() {
               color: 'white', border: 'none', borderRadius: '30px', fontFamily: "'Nunito', sans-serif",
               fontSize: '18px', fontWeight: 900, cursor: 'pointer', boxShadow: '0 8px 32px rgba(46,196,182,0.3)',
             }}>
-              Let&apos;s start learning! →
+              Let&apos;s go →
             </button>
           </div>
         ) : (
@@ -406,6 +474,15 @@ export default function BaselinePage() {
           </>
         )}
       </div>
+
+      <style jsx global>{`
+        @keyframes levelFlash {
+          0% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+          20% { opacity: 1; transform: translate(-50%, -50%) scale(1.05); }
+          70% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+          100% { opacity: 0; transform: translate(-50%, -50%) scale(0.95); }
+        }
+      `}</style>
     </div>
   )
 }
