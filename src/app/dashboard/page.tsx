@@ -33,6 +33,10 @@ export default function DashboardPage() {
   const [parentName, setParentName] = useState('')
   const [referralCode, setReferralCode] = useState<string | null>(null)
   const [referralCopied, setReferralCopied] = useState(false)
+  const [rewardSettings, setRewardSettings] = useState({ starsPerDollar: 20, weeklyStarCap: 200, rewardsPaused: false })
+  const [rewardSettingsDraft, setRewardSettingsDraft] = useState({ starsPerDollar: 20, weeklyStarCap: 200, rewardsPaused: false })
+  const [rewardSaving, setRewardSaving] = useState(false)
+  const [rewardSaved, setRewardSaved] = useState(false)
 
   useEffect(() => {
     // Check auth
@@ -74,8 +78,41 @@ export default function DashboardPage() {
   useEffect(() => {
     if (selectedChild) {
       fetchSessions(selectedChild)
+      fetchRewardSettings(selectedChild)
     }
   }, [selectedChild])
+
+  async function fetchRewardSettings(childId: string) {
+    try {
+      const res = await fetch(`/api/parent/reward-settings?childId=${childId}`, {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('learni_parent_token')}` }
+      })
+      const data = await res.json()
+      if (data.starsPerDollar !== undefined) {
+        setRewardSettings(data)
+        setRewardSettingsDraft(data)
+      }
+    } catch { /* */ }
+  }
+
+  async function saveRewardSettings() {
+    if (!selectedChild) return
+    setRewardSaving(true)
+    try {
+      await fetch('/api/parent/reward-settings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('learni_parent_token')}`,
+        },
+        body: JSON.stringify({ childId: selectedChild, ...rewardSettingsDraft }),
+      })
+      setRewardSettings(rewardSettingsDraft)
+      setRewardSaved(true)
+      setTimeout(() => setRewardSaved(false), 2500)
+    } catch { /* */ }
+    setRewardSaving(false)
+  }
 
   async function fetchSessions(childId: string) {
     try {
@@ -89,8 +126,7 @@ export default function DashboardPage() {
 
   const child = children.find(c => c.id === selectedChild)
   const totalStars = child?.total_stars || 0
-  const starRate = 20 // 20 stars = $1 (configurable later)
-  const dollarsOwed = (totalStars / starRate).toFixed(2)
+  const dollarsOwed = (totalStars / rewardSettings.starsPerDollar).toFixed(2)
 
   return (
     <div style={{
@@ -331,6 +367,98 @@ export default function DashboardPage() {
                 <div style={{ fontSize: '11px', fontWeight: 600, color: '#5a8a84', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '4px' }}>Streak</div>
                 <div style={{ fontSize: '32px', fontWeight: 900, fontFamily: "'Nunito', sans-serif", color: '#0d2b28' }}>🔥 {child?.streak_days || 0}</div>
               </div>
+            </div>
+
+            {/* Reward Settings panel */}
+            <div style={{
+              background: 'white',
+              borderRadius: '16px',
+              padding: '20px',
+              boxShadow: '0 2px 12px rgba(0,0,0,0.04)',
+              marginBottom: '24px',
+            }}>
+              <div style={{ fontFamily: "'Nunito', sans-serif", fontWeight: 900, fontSize: '16px', color: '#0d2b28', marginBottom: '4px' }}>💰 Reward settings</div>
+              <div style={{ fontSize: '13px', color: '#5a8a84', marginBottom: '16px' }}>
+                ⭐ {totalStars} stars = 💰 ${dollarsOwed} earned
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '14px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, color: '#5a8a84', textTransform: 'uppercase' as const, letterSpacing: '0.08em', marginBottom: '6px' }}>Stars per $1</label>
+                  <input
+                    type="number"
+                    min={1}
+                    value={rewardSettingsDraft.starsPerDollar}
+                    onChange={e => setRewardSettingsDraft(prev => ({ ...prev, starsPerDollar: Math.max(1, parseInt(e.target.value) || 1) }))}
+                    style={{
+                      width: '100%',
+                      padding: '9px 12px',
+                      border: '1.5px solid rgba(13,43,40,0.1)',
+                      borderRadius: '10px',
+                      fontSize: '14px',
+                      fontFamily: "'Plus Jakarta Sans', sans-serif",
+                      color: '#0d2b28',
+                      outline: 'none',
+                      boxSizing: 'border-box' as const,
+                    }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, color: '#5a8a84', textTransform: 'uppercase' as const, letterSpacing: '0.08em', marginBottom: '6px' }}>Weekly star cap</label>
+                  <input
+                    type="number"
+                    min={0}
+                    placeholder="No cap"
+                    value={rewardSettingsDraft.weeklyStarCap || ''}
+                    onChange={e => setRewardSettingsDraft(prev => ({ ...prev, weeklyStarCap: parseInt(e.target.value) || 0 }))}
+                    style={{
+                      width: '100%',
+                      padding: '9px 12px',
+                      border: '1.5px solid rgba(13,43,40,0.1)',
+                      borderRadius: '10px',
+                      fontSize: '14px',
+                      fontFamily: "'Plus Jakarta Sans', sans-serif",
+                      color: '#0d2b28',
+                      outline: 'none',
+                      boxSizing: 'border-box' as const,
+                    }}
+                  />
+                </div>
+              </div>
+
+              <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', marginBottom: '16px' }}>
+                <input
+                  type="checkbox"
+                  checked={rewardSettingsDraft.rewardsPaused}
+                  onChange={e => setRewardSettingsDraft(prev => ({ ...prev, rewardsPaused: e.target.checked }))}
+                  style={{ width: '16px', height: '16px', accentColor: '#2ec4b6', cursor: 'pointer' }}
+                />
+                <span style={{ fontSize: '14px', color: '#0d2b28', fontWeight: 600 }}>Pause rewards</span>
+              </label>
+
+              <button
+                onClick={saveRewardSettings}
+                disabled={rewardSaving}
+                style={{
+                  background: rewardSaved ? '#1a9e92' : '#2ec4b6',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '12px',
+                  padding: '10px 20px',
+                  fontFamily: "'Nunito', sans-serif",
+                  fontWeight: 800,
+                  fontSize: '14px',
+                  cursor: rewardSaving ? 'default' : 'pointer',
+                  transition: 'background 0.15s',
+                  marginBottom: '12px',
+                }}
+              >
+                {rewardSaved ? '✓ Saved!' : rewardSaving ? 'Saving…' : 'Save settings'}
+              </button>
+
+              <p style={{ fontSize: '11px', color: '#8abfba', margin: 0 }}>
+                You set the rate — Earni tracks the stars. When it&apos;s time to pay out, just hand over the cash!
+              </p>
             </div>
 
             {/* Start session button */}
