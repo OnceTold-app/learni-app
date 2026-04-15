@@ -169,21 +169,21 @@ async function sendDailySummary(childId: string, supabase: any) {
   }
 
   // Aggregate across all sessions
-  const totalStars = sessions.reduce((s, r) => s + (r.stars_earned || 0), 0)
-  const totalCorrect = sessions.reduce((s, r) => s + (r.questions_correct || 0), 0)
-  const totalQuestions = sessions.reduce((s, r) => s + (r.questions_total || 0), 0)
-  const totalDuration = Math.round(sessions.reduce((s, r) => s + (r.duration_seconds || 0), 0) / 60)
-  const subjectSet = new Set(sessions.flatMap(s => (s.subject || '').split(', ').map((x: string) => x.trim()).filter(Boolean)))
+  const totalStars = sessions.reduce((s: number, r: Record<string, unknown>) => s + ((r.stars_earned as number) || 0), 0)
+  const totalCorrect = sessions.reduce((s: number, r: Record<string, unknown>) => s + ((r.questions_correct as number) || 0), 0)
+  const totalQuestions = sessions.reduce((s: number, r: Record<string, unknown>) => s + ((r.questions_total as number) || 0), 0)
+  const totalDuration = Math.round(sessions.reduce((s: number, r: Record<string, unknown>) => s + ((r.duration_seconds as number) || 0), 0) / 60)
+  const subjectSet = new Set(sessions.flatMap((s: Record<string, unknown>) => ((s.subject as string) || '').split(', ').map((x: string) => x.trim()).filter(Boolean)))
   const subjects = Array.from(subjectSet)
-  const weakTopics = [...new Set(sessions.flatMap(s => s.weak_topics || []))]
-  const strongTopics = [...new Set(sessions.flatMap(s => s.strong_topics || []))]
+  const weakTopics = [...new Set(sessions.flatMap((s: Record<string, unknown>) => (s.weak_topics as string[]) || []))]
+  const strongTopics = [...new Set(sessions.flatMap((s: Record<string, unknown>) => (s.strong_topics as string[]) || []))]
 
   // Get all-time star total
   const { data: starRows } = await supabase
     .from('star_ledger')
     .select('stars')
     .eq('learner_id', childId)
-  const allTimeStars = (starRows || []).reduce((s: number, r: { stars: number }) => s + (r.stars || 0), 0)
+  const allTimeStars = (starRows || []).reduce((s: number, r: Record<string, unknown>) => s + ((r.stars as number) || 0), 0)
 
   // Get streak
   const { data: recentSessions } = await supabase
