@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { SkeletonLight, SkeletonStyles } from '@/components/ui/skeleton'
 import { track } from '@/lib/posthog'
 
@@ -37,6 +37,37 @@ export default function DashboardPage() {
   const [rewardSettingsDraft, setRewardSettingsDraft] = useState({ starsPerDollar: 20, weeklyStarCap: 200, rewardsPaused: false })
   const [rewardSaving, setRewardSaving] = useState(false)
   const [rewardSaved, setRewardSaved] = useState(false)
+  const [showInactivityWarning, setShowInactivityWarning] = useState(false)
+  const lastActivityRef = useRef(Date.now())
+
+  // Inactivity timeout — log parent out after 10 minutes
+  useEffect(() => {
+    const TIMEOUT_MS = 10 * 60 * 1000  // 10 minutes
+    const WARNING_MS = 9 * 60 * 1000   // warn at 9 minutes
+
+    function resetActivity() {
+      lastActivityRef.current = Date.now()
+      setShowInactivityWarning(false)
+    }
+
+    const events: (keyof WindowEventMap)[] = ['mousedown', 'mousemove', 'keydown', 'touchstart', 'scroll', 'click']
+    events.forEach(e => window.addEventListener(e, resetActivity))
+
+    const interval = setInterval(() => {
+      const idle = Date.now() - lastActivityRef.current
+      if (idle >= TIMEOUT_MS) {
+        localStorage.clear()
+        window.location.href = '/login'
+      } else if (idle >= WARNING_MS) {
+        setShowInactivityWarning(true)
+      }
+    }, 30000)
+
+    return () => {
+      events.forEach(e => window.removeEventListener(e, resetActivity))
+      clearInterval(interval)
+    }
+  }, [])
 
   useEffect(() => {
     // Check auth
@@ -584,6 +615,51 @@ export default function DashboardPage() {
           </>
         )}
       </div>
+
+      {/* Inactivity warning banner */}
+      {showInactivityWarning && (
+        <div style={{
+          position: 'fixed',
+          bottom: '24px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          background: '#0d2b28',
+          border: '1.5px solid rgba(245,166,35,0.5)',
+          borderRadius: '16px',
+          padding: '14px 20px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '16px',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
+          zIndex: 500,
+          maxWidth: '90vw',
+          whiteSpace: 'nowrap',
+        }}>
+          <span style={{ fontSize: '14px', color: '#f5a623', fontWeight: 600, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+            Still there? You&apos;ll be logged out in 1 minute due to inactivity.
+          </span>
+          <button
+            onClick={() => {
+              lastActivityRef.current = Date.now()
+              setShowInactivityWarning(false)
+            }}
+            style={{
+              background: '#2ec4b6',
+              color: 'white',
+              border: 'none',
+              borderRadius: '10px',
+              padding: '8px 16px',
+              fontFamily: "'Nunito', sans-serif",
+              fontWeight: 800,
+              fontSize: '13px',
+              cursor: 'pointer',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            Stay logged in
+          </button>
+        </div>
+      )}
 
       <style jsx global>{`
         @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap');
