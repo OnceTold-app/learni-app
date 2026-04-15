@@ -20,14 +20,28 @@ export async function POST(req: NextRequest) {
 
   const { data: account } = await supabase
     .from('accounts')
-    .select('stripe_customer_id')
+    .select('stripe_customer_id, email')
     .eq('user_id', user.id)
     .single()
 
+  // No Stripe customer yet — send them to checkout instead
   if (!account?.stripe_customer_id) {
-    return NextResponse.json({ error: 'No billing account found' }, { status: 404 })
+    const stripe = getStripe()
+    const standardPrice = process.env.STRIPE_PRICE_STANDARD
+    const session = await stripe.checkout.sessions.create({
+      mode: 'subscription',
+      payment_method_types: ['card'],
+      customer_email: account?.email || user.email || '',
+      line_items: [{ price: standardPrice, quantity: 1 }],
+      subscription_data: { trial_period_days: 7 },
+      allow_promotion_codes: true,
+      success_url: `${req.nextUrl.origin}/dashboard`,
+      cancel_url: `${req.nextUrl.origin}/account`,
+    } as Parameters<typeof stripe.checkout.sessions.create>[0])
+    return NextResponse.json({ url: session.url })
   }
 
+  // Has Stripe customer — open the billing portal
   const stripe = getStripe()
   const session = await stripe.billingPortal.sessions.create({
     customer: account.stripe_customer_id,
