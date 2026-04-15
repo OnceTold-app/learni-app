@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
       customer_email: email,
       line_items: lineItems,
       subscription_data: {
-        trial_period_days: 14,
+        trial_period_days: 7,
       },
       allow_promotion_codes: true,
       success_url: `${req.nextUrl.origin}/subscribe/success?session_id={CHECKOUT_SESSION_ID}`,
