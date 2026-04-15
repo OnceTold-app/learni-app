@@ -235,9 +235,9 @@ export default function DashboardPage() {
           <div style={{ textAlign: 'center', padding: '48px 0' }}>
             <div style={{ fontSize: '48px', marginBottom: '16px' }}>👋</div>
             <h2 style={{ fontFamily: "'Nunito', sans-serif", fontWeight: 900, color: '#0d2b28', marginBottom: '8px' }}>
-              Welcome to the Hub
+              Welcome to your Hub
             </h2>
-            <p style={{ color: '#5a8a84', marginBottom: '24px' }}>Add your first child to get started.</p>
+            <p style={{ color: '#5a8a84', marginBottom: '24px' }}>Add your first child to get started with Earni.</p>
             <a href="/onboarding" style={{
               display: 'inline-block',
               background: '#2ec4b6',
@@ -248,7 +248,13 @@ export default function DashboardPage() {
               fontWeight: 900,
               fontSize: '16px',
               textDecoration: 'none',
+              marginBottom: '16px',
             }}>Add a child →</a>
+            <div style={{ marginTop: '8px' }}>
+              <a href="/account" style={{ fontSize: '13px', color: '#5a8a84', textDecoration: 'none' }}>⚙️ Account settings</a>
+              <span style={{ color: '#ccc', margin: '0 8px' }}>·</span>
+              <a href="/login" onClick={() => { localStorage.clear(); }} style={{ fontSize: '13px', color: '#5a8a84', textDecoration: 'none' }}>Log out</a>
+            </div>
           </div>
         ) : (
           <>
