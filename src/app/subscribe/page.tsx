@@ -59,7 +59,7 @@ export default function SubscribePage() {
           <h1 style={{ fontFamily: "'Nunito', sans-serif", fontSize: '28px', fontWeight: 900, color: '#0d2b28', marginTop: '16px', marginBottom: '4px' }}>
             Start your subscription
           </h1>
-          <p style={{ color: '#5a8a84', fontSize: '14px' }}>14-day free trial · Cancel anytime</p>
+          <p style={{ color: '#5a8a84', fontSize: '14px' }}>7-day free trial · Cancel anytime</p>
         </div>
 
         {/* Child count */}
@@ -100,7 +100,7 @@ export default function SubscribePage() {
             <span style={{ fontSize: '20px', fontWeight: 900, fontFamily: "'Nunito', sans-serif", color: '#2ec4b6' }}>${monthlyPrice}/mo</span>
           </div>
           <div style={{ fontSize: '12px', color: '#8abfba', marginTop: '6px', textAlign: 'center' }}>
-            First 14 days free · Then ${monthlyPrice} NZD/month
+            First 7 days free · Then ${monthlyPrice} NZD/month
           </div>
         </div>
 
@@ -123,7 +123,7 @@ export default function SubscribePage() {
             fontFamily: "'Nunito', sans-serif", fontSize: '16px', fontWeight: 900,
             cursor: loading || !email ? 'not-allowed' : 'pointer',
           }}>
-          {loading ? 'Redirecting to checkout...' : 'Start 14-day free trial →'}
+          {loading ? 'Redirecting to checkout...' : 'Start 7-day free trial →'}
         </button>
 
         <p style={{ textAlign: 'center', marginTop: '12px', fontSize: '11px', color: '#8abfba' }}>
