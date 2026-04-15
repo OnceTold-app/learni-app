@@ -194,17 +194,61 @@ export default function KidHubPage() {
     )
   }
 
+  function handleLogout() {
+    localStorage.removeItem('learni_child_id')
+    localStorage.removeItem('learni_child_name')
+    localStorage.removeItem('learni_child_pin')
+    localStorage.removeItem('learni_year_level')
+    localStorage.removeItem('learni_child_username')
+    window.location.href = '/login'
+  }
+
   return (
     <div style={{
       minHeight: '100vh',
       background: 'linear-gradient(180deg, #0d2b28 0%, #143330 50%, #1a3d39 100%)',
       fontFamily: "'Plus Jakarta Sans', sans-serif",
-      padding: '24px',
       paddingBottom: '120px',
     }}>
-      <div style={{ maxWidth: '500px', margin: '0 auto' }}>
+      {/* Top bar */}
+      <div style={{
+        padding: '12px 20px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        borderBottom: '1px solid rgba(255,255,255,0.06)',
+      }}>
+        <span style={{
+          fontFamily: "'Nunito', sans-serif",
+          fontSize: '14px',
+          fontWeight: 900,
+          color: 'rgba(255,255,255,0.5)',
+          letterSpacing: '0.08em',
+          textTransform: 'uppercase' as const,
+        }}>My Hub</span>
+        <button
+          onClick={handleLogout}
+          style={{
+            background: 'rgba(255,255,255,0.06)',
+            border: '1px solid rgba(255,255,255,0.1)',
+            borderRadius: '20px',
+            padding: '6px 14px',
+            fontSize: '12px',
+            fontWeight: 700,
+            color: 'rgba(255,255,255,0.4)',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '5px',
+          }}
+        >
+          🔒 Log out
+        </button>
+      </div>
+
+      <div style={{ maxWidth: '500px', margin: '0 auto', padding: '24px' }}>
         {/* Header */}
-        <div style={{ textAlign: 'center', marginBottom: '32px', paddingTop: '20px' }}>
+        <div style={{ textAlign: 'center', marginBottom: '32px', paddingTop: '4px' }}>
           {avatarUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -455,7 +499,7 @@ export default function KidHubPage() {
           </div>
         )}
 
-        {/* Sign out */}
+        {/* Switch user / sign out */}
         <button
           onClick={async () => {
             const childId = localStorage.getItem('learni_child_id')
@@ -469,12 +513,7 @@ export default function KidHubPage() {
                 })
               } catch { /* fire and forget */ }
             }
-            localStorage.removeItem('learni_child_id')
-            localStorage.removeItem('learni_child_name')
-            localStorage.removeItem('learni_child_username')
-            localStorage.removeItem('learni_year_level')
-            localStorage.removeItem('learni_session_language')
-            window.location.href = '/login'
+            handleLogout()
           }}
           style={{
             display: 'block',
