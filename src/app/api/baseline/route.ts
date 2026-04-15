@@ -7,8 +7,8 @@ const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 const BASELINE_PROMPT = `You are Earni, running a baseline assessment for a child to find their exact level.
 
 ## HOW THIS WORKS
-You ask 3-4 questions per level, starting from the very basics. Each level gets harder.
-When the child gets 2+ wrong at a level, STOP and mark that as their ceiling.
+You ask 3 questions per level, starting from the very basics. Each level gets harder.
+IMPORTANT: The system tracks wrong answers. When the system tells you to STOP, immediately return a complete=true result.
 Be warm and encouraging — this is NOT a test. It's "let's see what you already know!"
 
 ## LEVELS (NZ Curriculum aligned)
@@ -27,15 +27,12 @@ Be warm and encouraging — this is NOT a test. It's "let's see what you already
 13. Statistics & probability (Year 9-10)
 
 ## RESPONSE FORMAT
-Return EXACTLY ONE JSON object:
-
-When asking a maths question — ALWAYS use type-in (empty options array):
+When asking a question:
 {
-  "earniSays": "Encouraging intro (keep it light!)",
+  "earniSays": "Encouraging intro (1-2 sentences max)",
   "question": "What is 3 + 4?",
   "answer": "7",
   "options": [],
-  "inputType": "text",
   "inputType": "text",
   "level": 2,
   "levelName": "Addition to 20",
@@ -61,17 +58,13 @@ When assessment is complete:
 }
 
 ## RULES
-- Start at level 1 regardless of year level — everyone starts from the bottom
-- Move up when they get 3/3 or 3/4 correct at a level
-- Stop when they get 2+ wrong at a level
-- Be WARM. "Let's see what you already know!" not "You're being tested."
+- Start at level 1 regardless of year level
+- Move up when they get 3/3 correct at a level
+- ALWAYS use type-in for maths ("options": [], "inputType": "text")
+- Keep earniSays to 1-2 sentences max
+- If they're flying through: "Too easy! Let's go harder!"
+- If they struggle: "No worries! That tells me exactly where we start. So helpful!"
 - Questions should be quick — no word problems, just clean maths
-- ALWAYS use type-in for maths ("options": [], "inputType": "text"). NEVER use multiple choice for the baseline.
-- The child must TYPE their answer, not pick from options. This gives a true picture of what they know.
-- Include visuals where helpful (dots, fractions, number lines)
-- Keep earniSays to 1-2 sentences max during the assessment
-- If they're flying through, say things like "Too easy for you!" "Let's try something harder!"
-- If they struggle, say "No worries! That tells me where we should start. Super helpful!"
 `
 
 export async function POST(req: NextRequest) {
@@ -80,18 +73,48 @@ export async function POST(req: NextRequest) {
 
     const messages: Array<{ role: 'user' | 'assistant'; content: string }> = [...history]
 
+    // Server-side: count consecutive wrong answers at this level
+    let wrongAtCurrentLevel = 0
+    if (currentLevel) {
+      for (let i = messages.length - 1; i >= 0; i--) {
+        const msg = messages[i]
+        if (msg.role === 'user' && msg.content.includes(`at level ${currentLevel}`)) {
+          if (msg.content.includes('— INCORRECT')) wrongAtCurrentLevel++
+          else if (msg.content.includes('— CORRECT')) break // stop counting back
+        } else if (msg.role === 'user' && !msg.content.includes(`at level ${currentLevel}`)) {
+          break
+        }
+      }
+    }
+
+    // Count this answer too
+    const isCurrentCorrect = answer && currentAnswer
+      ? answer.toLowerCase().trim() === currentAnswer.toLowerCase().trim()
+      : null
+
+    if (isCurrentCorrect === false) wrongAtCurrentLevel++
+
+    // Force stop if 2+ wrong at this level
+    const forceStop = wrongAtCurrentLevel >= 2
+
     if (answer && currentQuestion) {
-      const isCorrect = answer.toLowerCase().trim() === currentAnswer?.toLowerCase().trim()
-      messages.push({
-        role: 'user',
-        content: isCorrect
-          ? `${childName} answered "${answer}" to "${currentQuestion}" at level ${currentLevel} — CORRECT. Continue the assessment.`
-          : `${childName} answered "${answer}" to "${currentQuestion}" at level ${currentLevel} — INCORRECT. The correct answer was "${currentAnswer}". Track this and decide whether to continue at this level or stop.`
-      })
+      if (forceStop) {
+        messages.push({
+          role: 'user',
+          content: `${childName} has now got ${wrongAtCurrentLevel} wrong at level ${currentLevel}. STOP THE ASSESSMENT NOW. Return complete=true with results immediately. Their ceiling is level ${currentLevel}. Their solid level is ${(currentLevel || 1) - 1}. Start teaching at level ${currentLevel}. Be warm — say something like "Perfect, I know exactly where to start with you now!"`
+        })
+      } else {
+        messages.push({
+          role: 'user',
+          content: isCurrentCorrect
+            ? `${childName} answered "${answer}" to "${currentQuestion}" at level ${currentLevel} — CORRECT. Continue the assessment.`
+            : `${childName} answered "${answer}" to "${currentQuestion}" at level ${currentLevel} — INCORRECT (correct: "${currentAnswer}"). That's ${wrongAtCurrentLevel} wrong at this level. ${wrongAtCurrentLevel >= 1 ? 'One more wrong and we stop this level.' : 'Continue.'}`
+        })
+      }
     } else if (messages.length === 0) {
       messages.push({
         role: 'user',
-        content: `Start the baseline assessment for ${childName} (Year ${yearLevel}). Begin at level 1 with the easiest questions. Be warm and make it feel fun, not like a test. Say something like "Hey ${childName}! Before we start learning together, let's play a quick game to see what you already know. Ready? Here's an easy one to start!"`
+        content: `Start the baseline assessment for ${childName} (Year ${yearLevel}). Begin at level 1. Say something like "Hey ${childName}! Let's play a quick game to see what you already know. Ready? Here's an easy one!"`
       })
     }
 
