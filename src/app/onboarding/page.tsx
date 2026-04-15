@@ -302,7 +302,7 @@ export default function OnboardingPage() {
         )}
 
         <p style={{ textAlign: 'center', marginTop: '16px', fontSize: '11px', color: '#8abfba' }}>
-          Step {step} of {totalSteps} · All information is private and never shared
+          Step {step} of {totalSteps} · Your data is secure and never sold
         </p>
       </div>
     </div>
