@@ -17,90 +17,208 @@ export async function POST(request: Request) {
     const firstName = name.split(' ')[0]
 
     const htmlBody = `<!DOCTYPE html>
-<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
-<body style="font-family: -apple-system, 'Nunito', 'Segoe UI', sans-serif; color: #0d2b28; line-height: 1.65; max-width: 560px; margin: 0 auto; padding: 20px; background: #ffffff;">
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Welcome to Learni</title>
+</head>
+<body style="margin:0;padding:0;background-color:#f0faf9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
 
-  <div style="text-align: center; margin-bottom: 32px; padding: 32px 0 24px;">
-    <div style="font-family: 'Nunito', sans-serif; font-size: 28px; font-weight: 900; color: #0d2b28; letter-spacing: -0.5px;">
-      learni<span style="color: #2ec4b6;">.</span>
-    </div>
-    <div style="margin-top: 24px; font-size: 48px;">👋</div>
-  </div>
-
-  <div style="font-size: 15px; color: #0d2b28;">
-    <p style="margin: 0 0 16px; font-family: 'Nunito', sans-serif; font-size: 22px; font-weight: 900; color: #0d2b28;">
-      Hey ${firstName}! Welcome aboard.
-    </p>
-
-    <p style="margin: 0 0 16px; color: #3a6660;">
-      I'm Earni — the AI tutor behind Learni. Your 7-day free trial has started, and I'm genuinely excited to work with your child.
-    </p>
-
-    <p style="margin: 0 0 20px; font-weight: 600; color: #0d2b28;">Here's how to get started in 2 minutes:</p>
-
-    <div style="background: #f7fafa; border-radius: 16px; padding: 20px 24px; margin-bottom: 24px;">
-      <div style="display: flex; align-items: flex-start; margin-bottom: 14px;">
-        <div style="background: #2ec4b6; color: white; width: 24px; height: 24px; border-radius: 50%; font-family: 'Nunito', sans-serif; font-weight: 900; font-size: 13px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; margin-right: 12px; margin-top: 1px;">1</div>
-        <div style="font-size: 14px; color: #0d2b28;">Go to your <a href="https://learniapp.co/dashboard" style="color: #2ec4b6; font-weight: 700; text-decoration: none;">Parent Hub</a> and add your child — name, age, year level</div>
-      </div>
-      <div style="display: flex; align-items: flex-start; margin-bottom: 14px;">
-        <div style="background: #2ec4b6; color: white; width: 24px; height: 24px; border-radius: 50%; font-family: 'Nunito', sans-serif; font-weight: 900; font-size: 13px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; margin-right: 12px; margin-top: 1px;">2</div>
-        <div style="font-size: 14px; color: #0d2b28;">Your child picks a username and 4-digit PIN — that's their login</div>
-      </div>
-      <div style="display: flex; align-items: flex-start; margin-bottom: 14px;">
-        <div style="background: #2ec4b6; color: white; width: 24px; height: 24px; border-radius: 50%; font-family: 'Nunito', sans-serif; font-weight: 900; font-size: 13px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; margin-right: 12px; margin-top: 1px;">3</div>
-        <div style="font-size: 14px; color: #0d2b28;">First session: I run a quick baseline to find their level automatically</div>
-      </div>
-      <div style="display: flex; align-items: flex-start;">
-        <div style="background: #2ec4b6; color: white; width: 24px; height: 24px; border-radius: 50%; font-family: 'Nunito', sans-serif; font-weight: 900; font-size: 13px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; margin-right: 12px; margin-top: 1px;">4</div>
-        <div style="font-size: 14px; color: #0d2b28;">Sessions take 15–20 min. Kids earn stars ⭐ that convert to real pocket money 💰</div>
-      </div>
-    </div>
-
-    <div style="text-align: center; margin-bottom: 28px;">
-      <a href="https://learniapp.co/dashboard" style="display: inline-block; background: #2ec4b6; color: white; padding: 14px 32px; border-radius: 30px; font-family: 'Nunito', sans-serif; font-weight: 900; font-size: 16px; text-decoration: none; box-shadow: 0 6px 24px rgba(46,196,182,0.35);">
-        Go to my Hub →
-      </a>
-    </div>
-
-    <p style="margin: 0 0 8px; font-size: 14px; color: #5a8a84;">
-      Questions? Just reply — I read everything. Or visit <a href="https://learniapp.co" style="color: #2ec4b6; text-decoration: none;">learniapp.co</a>
-    </p>
-  </div>
-
-  <table cellpadding="0" cellspacing="0" border="0" style="margin-top: 28px; border-top: 1px solid #e8f0ef; padding-top: 20px; width: 100%;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f0faf9;padding:40px 16px;">
     <tr>
-      <td style="vertical-align: top; padding-right: 16px; width: 64px;">
-        <div style="width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(145deg, #2ec4b6, #1a9e92); text-align: center; line-height: 48px; font-size: 24px; color: white; font-weight: 900; font-family: 'Nunito', sans-serif;">E</div>
-      </td>
-      <td style="vertical-align: top;">
-        <div style="font-family: 'Nunito', sans-serif; font-weight: 900; font-size: 16px; color: #0d2b28;">Earni</div>
-        <div style="font-size: 12px; color: #5a8a84; margin-top: 2px;">AI Tutor at Learni</div>
-        <div style="margin-top: 8px;">
-          <a href="https://learniapp.co" style="color: #2ec4b6; text-decoration: none; font-size: 13px; font-weight: 600;">learniapp.co</a>
-          <span style="color: #ccc; margin: 0 6px;">·</span>
-          <a href="mailto:hello@learniapp.co" style="color: #5a8a84; text-decoration: none; font-size: 13px;">hello@learniapp.co</a>
-        </div>
-        <div style="margin-top: 10px; font-size: 11px; color: #8abfba; font-style: italic;">Learn it. Earn it. ✨</div>
+      <td align="center">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;">
+
+          <!-- Logo -->
+          <tr>
+            <td align="center" style="padding-bottom:32px;">
+              <span style="font-family:Georgia,serif;font-size:30px;font-weight:900;color:#0d2b28;letter-spacing:-1px;">learni<span style="color:#2ec4b6;">.</span></span>
+            </td>
+          </tr>
+
+          <!-- Main card -->
+          <tr>
+            <td style="background:#ffffff;border-radius:20px;padding:40px 40px 32px;box-shadow:0 4px 24px rgba(0,0,0,0.06);">
+
+              <!-- Greeting -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td style="padding-bottom:8px;">
+                    <span style="font-size:36px;">👋</span>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding-bottom:12px;">
+                    <h1 style="margin:0;font-family:Georgia,serif;font-size:26px;font-weight:900;color:#0d2b28;line-height:1.2;">Hey ${firstName}, welcome to Learni!</h1>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding-bottom:32px;">
+                    <p style="margin:0;font-size:15px;color:#4a7a74;line-height:1.7;">I&apos;m Earni — your child&apos;s new AI tutor. Your 7-day free trial has started. Let&apos;s get your first session going.</p>
+                  </td>
+                </tr>
+
+                <!-- Divider -->
+                <tr>
+                  <td style="padding-bottom:24px;border-top:1px solid #e8f5f3;">&nbsp;</td>
+                </tr>
+
+                <!-- Steps heading -->
+                <tr>
+                  <td style="padding-bottom:20px;">
+                    <p style="margin:0;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#2ec4b6;">Get started in 3 steps</p>
+                  </td>
+                </tr>
+
+                <!-- Step 1 -->
+                <tr>
+                  <td style="padding-bottom:16px;">
+                    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+                      <tr>
+                        <td width="40" valign="top" style="padding-right:14px;">
+                          <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                            <tr>
+                              <td width="32" height="32" align="center" valign="middle" style="background-color:#2ec4b6;border-radius:50%;width:32px;height:32px;">
+                                <span style="font-size:13px;font-weight:900;color:#ffffff;line-height:32px;">1</span>
+                              </td>
+                            </tr>
+                          </table>
+                        </td>
+                        <td valign="middle">
+                          <p style="margin:0;font-size:14px;color:#0d2b28;line-height:1.6;"><strong>Open your <a href="https://learniapp.co/dashboard" style="color:#2ec4b6;text-decoration:none;">Parent Hub</a></strong> and add your child — name, age, and year level.</p>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+
+                <!-- Step 2 -->
+                <tr>
+                  <td style="padding-bottom:16px;">
+                    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+                      <tr>
+                        <td width="40" valign="top" style="padding-right:14px;">
+                          <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                            <tr>
+                              <td width="32" height="32" align="center" valign="middle" style="background-color:#2ec4b6;border-radius:50%;width:32px;height:32px;">
+                                <span style="font-size:13px;font-weight:900;color:#ffffff;line-height:32px;">2</span>
+                              </td>
+                            </tr>
+                          </table>
+                        </td>
+                        <td valign="middle">
+                          <p style="margin:0;font-size:14px;color:#0d2b28;line-height:1.6;"><strong>Your child picks a username and 4-digit PIN</strong> — that&apos;s their personal login.</p>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+
+                <!-- Step 3 -->
+                <tr>
+                  <td style="padding-bottom:32px;">
+                    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+                      <tr>
+                        <td width="40" valign="top" style="padding-right:14px;">
+                          <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                            <tr>
+                              <td width="32" height="32" align="center" valign="middle" style="background-color:#2ec4b6;border-radius:50%;width:32px;height:32px;">
+                                <span style="font-size:13px;font-weight:900;color:#ffffff;line-height:32px;">3</span>
+                              </td>
+                            </tr>
+                          </table>
+                        </td>
+                        <td valign="middle">
+                          <p style="margin:0;font-size:14px;color:#0d2b28;line-height:1.6;"><strong>First session starts</strong> — I run a quick baseline to find their exact level, then we&apos;re off. Sessions take 15&ndash;20 min. ⭐</p>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+
+                <!-- CTA Button -->
+                <tr>
+                  <td align="center" style="padding-bottom:28px;">
+                    <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                      <tr>
+                        <td align="center" style="background-color:#2ec4b6;border-radius:50px;padding:0;">
+                          <a href="https://learniapp.co/dashboard" style="display:inline-block;padding:16px 40px;font-size:16px;font-weight:700;color:#ffffff;text-decoration:none;border-radius:50px;letter-spacing:-0.2px;">Go to my Hub &rarr;</a>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+
+                <!-- Reward note -->
+                <tr>
+                  <td style="background:#f0faf9;border-radius:12px;padding:16px 20px;">
+                    <p style="margin:0;font-size:13px;color:#4a7a74;line-height:1.7;">💰 <strong>Don&apos;t forget to set your reward rate</strong> in the Hub — kids earn stars for correct answers, and you decide how much each star is worth. Real money, real motivation.</p>
+                  </td>
+                </tr>
+
+              </table>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="padding:28px 8px 8px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td width="48" valign="top" style="padding-right:14px;">
+                    <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                      <tr>
+                        <td width="44" height="44" align="center" valign="middle" style="background-color:#2ec4b6;border-radius:50%;width:44px;height:44px;">
+                          <span style="font-size:20px;font-weight:900;color:#ffffff;line-height:44px;">E</span>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                  <td valign="top">
+                    <p style="margin:0 0 2px;font-size:15px;font-weight:700;color:#0d2b28;">Earni</p>
+                    <p style="margin:0 0 8px;font-size:12px;color:#7aada8;">AI Tutor at Learni</p>
+                    <p style="margin:0;font-size:13px;">
+                      <a href="https://learniapp.co" style="color:#2ec4b6;text-decoration:none;font-weight:600;">learniapp.co</a>
+                      <span style="color:#ccc;margin:0 6px;">&middot;</span>
+                      <a href="mailto:hello@learniapp.co" style="color:#7aada8;text-decoration:none;">hello@learniapp.co</a>
+                    </p>
+                    <p style="margin:10px 0 0;font-size:11px;color:#a0c8c4;font-style:italic;">Learn it. Earn it. ✨</p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Unsubscribe -->
+          <tr>
+            <td align="center" style="padding-top:16px;">
+              <p style="margin:0;font-size:11px;color:#a0c8c4;">Momentum Ventures Limited &middot; Auckland, New Zealand</p>
+            </td>
+          </tr>
+
+        </table>
       </td>
     </tr>
   </table>
-</body></html>`
+
+</body>
+</html>`
 
     const plainBody = `Hey ${firstName}!
 
-I'm Earni — the AI tutor behind Learni. Your 7-day free trial has started.
+I'm Earni — your child's new AI tutor. Your 7-day free trial has started.
 
-Here's how to get going in 2 minutes:
+Get started in 3 steps:
 
-1. Go to your Hub → learniapp.co/dashboard
-2. Add your child (name, age, year level)
-3. They pick a username and PIN — that's their login
-4. First session: I'll run a baseline assessment to find their level
+1. Open your Hub → learniapp.co/dashboard and add your child (name, age, year level)
+2. Your child picks a username and 4-digit PIN — that's their login
+3. First session: I run a quick baseline to find their exact level, then we're off
 
-Sessions take 15–20 min. Kids earn stars ⭐ for correct answers, which convert to real pocket money 💰
+Sessions take 15-20 min. Kids earn stars ⭐ for correct answers — you set the reward rate in the Hub.
 
-Questions? Just reply to this email.
+Go to your Hub → https://learniapp.co/dashboard
 
 — Earni
 AI Tutor at Learni | learniapp.co`
@@ -119,7 +237,7 @@ AI Tutor at Learni | learniapp.co`
     await transporter.sendMail({
       from: `Earni from Learni <${EMAIL}>`,
       to: email,
-      subject: 'Welcome to Learni 👋',
+      subject: `Welcome to Learni, ${firstName}! 👋`,
       text: plainBody,
       html: htmlBody,
     })
@@ -127,7 +245,6 @@ AI Tutor at Learni | learniapp.co`
     return NextResponse.json({ ok: true })
   } catch (error) {
     console.error('Welcome email error:', error)
-    // Don't fail signup if email fails
     return NextResponse.json({ ok: false, error: String(error) }, { status: 200 })
   }
 }
