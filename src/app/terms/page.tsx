@@ -75,7 +75,7 @@ export default function TermsPage() {
           <p><strong>Additional children:</strong> $19 NZD per month per additional child (maximum 4 children per account).</p>
           <p><strong>Billing:</strong> Subscriptions renew automatically each month. You will be charged on the same date each month following your trial period.</p>
           <p><strong>Price changes:</strong> We will give you at least 30 days&apos; notice by email before any price increase takes effect. You may cancel before the change if you do not wish to continue.</p>
-          <p><strong>Refunds:</strong> We consider refund requests on a case-by-case basis within 14 days of payment. Contact us at <a href="mailto:hello@learniapp.co" style={{ color: '#2ec4b6' }}>hello@learniapp.co</a>. Nothing in these Terms limits your rights under applicable consumer protection law.</p>
+          <p><strong>Refunds:</strong> We consider refund requests on a case-by-case basis within 14 days of payment. Chat with us or email <a href="mailto:hello@learniapp.co" style={{ color: '#2ec4b6' }}>hello@learniapp.co</a>. Nothing in these Terms limits your rights under applicable consumer protection law.</p>
           <p style={basicallyStyle}>💡 <em>In plain English: $49/month for one child, $19/month for each extra child. Cancel any time. We&apos;ll always warn you before prices go up.</em></p>
 
           <h2 style={h2Style}>7. Star Rewards</h2>
@@ -131,13 +131,10 @@ export default function TermsPage() {
 
           <h2 style={h2Style}>13. Governing Law</h2>
           <p>These Terms are governed by the laws of New Zealand. Any disputes that cannot be resolved informally will be subject to the exclusive jurisdiction of the courts of Auckland, New Zealand.</p>
-          <p>We&apos;d always rather sort things out directly first — email us at <a href="mailto:hello@learniapp.co" style={{ color: '#2ec4b6' }}>hello@learniapp.co</a> and we&apos;ll do our best to make it right.</p>
 
           <h2 style={h2Style}>14. Contact</h2>
-          <p>Questions about these Terms? We&apos;re happy to help.</p>
-          <p><strong>Email:</strong> <a href="mailto:hello@learniapp.co" style={{ color: '#2ec4b6' }}>hello@learniapp.co</a><br />
-          <strong>Company:</strong> Momentum Ventures Limited<br />
-          <strong>Location:</strong> Auckland, New Zealand</p>
+          <p>Questions? <a href="https://learniapp.co/#chat" style={{ color: '#2ec4b6' }}>Chat with us</a> or email <a href="mailto:hello@learniapp.co" style={{ color: '#2ec4b6' }}>hello@learniapp.co</a></p>
+          <p style={{ color: '#5a8a84', fontSize: '14px' }}>Momentum Ventures Limited, Auckland, New Zealand.</p>
         </div>
       </div>
     </div>
