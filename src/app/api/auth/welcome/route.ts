@@ -56,7 +56,7 @@ export async function POST(request: Request) {
                 </tr>
                 <tr>
                   <td style="padding-bottom:32px;">
-                    <p style="margin:0;font-size:15px;color:#4a7a74;line-height:1.7;">I&apos;m Earni — your child&apos;s new AI tutor. Your 7-day free trial has started. Let&apos;s get your first session going.</p>
+                    <p style="margin:0;font-size:15px;color:#4a7a74;line-height:1.7;">I'm Earni — your child's new AI tutor. Your 7-day free trial has started. Let's get your first session going.</p>
                   </td>
                 </tr>
 
@@ -109,7 +109,7 @@ export async function POST(request: Request) {
                           </table>
                         </td>
                         <td valign="middle">
-                          <p style="margin:0;font-size:14px;color:#0d2b28;line-height:1.6;"><strong>Your child picks a username and 4-digit PIN</strong> — that&apos;s their personal login.</p>
+                          <p style="margin:0;font-size:14px;color:#0d2b28;line-height:1.6;"><strong>Your child picks a username and 4-digit PIN</strong> — that's their personal login.</p>
                         </td>
                       </tr>
                     </table>
@@ -131,7 +131,7 @@ export async function POST(request: Request) {
                           </table>
                         </td>
                         <td valign="middle">
-                          <p style="margin:0;font-size:14px;color:#0d2b28;line-height:1.6;"><strong>First session starts</strong> — I run a quick baseline to find their exact level, then we&apos;re off. Sessions take 15&ndash;20 min. ⭐</p>
+                          <p style="margin:0;font-size:14px;color:#0d2b28;line-height:1.6;"><strong>First session starts</strong> — I run a quick baseline to find their exact level, then we're off. Sessions take 15–20 min. ⭐</p>
                         </td>
                       </tr>
                     </table>
@@ -144,7 +144,7 @@ export async function POST(request: Request) {
                     <table role="presentation" cellpadding="0" cellspacing="0" border="0">
                       <tr>
                         <td align="center" style="background-color:#2ec4b6;border-radius:50px;padding:0;">
-                          <a href="https://learniapp.co/dashboard" style="display:inline-block;padding:16px 40px;font-size:16px;font-weight:700;color:#ffffff;text-decoration:none;border-radius:50px;letter-spacing:-0.2px;">Go to my Hub &rarr;</a>
+                          <a href="https://learniapp.co/dashboard" style="display:inline-block;padding:16px 40px;font-size:16px;font-weight:700;color:#ffffff;text-decoration:none;border-radius:50px;letter-spacing:-0.2px;">Go to my Hub →</a>
                         </td>
                       </tr>
                     </table>
@@ -154,7 +154,7 @@ export async function POST(request: Request) {
                 <!-- Reward note -->
                 <tr>
                   <td style="background:#f0faf9;border-radius:12px;padding:16px 20px;">
-                    <p style="margin:0;font-size:13px;color:#4a7a74;line-height:1.7;">💰 <strong>Don&apos;t forget to set your reward rate</strong> in the Hub — kids earn stars for correct answers, and you decide how much each star is worth. Real money, real motivation.</p>
+                    <p style="margin:0;font-size:13px;color:#4a7a74;line-height:1.7;">💰 <strong>Don't forget to set your reward rate</strong> in the Hub — kids earn stars for correct answers, and you decide how much each star is worth. Real money, real motivation.</p>
                   </td>
                 </tr>
 
@@ -181,7 +181,7 @@ export async function POST(request: Request) {
                     <p style="margin:0 0 8px;font-size:12px;color:#7aada8;">AI Tutor at Learni</p>
                     <p style="margin:0;font-size:13px;">
                       <a href="https://learniapp.co" style="color:#2ec4b6;text-decoration:none;font-weight:600;">learniapp.co</a>
-                      <span style="color:#ccc;margin:0 6px;">&middot;</span>
+                      <span style="color:#ccc;margin:0 6px;">·</span>
                       <a href="mailto:hello@learniapp.co" style="color:#7aada8;text-decoration:none;">hello@learniapp.co</a>
                     </p>
                     <p style="margin:10px 0 0;font-size:11px;color:#a0c8c4;font-style:italic;">Learn it. Earn it. ✨</p>
@@ -194,7 +194,7 @@ export async function POST(request: Request) {
           <!-- Unsubscribe -->
           <tr>
             <td align="center" style="padding-top:16px;">
-              <p style="margin:0;font-size:11px;color:#a0c8c4;">Momentum Ventures Limited &middot; Auckland, New Zealand</p>
+              <p style="margin:0;font-size:11px;color:#a0c8c4;">Momentum Ventures Limited · Auckland, New Zealand</p>
             </td>
           </tr>
 
