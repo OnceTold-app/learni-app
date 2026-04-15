@@ -102,6 +102,8 @@ export default function SessionPage() {
   const lastActivityRef = useRef(Date.now())
   const pausedTimeRef = useRef(0)
   const [paused, setPaused] = useState(false)
+  const [showIdleOverlay, setShowIdleOverlay] = useState(false)
+  const idleCountdownRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [speaking, setSpeaking] = useState(false)
   const [voiceEnabled, setVoiceEnabled] = useState(true)
   const [voiceSpeed, setVoiceSpeed] = useState(1.0)
@@ -390,6 +392,53 @@ export default function SessionPage() {
     }, 5000)
     return () => clearInterval(inactivityCheck)
   }, [paused, state.loading, state.sessionStarted])
+
+  // 20-minute inactivity — show "Are you still there?" overlay, then auto-logout after 60s
+  useEffect(() => {
+    const IDLE_MS = 20 * 60 * 1000  // 20 minutes
+
+    const idleCheck = setInterval(() => {
+      if (paused || state.loading || !state.sessionStarted || speaking || showIdleOverlay) return
+      const idle = Date.now() - lastActivityRef.current
+      if (idle >= IDLE_MS) {
+        setShowIdleOverlay(true)
+        // Auto-logout after 60 seconds of no response
+        if (!idleCountdownRef.current) {
+          idleCountdownRef.current = setTimeout(async () => {
+            try {
+              await fetch('/api/session/complete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  childId: localStorage.getItem('learni_child_id'),
+                  starsEarned: state.starsEarned,
+                  correctCount: state.correctCount,
+                  totalQuestions: state.totalQuestions,
+                  subjects: [subject],
+                  duration: Math.floor((Date.now() - sessionStartRef.current) / 1000),
+                  jarAllocation: { save: state.jarSave, spend: state.jarSpend, give: state.jarGive },
+                }),
+              })
+            } catch { /* best effort */ }
+            localStorage.removeItem('learni_child_id')
+            localStorage.removeItem('learni_child_name')
+            localStorage.removeItem('learni_child_pin')
+            localStorage.removeItem('learni_year_level')
+            localStorage.removeItem('learni_child_username')
+            window.location.href = '/kid-hub'
+          }, 60000)
+        }
+      }
+    }, 15000)
+
+    return () => {
+      clearInterval(idleCheck)
+      if (idleCountdownRef.current) {
+        clearTimeout(idleCountdownRef.current)
+        idleCountdownRef.current = null
+      }
+    }
+  }, [paused, state.loading, state.sessionStarted, speaking, showIdleOverlay, state.starsEarned, state.correctCount, state.totalQuestions, state.jarSave, state.jarSpend, state.jarGive, subject])
 
   // Also pause on visibility change (tab switch, screen lock)
   useEffect(() => {
@@ -1768,6 +1817,60 @@ export default function SessionPage() {
                   End session
                 </button>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Idle overlay — shown after 20 minutes of inactivity */}
+        {showIdleOverlay && (
+          <div style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(13,43,40,0.97)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 250,
+            padding: '24px',
+          }}>
+            <div style={{ textAlign: 'center', maxWidth: '380px' }}>
+              <div style={{ fontSize: '64px', marginBottom: '16px' }}>👋</div>
+              <h2 style={{
+                fontFamily: "'Nunito', sans-serif",
+                fontSize: '26px',
+                fontWeight: 900,
+                color: 'white',
+                marginBottom: '10px',
+              }}>Are you still there?</h2>
+              <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: '15px', marginBottom: '32px', lineHeight: 1.6 }}>
+                Earni noticed you&apos;ve been away for a while. You&apos;ll be taken back to the Hub in a moment if not.
+              </p>
+              <button
+                onClick={() => {
+                  lastActivityRef.current = Date.now()
+                  setShowIdleOverlay(false)
+                  if (idleCountdownRef.current) {
+                    clearTimeout(idleCountdownRef.current)
+                    idleCountdownRef.current = null
+                  }
+                }}
+                style={{
+                  padding: '16px 40px',
+                  background: 'linear-gradient(135deg, #2ec4b6, #1ab5a8)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '30px',
+                  fontFamily: "'Nunito', sans-serif",
+                  fontSize: '18px',
+                  fontWeight: 900,
+                  cursor: 'pointer',
+                  boxShadow: '0 8px 32px rgba(46,196,182,0.3)',
+                }}
+              >
+                Yes, I&apos;m here! 🙋
+              </button>
             </div>
           </div>
         )}
