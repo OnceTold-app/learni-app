@@ -111,6 +111,13 @@ export default function BaselinePage() {
 
   useEffect(() => { fetchQuestion() }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Auto-save and redirect when complete
+  useEffect(() => {
+    if (state.complete && state.results) {
+      saveResults()
+    }
+  }, [state.complete]) // eslint-disable-line react-hooks/exhaustive-deps
+
   function handleAnswer(ans: string) {
     if (loading || selectedAnswer) return
     setTypedAnswer('') // clear input immediately
@@ -133,6 +140,12 @@ export default function BaselinePage() {
     // Save baseline results to learner profile
     try {
       const token = localStorage.getItem('learni_parent_token')
+      // Save to localStorage for kid hub to display immediately
+      localStorage.setItem('learni_baseline_level', String(state.results.startTeachingAt))
+      localStorage.setItem('learni_baseline_level_name', state.results.startTeachingName)
+      localStorage.setItem('learni_baseline_strengths', state.results.strengths.join(', '))
+      localStorage.setItem('learni_baseline_gaps', state.results.gaps.join(', '))
+
       await fetch('/api/parent/update-child', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
@@ -140,6 +153,8 @@ export default function BaselinePage() {
           childId,
           updates: {
             baselineResults: state.results,
+            baselineLevel: state.results.startTeachingAt,
+            baselineLevelName: state.results.startTeachingName,
             baselineDate: new Date().toISOString(),
           }
         }),
