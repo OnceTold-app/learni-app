@@ -22,6 +22,7 @@ export default function KidHubPage() {
   const [loading, setLoading] = useState(true)
   const [statsError, setStatsError] = useState(false)
   const [needsBaseline, setNeedsBaseline] = useState(false)
+  const [baselineLevelName, setBaselineLevelName] = useState('')
   const [topicsMastered, setTopicsMastered] = useState(0)
   const [badges, setBadges] = useState<Array<{ id: string; name: string; emoji: string; desc: string; earned: boolean; isNew: boolean }>>([])
 
@@ -48,6 +49,9 @@ export default function KidHubPage() {
         if (!data.sessions || data.sessions.length === 0) {
           setNeedsBaseline(true)
         }
+        // Load baseline level name
+        const lvlName = localStorage.getItem('learni_baseline_level_name') || ''
+        if (lvlName) setBaselineLevelName(lvlName)
         if (data.avatarUrl) setAvatarUrl(data.avatarUrl)
       }
       // Load mastery for ranking
@@ -329,7 +333,7 @@ export default function KidHubPage() {
         </div>
 
         {/* Baseline prompt */}
-        {needsBaseline && (
+        {needsBaseline && !baselineLevelName && (
           <a
             href="/baseline"
             style={{
@@ -347,6 +351,24 @@ export default function KidHubPage() {
             <div style={{ fontFamily: "'Nunito', sans-serif", fontSize: '16px', fontWeight: 900, color: '#f5a623', marginBottom: '4px' }}>Let&apos;s find your level!</div>
             <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.4)' }}>Quick assessment so Earni knows where to start</div>
           </a>
+        )}
+        {baselineLevelName && (
+          <div style={{
+            background: 'rgba(46,196,182,0.08)',
+            border: '1.5px solid rgba(46,196,182,0.2)',
+            padding: '14px 18px',
+            borderRadius: '14px',
+            marginBottom: '16px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+          }}>
+            <span style={{ fontSize: '22px' }}>📊</span>
+            <div>
+              <div style={{ fontFamily: "'Nunito', sans-serif", fontSize: '14px', fontWeight: 800, color: '#2ec4b6' }}>Starting level: {baselineLevelName}</div>
+              <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.45)', marginTop: '2px' }}>Earni will teach from here</div>
+            </div>
+          </div>
         )}
 
         {/* Start session button */}
