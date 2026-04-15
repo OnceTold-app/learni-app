@@ -35,7 +35,6 @@ export default function OnboardingPage() {
   const [age, setAge] = useState('')
   const [yearLevel, setYearLevel] = useState('')
   const [pin, setPin] = useState('')
-  const [language, setLanguage] = useState('en')
   const [sessionLanguage, setSessionLanguage] = useState('en')
   const [school, setSchool] = useState('')
   const [selectedInterests, setSelectedInterests] = useState<string[]>([])
@@ -66,7 +65,7 @@ export default function OnboardingPage() {
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({
           name, age: age ? parseInt(age) : null, yearLevel: parseInt(yearLevel),
-          pin: pin || '0000', language, sessionLanguage,
+          pin: pin || '0000', sessionLanguage,
           school, interests: selectedInterests, personality, challenges, parentGoals,
         }),
       })
@@ -176,19 +175,12 @@ export default function OnboardingPage() {
             </p>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                <div>
-                  <label style={labelStyle}>Language at home</label>
-                  <select value={language} onChange={e => setLanguage(e.target.value)} style={{ ...inputStyle, cursor: 'pointer' }}>
-                    {LANGUAGES.map(l => <option key={l.value} value={l.value}>{l.label}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label style={labelStyle}>Earni teaches in</label>
-                  <select value={sessionLanguage} onChange={e => setSessionLanguage(e.target.value)} style={{ ...inputStyle, cursor: 'pointer' }}>
-                    {LANGUAGES.map(l => <option key={l.value} value={l.value}>{l.label}</option>)}
-                  </select>
-                </div>
+              <div>
+                <label style={labelStyle}>Teaching language</label>
+                <p style={{ fontSize: '12px', color: '#5a8a84', marginTop: '-2px', marginBottom: '6px' }}>What language do you want Earni to teach in?</p>
+                <select value={sessionLanguage} onChange={e => setSessionLanguage(e.target.value)} style={{ ...inputStyle, cursor: 'pointer' }}>
+                  {LANGUAGES.map(l => <option key={l.value} value={l.value}>{l.label}</option>)}
+                </select>
               </div>
 
               <div>
