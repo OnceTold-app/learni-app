@@ -70,12 +70,12 @@ export default function TermsPage() {
           <p style={basicallyStyle}>💡 <em>In plain English: You&apos;re giving permission for your child to use Learni. You stay in control of their data the whole time.</em></p>
 
           <h2 style={h2Style}>6. Pricing & Subscriptions</h2>
-          <p><strong>Free trial:</strong> New accounts receive a 14-day free trial with full access to all features.</p>
+          <p><strong>Free trial:</strong> New accounts receive a 7-day free trial with full access to all features.</p>
           <p><strong>Standard plan:</strong> $49 NZD per month for one child, with unlimited sessions across all subjects.</p>
           <p><strong>Additional children:</strong> $19 NZD per month per additional child (maximum 4 children per account).</p>
           <p><strong>Billing:</strong> Subscriptions renew automatically each month. You will be charged on the same date each month following your trial period.</p>
           <p><strong>Price changes:</strong> We will give you at least 30 days&apos; notice by email before any price increase takes effect. You may cancel before the change if you do not wish to continue.</p>
-          <p><strong>Refunds:</strong> We consider refund requests on a case-by-case basis within 14 days of payment. Chat with us or email <a href="mailto:hello@learniapp.co" style={{ color: '#2ec4b6' }}>hello@learniapp.co</a>. Nothing in these Terms limits your rights under applicable consumer protection law.</p>
+          <p><strong>Refunds:</strong> We consider refund requests on a case-by-case basis within 7 days of payment. Chat with us or email <a href="mailto:hello@learniapp.co" style={{ color: '#2ec4b6' }}>hello@learniapp.co</a>. Nothing in these Terms limits your rights under applicable consumer protection law.</p>
           <p style={basicallyStyle}>💡 <em>In plain English: $49/month for one child, $19/month for each extra child. Cancel any time. We&apos;ll always warn you before prices go up.</em></p>
 
           <h2 style={h2Style}>7. Star Rewards</h2>
@@ -125,7 +125,7 @@ export default function TermsPage() {
           <p style={basicallyStyle}>💡 <em>In plain English: We do our best, but we can&apos;t guarantee perfection. Your legal rights under NZ consumer law are always protected.</em></p>
 
           <h2 style={h2Style}>12. Changes to These Terms</h2>
-          <p>We may update these Terms from time to time. If we make material changes, we will notify you by email at least 14 days before the changes take effect. Minor changes (such as fixing typos or clarifying existing language) may be made without notice.</p>
+          <p>We may update these Terms from time to time. If we make material changes, we will notify you by email at least 7 days before the changes take effect. Minor changes (such as fixing typos or clarifying existing language) may be made without notice.</p>
           <p>Continuing to use the Service after changes take effect means you accept the updated Terms. If you don&apos;t agree with a change, you may cancel your account before it takes effect.</p>
           <p style={basicallyStyle}>💡 <em>In plain English: We&apos;ll always warn you before anything important changes. You can leave if you don&apos;t like it.</em></p>
 
