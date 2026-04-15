@@ -68,5 +68,29 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
+  // Alert Sterling via Telegram if a non-English teaching language is requested
+  if (sessionLanguage && sessionLanguage !== 'en') {
+    const LANGUAGE_NAMES: Record<string, string> = {
+      mi: 'Te Reo Māori', af: 'Afrikaans', zh: 'Mandarin',
+      hi: 'Hindi', sm: 'Samoan', fr: 'French', es: 'Spanish',
+    }
+    const langName = LANGUAGE_NAMES[sessionLanguage] || sessionLanguage
+    const parentEmail = user.email || 'unknown'
+    const msg = `🌐 *Language Request — Action Required*\n\nA new child has been added with a non-English teaching language.\n\n*Language:* ${langName}\n*Child:* ${name} (Year ${yearLevel})\n*Parent:* ${parentEmail}\n\nPlease update Earni's prompts and content for ${langName} ASAP. Treat this as urgent.`
+    try {
+      await fetch(\`https://api.telegram.org/bot\${process.env.STERLING_TELEGRAM_TOKEN}/sendMessage\`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: process.env.STERLING_CHAT_ID,
+          text: msg,
+          parse_mode: 'Markdown',
+        }),
+      })
+    } catch (e) {
+      console.warn('Telegram alert failed (non-fatal):', e)
+    }
+  }
+
   return NextResponse.json({ child: learner })
 }
