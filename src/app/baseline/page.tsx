@@ -42,9 +42,10 @@ export default function BaselinePage() {
   const [loading, setLoading] = useState(true)
   const [correctCount, setCorrectCount] = useState(0)
   const [totalCount, setTotalCount] = useState(0)
+  const [wrongAtLevel, setWrongAtLevel] = useState(0)
   const historyRef = useRef<Array<{ role: 'user' | 'assistant'; content: string }>>([])
 
-  async function fetchQuestion(answer?: string, currentQuestion?: string, currentAnswer?: string, currentLevel?: number) {
+  async function fetchQuestion(answer?: string, currentQuestion?: string, currentAnswer?: string, currentLevel?: number, currentWrongAtLevel?: number) {
     setLoading(true)
     setSelectedAnswer(null)
     setIsCorrect(null)
@@ -58,6 +59,7 @@ export default function BaselinePage() {
           childName, yearLevel,
           history: historyRef.current.slice(-12),
           answer, currentQuestion, currentAnswer, currentLevel,
+          wrongAtLevel: currentWrongAtLevel || 0,
         }),
       })
       const data = await res.json()
@@ -66,6 +68,8 @@ export default function BaselinePage() {
         historyRef.current.push({ role: 'assistant', content: JSON.stringify(data) })
       }
 
+      // Reset wrong count when level changes
+      if (data.level && data.level !== state.level) setWrongAtLevel(0)
       setState({
         earniSays: data.earniSays || '',
         question: data.question || null,
@@ -111,6 +115,8 @@ export default function BaselinePage() {
     if (loading || selectedAnswer) return
     setTypedAnswer('') // clear input immediately
     const correct = ans.toLowerCase().trim() === state.answer.toLowerCase().trim()
+    const newWrongAtLevel = correct ? 0 : wrongAtLevel + 1
+    setWrongAtLevel(correct ? wrongAtLevel : wrongAtLevel + 1) // reset on level change happens in fetchQuestion response
     setSelectedAnswer(ans)
     setIsCorrect(correct)
     setTotalCount(t => t + 1)
