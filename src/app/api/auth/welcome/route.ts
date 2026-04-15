@@ -33,7 +33,7 @@ export async function POST(request: Request) {
     </p>
 
     <p style="margin: 0 0 16px; color: #3a6660;">
-      I'm Earni — the AI tutor behind Learni. Your 14-day free trial has started, and I'm genuinely excited to work with your child.
+      I'm Earni — the AI tutor behind Learni. Your 7-day free trial has started, and I'm genuinely excited to work with your child.
     </p>
 
     <p style="margin: 0 0 20px; font-weight: 600; color: #0d2b28;">Here's how to get started in 2 minutes:</p>
@@ -89,7 +89,7 @@ export async function POST(request: Request) {
 
     const plainBody = `Hey ${firstName}!
 
-I'm Earni — the AI tutor behind Learni. Your 14-day free trial has started.
+I'm Earni — the AI tutor behind Learni. Your 7-day free trial has started.
 
 Here's how to get going in 2 minutes:
 
