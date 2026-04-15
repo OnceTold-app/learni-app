@@ -16,7 +16,7 @@ export default function PrivacyPage() {
         <div style={{ fontSize: '15px', lineHeight: 1.8, color: '#2d3a38' }}>
           <h2 style={h2Style}>1. Who We Are</h2>
           <p>Learni is operated by Momentum Ventures Limited, based in Auckland, New Zealand. We comply with the New Zealand Privacy Act 2020.</p>
-          <p>Contact: <a href="mailto:hello@learniapp.co" style={{ color: '#2ec4b6' }}>hello@learniapp.co</a></p>
+          <p>Questions? <a href="https://learniapp.co/#chat" style={{ color: '#2ec4b6' }}>Chat with us</a> or email <a href="mailto:hello@learniapp.co" style={{ color: '#2ec4b6' }}>hello@learniapp.co</a></p>
 
           <h2 style={h2Style}>2. Information We Collect</h2>
 
@@ -80,7 +80,7 @@ export default function PrivacyPage() {
             <li><strong>Payment processing</strong> — handled by a PCI-DSS compliant payment provider; we never store card details</li>
             <li><strong>Email delivery</strong> — used to send parent summaries and account notifications</li>
           </ul>
-          <p>All providers are bound by data processing agreements and are only permitted to use your data to provide their service to us. A full list of our data processors is available on request — contact us at <a href="mailto:hello@learniapp.co" style={{ color: '#2ec4b6' }}>hello@learniapp.co</a>.</p>
+          <p>All providers are bound by data processing agreements and are only permitted to use your data to provide their service to us. A full list of our data processors is available on request — chat with us or email <a href="mailto:hello@learniapp.co" style={{ color: '#2ec4b6' }}>hello@learniapp.co</a>.</p>
 
           <h2 style={h2Style}>6. Data Sharing</h2>
           <p>We share your data only with:</p>
@@ -108,7 +108,7 @@ export default function PrivacyPage() {
             <li>Request deletion of your data</li>
             <li>Ask what data processors we use</li>
           </ul>
-          <p>To exercise any of these rights, email <a href="mailto:hello@learniapp.co" style={{ color: '#2ec4b6' }}>hello@learniapp.co</a>.</p>
+          <p>To exercise any of these rights, <a href="https://learniapp.co/#chat" style={{ color: '#2ec4b6' }}>chat with us</a> or email <a href="mailto:hello@learniapp.co" style={{ color: '#2ec4b6' }}>hello@learniapp.co</a>.</p>
 
           <h2 style={h2Style}>10. Security</h2>
           <ul style={ulStyle}>
