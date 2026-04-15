@@ -8,8 +8,8 @@ export default function SignupPage() {
   const [password, setPassword] = useState('')
   const [name, setName] = useState('')
   const [loading, setLoading] = useState(false)
+  const [loadingPhase, setLoadingPhase] = useState('')
   const [error, setError] = useState('')
-  const [success, setSuccess] = useState(false)
 
   useEffect(() => {
     // Capture referral code from URL (?ref=XXXXXX)
@@ -22,6 +22,7 @@ export default function SignupPage() {
   async function handleSignup(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
+    setLoadingPhase('Setting up your account...')
     setError('')
 
     try {
@@ -39,10 +40,10 @@ export default function SignupPage() {
 
       if (authError) throw authError
 
-      // Create account record with 14-day trial
+      // Create account record with 7-day trial
       if (authData.user) {
         const trialEnd = new Date()
-        trialEnd.setDate(trialEnd.getDate() + 14)
+        trialEnd.setDate(trialEnd.getDate() + 7)
 
         // Generate unique 6-char referral code
         const referralCode = Math.random().toString(36).substring(2, 8).toUpperCase()
@@ -108,60 +109,25 @@ export default function SignupPage() {
         console.warn('Welcome email failed (non-fatal):', emailErr)
       }
 
-      setSuccess(true)
+      // Redirect to Stripe Checkout
+      setLoadingPhase('Redirecting to payment...')
+      const checkoutRes = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, childCount: 1 }),
+      })
+      const checkoutData = await checkoutRes.json()
+      if (checkoutData.url) {
+        window.location.href = checkoutData.url
+      } else {
+        throw new Error(checkoutData.error || 'Failed to create checkout session')
+      }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Something went wrong'
       setError(message)
-    } finally {
       setLoading(false)
+      setLoadingPhase('')
     }
-  }
-
-  if (success) {
-    return (
-      <div style={{
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        background: '#f7fafa',
-        fontFamily: "'Plus Jakarta Sans', sans-serif",
-        padding: '24px',
-      }}>
-        <div style={{
-          background: 'white',
-          borderRadius: '24px',
-          padding: 'clamp(24px, 6vw, 48px)',
-          maxWidth: '440px',
-          width: '100%',
-          textAlign: 'center',
-          boxShadow: '0 8px 40px rgba(0,0,0,0.06)',
-        }}>
-          <div style={{ fontSize: '48px', marginBottom: '16px' }}>🎉</div>
-          <h1 style={{
-            fontFamily: "'Nunito', sans-serif",
-            fontSize: '28px',
-            fontWeight: 900,
-            color: '#0d2b28',
-            marginBottom: '12px',
-          }}>You&apos;re in!</h1>
-          <p style={{ color: '#5a8a84', fontSize: '16px', lineHeight: 1.6, marginBottom: '24px' }}>
-            Your 14-day free trial has started. Let&apos;s add your child.
-          </p>
-          <a href="/onboarding" style={{
-            display: 'inline-block',
-            background: '#2ec4b6',
-            color: 'white',
-            padding: '14px 28px',
-            borderRadius: '30px',
-            fontFamily: "'Nunito', sans-serif",
-            fontWeight: 900,
-            fontSize: '16px',
-            textDecoration: 'none',
-          }}>Add your child →</a>
-        </div>
-      </div>
-    )
   }
 
   return (
@@ -296,8 +262,12 @@ export default function SignupPage() {
               transition: 'background 0.15s',
             }}
           >
-            {loading ? 'Creating account...' : 'Start free →'}
+            {loading ? loadingPhase : 'Start free →'}
           </button>
+
+          <p style={{ textAlign: 'center', margin: '4px 0 0', fontSize: '12px', color: '#8abfba' }}>
+            No charge today — $49/month starts after your 7-day trial. Cancel any time.
+          </p>
         </form>
 
         <p style={{ textAlign: 'center', marginTop: '20px', fontSize: '13px', color: '#5a8a84' }}>
