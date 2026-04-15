@@ -28,7 +28,7 @@ export const metadata: Metadata = {
     'AI tutor NZ', 'online tutoring New Zealand', 'maths tutor NZ', 'learni', 'earni',
     'NZ curriculum', 'year 1-13 tutor', 'kids learning app', 'educational app NZ',
     'reading tutor', 'Te Reo Maori learning', 'school tutor NZ', 'NCEA prep',
-    'Kip McGrath alternative', 'homework help NZ', 'reward learning app',
+    'after school tutor NZ', 'homework help NZ', 'reward learning app',
   ],
   authors: [{ name: 'Learni', url: 'https://learniapp.co' }],
   creator: 'Learni',
