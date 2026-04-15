@@ -133,7 +133,8 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({ sent })
 }
 
-async function sendDailySummary(childId: string, supabase: ReturnType<typeof createClient>) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function sendDailySummary(childId: string, supabase: any) {
   // Get learner + account
   const { data: learner } = await supabase
     .from('learners')
