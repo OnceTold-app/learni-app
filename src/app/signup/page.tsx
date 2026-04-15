@@ -206,13 +206,13 @@ export default function SignupPage() {
         <form onSubmit={handleSignup} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <div>
             <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#0d2b28', marginBottom: '6px' }}>
-              Your name
+              Your name (parent / guardian)
             </label>
             <input
               type="text"
               value={name}
               onChange={e => setName(e.target.value)}
-              placeholder="e.g. Sarah"
+              placeholder="e.g. Sarah (your name, not your child's)"
               required
               style={{
                 width: '100%',
