@@ -69,30 +69,16 @@ When assessment is complete:
 
 export async function POST(req: NextRequest) {
   try {
-    const { childName, yearLevel, history = [], answer, currentQuestion, currentAnswer, currentLevel } = await req.json()
+    const { childName, yearLevel, history = [], answer, currentQuestion, currentAnswer, currentLevel, wrongAtLevel = 0 } = await req.json()
 
     const messages: Array<{ role: 'user' | 'assistant'; content: string }> = [...history]
 
-    // Server-side: count consecutive wrong answers at this level
-    let wrongAtCurrentLevel = 0
-    if (currentLevel) {
-      for (let i = messages.length - 1; i >= 0; i--) {
-        const msg = messages[i]
-        if (msg.role === 'user' && msg.content.includes(`at level ${currentLevel}`)) {
-          if (msg.content.includes('— INCORRECT')) wrongAtCurrentLevel++
-          else if (msg.content.includes('— CORRECT')) break // stop counting back
-        } else if (msg.role === 'user' && !msg.content.includes(`at level ${currentLevel}`)) {
-          break
-        }
-      }
-    }
-
-    // Count this answer too
+    // Use wrongAtLevel from frontend (reliable, no history scanning needed)
     const isCurrentCorrect = answer && currentAnswer
       ? answer.toLowerCase().trim() === currentAnswer.toLowerCase().trim()
       : null
 
-    if (isCurrentCorrect === false) wrongAtCurrentLevel++
+    const wrongAtCurrentLevel = wrongAtLevel || 0
 
     // Force stop if 2+ wrong at this level
     const forceStop = wrongAtCurrentLevel >= 2
