@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react'
 import { getCurrentRank, getNextRank, getProgressToNextRank } from '@/lib/ranks'
 import { Skeleton, SkeletonStyles } from '@/components/ui/skeleton'
+import TimesTableHeatmap, { FactMasteryData } from '@/components/times-table-heatmap'
+import { ALL_MASTERY_TOPICS } from '@/lib/question-bank-generator'
 
 interface SessionData {
   id: string
@@ -25,6 +27,11 @@ export default function KidHubPage() {
   const [baselineLevelName, setBaselineLevelName] = useState('')
   const [topicsMastered, setTopicsMastered] = useState(0)
   const [badges, setBadges] = useState<Array<{ id: string; name: string; emoji: string; desc: string; earned: boolean; isNew: boolean }>>([])
+  // Mastery map state
+  const [tierSummary, setTierSummary] = useState<Array<{ tier: number; total: number; mastered: number }>>([])
+  const [topicMastery, setTopicMastery] = useState<Array<{ topic_id: string; tier: number; correct_count: number; streak_current: number; is_mastered: boolean }>>([])
+  const [factMastery, setFactMastery] = useState<FactMasteryData[]>([])
+  const [masteryExpanded, setMasteryExpanded] = useState(false)
 
   useEffect(() => {
     const id = localStorage.getItem('learni_child_id')
@@ -54,7 +61,7 @@ export default function KidHubPage() {
         if (lvlName) setBaselineLevelName(lvlName)
         if (data.avatarUrl) setAvatarUrl(data.avatarUrl)
       }
-      // Load mastery for ranking
+      // Load mastery for ranking + mastery map
       const masteryRes = await fetch(`/api/kid/mastery?childId=${childId}`)
       if (masteryRes.ok) {
         const masteryData = await masteryRes.json()
@@ -65,6 +72,9 @@ export default function KidHubPage() {
           }
         ).length
         setTopicsMastered(mastered)
+        if (masteryData.tierSummary) setTierSummary(masteryData.tierSummary)
+        if (masteryData.topicMastery) setTopicMastery(masteryData.topicMastery)
+        if (masteryData.factMastery) setFactMastery(masteryData.factMastery)
       }
 
       // Load achievements
@@ -151,7 +161,7 @@ export default function KidHubPage() {
             Couldn&apos;t load your stats
           </h2>
           <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.5)', margin: '0 0 28px', lineHeight: 1.6 }}>
-            Something went wrong. Your stars and progress are safe — just give it another try.
+            Something went wrong. Your stars and progress are safe - just give it another try.
           </p>
           <button
             onClick={() => {
@@ -337,7 +347,7 @@ export default function KidHubPage() {
             <span style={{ fontSize: '32px' }}>🔥</span>
             <div>
               <div style={{ fontFamily: "'Nunito', sans-serif", fontSize: '22px', fontWeight: 900, color: '#f5a623' }}>{streak} day streak!</div>
-              <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)' }}>Keep it going — don&apos;t break the chain!</div>
+              <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)' }}>Keep it going - don&apos;t break the chain!</div>
             </div>
           </div>
         )}
@@ -415,6 +425,144 @@ export default function KidHubPage() {
           </div>
         )}
 
+        <div style={{ marginBottom: '24px' }}>
+          {/* Header row */}
+          <button
+            onClick={() => setMasteryExpanded(x => !x)}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              width: '100%',
+              background: 'rgba(255,255,255,0.04)',
+              border: '1px solid rgba(255,255,255,0.08)',
+              borderRadius: masteryExpanded ? '16px 16px 0 0' : '16px',
+              padding: '14px 18px',
+              cursor: 'pointer',
+              color: 'white',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <span style={{ fontSize: '20px' }}>🏆</span>
+              <span style={{ fontFamily: "'Nunito', sans-serif", fontSize: '16px', fontWeight: 900 }}>My Mastery Map</span>
+            </div>
+            <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)' }}>{masteryExpanded ? '▲' : '▼'}</span>
+          </button>
+
+          {/* Tier summary - always visible */}
+          <div style={{
+            background: 'rgba(255,255,255,0.03)',
+            border: '1px solid rgba(255,255,255,0.06)',
+            borderTop: 'none',
+            borderRadius: masteryExpanded ? '0' : '0 0 16px 16px',
+            padding: '12px 18px',
+            display: 'flex',
+            gap: '8px',
+            flexWrap: 'wrap',
+          }}>
+            {tierSummary.length > 0 ? tierSummary.map(ts => (
+              <span key={ts.tier} style={{
+                fontSize: '12px',
+                fontWeight: 700,
+                color: ts.tier === 3 ? '#f5a623' : ts.tier === 2 ? '#2ec4b6' : 'rgba(255,255,255,0.6)',
+                fontFamily: "'Nunito', sans-serif",
+              }}>
+                {ts.tier === 1 ? '🟢' : ts.tier === 2 ? '🔵' : '⭐'} Tier {ts.tier}: {ts.mastered}/{ts.total} mastered
+                {ts.tier < 3 && <span style={{ color: 'rgba(255,255,255,0.2)', marginLeft: '6px' }}>·</span>}
+              </span>
+            )) : (
+              <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.3)', fontWeight: 600 }}>Start a session to track your mastery!</span>
+            )}
+          </div>
+
+          {/* Expanded content */}
+          {masteryExpanded && (
+            <div style={{
+              background: 'rgba(255,255,255,0.02)',
+              border: '1px solid rgba(255,255,255,0.06)',
+              borderTop: 'none',
+              borderRadius: '0 0 16px 16px',
+              padding: '16px',
+            }}>
+              {/* Times table heatmap */}
+              <div style={{ marginBottom: '20px' }}>
+                <h3 style={{
+                  fontFamily: "'Nunito', sans-serif",
+                  fontSize: '13px',
+                  fontWeight: 800,
+                  color: 'rgba(255,255,255,0.5)',
+                  marginBottom: '10px',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.06em',
+                }}>Times Tables</h3>
+                <TimesTableHeatmap masteryData={factMastery} />
+              </div>
+
+              {/* Topic tick-list grouped by tier */}
+              {[1, 2, 3].map(tier => {
+                const tierTopics = ALL_MASTERY_TOPICS.filter(t => t.tier === tier)
+                const tmMap = new Map(topicMastery.map(r => [r.topic_id, r]))
+                return (
+                  <div key={tier} style={{ marginBottom: '16px' }}>
+                    <h3 style={{
+                      fontFamily: "'Nunito', sans-serif",
+                      fontSize: '13px',
+                      fontWeight: 800,
+                      color: tier === 3 ? '#f5a623' : tier === 2 ? '#2ec4b6' : 'rgba(255,255,255,0.5)',
+                      marginBottom: '8px',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.06em',
+                    }}>
+                      {tier === 1 ? '🟢 Tier 1 - Foundations' : tier === 2 ? '🔵 Tier 2 - Fluency' : '⭐ Tier 3 - Elite'}
+                    </h3>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      {tierTopics.map(topic => {
+                        const row = tmMap.get(topic.id)
+                        const isMastered = row?.is_mastered === true
+                        const inProgress = row && !isMastered && row.correct_count > 0
+                        const pct = row ? Math.min(Math.round((row.correct_count / topic.mastery_threshold) * 100), 100) : 0
+                        return (
+                          <div key={topic.id} style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            padding: '6px 8px',
+                            background: isMastered ? 'rgba(46,196,182,0.08)' : inProgress ? 'rgba(245,166,35,0.06)' : 'rgba(255,255,255,0.02)',
+                            borderRadius: '8px',
+                            border: isMastered ? '1px solid rgba(46,196,182,0.15)' : '1px solid transparent',
+                          }}>
+                            <span style={{ fontSize: '14px', flexShrink: 0 }}>
+                              {isMastered ? (tier === 3 ? '⭐' : '✅') : inProgress ? '🔶' : '⬜'}
+                            </span>
+                            <span style={{
+                              flex: 1,
+                              fontSize: '12px',
+                              fontWeight: 700,
+                              color: isMastered ? '#2ec4b6' : inProgress ? '#f5a623' : 'rgba(255,255,255,0.45)',
+                              fontFamily: "'Nunito', sans-serif",
+                            }}>
+                              {topic.name}
+                            </span>
+                            {inProgress && (
+                              <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', fontWeight: 700 }}>
+                                {row!.correct_count}/{topic.mastery_threshold}
+                              </span>
+                            )}
+                            {inProgress && (
+                              <div style={{ width: '40px', height: '4px', background: 'rgba(255,255,255,0.08)', borderRadius: '2px', overflow: 'hidden', flexShrink: 0 }}>
+                                <div style={{ height: '100%', width: `${pct}%`, background: '#f5a623', borderRadius: '2px' }} />
+                              </div>
+                            )}
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
         {/* Start session button */}
         <a
           href="/start-session"
@@ -435,6 +583,147 @@ export default function KidHubPage() {
         >
           Start learning with Earni →
         </a>
+
+        {/* ─── MASTERY MAP SECTION ─────────────────────────────── */}
+        <div style={{ marginBottom: '24px' }}>
+          {/* Header row */}
+          <button
+            onClick={() => setMasteryExpanded(x => !x)}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              width: '100%',
+              background: 'rgba(255,255,255,0.04)',
+              border: '1px solid rgba(255,255,255,0.08)',
+              borderRadius: masteryExpanded ? '16px 16px 0 0' : '16px',
+              padding: '14px 18px',
+              cursor: 'pointer',
+              color: 'white',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <span style={{ fontSize: '20px' }}>🏆</span>
+              <span style={{ fontFamily: "'Nunito', sans-serif", fontSize: '16px', fontWeight: 900 }}>My Mastery Map</span>
+            </div>
+            <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)' }}>{masteryExpanded ? '▲' : '▼'}</span>
+          </button>
+
+          {/* Tier summary - always visible */}
+          <div style={{
+            background: 'rgba(255,255,255,0.03)',
+            border: '1px solid rgba(255,255,255,0.06)',
+            borderTop: 'none',
+            borderRadius: masteryExpanded ? '0' : '0 0 16px 16px',
+            padding: '12px 18px',
+            display: 'flex',
+            gap: '8px',
+            flexWrap: 'wrap',
+          }}>
+            {tierSummary.length > 0 ? tierSummary.map(ts => (
+              <span key={ts.tier} style={{
+                fontSize: '12px',
+                fontWeight: 700,
+                color: ts.tier === 3 ? '#f5a623' : ts.tier === 2 ? '#2ec4b6' : 'rgba(255,255,255,0.6)',
+                fontFamily: "'Nunito', sans-serif",
+              }}>
+                {ts.tier === 1 ? '🟢' : ts.tier === 2 ? '🔵' : '⭐'} Tier {ts.tier}: {ts.mastered}/{ts.total} mastered
+                {ts.tier < 3 && <span style={{ color: 'rgba(255,255,255,0.2)', marginLeft: '6px' }}>·</span>}
+              </span>
+            )) : (
+              <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.3)', fontWeight: 600 }}>Start a session to track your mastery!</span>
+            )}
+          </div>
+
+          {/* Expanded content */}
+          {masteryExpanded && (
+            <div style={{
+              background: 'rgba(255,255,255,0.02)',
+              border: '1px solid rgba(255,255,255,0.06)',
+              borderTop: 'none',
+              borderRadius: '0 0 16px 16px',
+              padding: '16px',
+            }}>
+              {/* Times table heatmap */}
+              <div style={{ marginBottom: '20px' }}>
+                <h3 style={{
+                  fontFamily: "'Nunito', sans-serif",
+                  fontSize: '13px',
+                  fontWeight: 800,
+                  color: 'rgba(255,255,255,0.5)',
+                  marginBottom: '10px',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.06em',
+                }}>Times Tables</h3>
+                <TimesTableHeatmap masteryData={factMastery} />
+              </div>
+
+              {/* Topic tick-list grouped by tier */}
+              {[1, 2, 3].map(tier => {
+                const tierTopics = ALL_MASTERY_TOPICS.filter(t => t.tier === tier)
+                const tmMap = new Map(topicMastery.map(r => [r.topic_id, r]))
+                return (
+                  <div key={tier} style={{ marginBottom: '16px' }}>
+                    <h3 style={{
+                      fontFamily: "'Nunito', sans-serif",
+                      fontSize: '13px',
+                      fontWeight: 800,
+                      color: tier === 3 ? '#f5a623' : tier === 2 ? '#2ec4b6' : 'rgba(255,255,255,0.5)',
+                      marginBottom: '8px',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.06em',
+                    }}>
+                      {tier === 1 ? '🟢 Tier 1 - Foundations' : tier === 2 ? '🔵 Tier 2 - Fluency' : '⭐ Tier 3 - Elite'}
+                    </h3>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      {tierTopics.map(topic => {
+                        const row = tmMap.get(topic.id)
+                        const isMastered = row?.is_mastered === true
+                        const inProgress = row && !isMastered && row.correct_count > 0
+                        const pct = row ? Math.min(Math.round((row.correct_count / topic.mastery_threshold) * 100), 100) : 0
+                        return (
+                          <div key={topic.id} style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            padding: '6px 8px',
+                            background: isMastered ? 'rgba(46,196,182,0.08)' : inProgress ? 'rgba(245,166,35,0.06)' : 'rgba(255,255,255,0.02)',
+                            borderRadius: '8px',
+                            border: isMastered ? '1px solid rgba(46,196,182,0.15)' : '1px solid transparent',
+                          }}>
+                            <span style={{ fontSize: '14px', flexShrink: 0 }}>
+                              {isMastered ? (tier === 3 ? '⭐' : '✅') : inProgress ? '🔶' : '⬜'}
+                            </span>
+                            <span style={{
+                              flex: 1,
+                              fontSize: '12px',
+                              fontWeight: 700,
+                              color: isMastered ? '#2ec4b6' : inProgress ? '#f5a623' : 'rgba(255,255,255,0.45)',
+                              fontFamily: "'Nunito', sans-serif",
+                            }}>
+                              {topic.name}
+                            </span>
+                            {inProgress && (
+                              <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', fontWeight: 700 }}>
+                                {row!.correct_count}/{topic.mastery_threshold}
+                              </span>
+                            )}
+                            {inProgress && (
+                              <div style={{ width: '40px', height: '4px', background: 'rgba(255,255,255,0.08)', borderRadius: '2px', overflow: 'hidden', flexShrink: 0 }}>
+                                <div style={{ height: '100%', width: `${pct}%`, background: '#f5a623', borderRadius: '2px' }} />
+                              </div>
+                            )}
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
+        {/* ─── END MASTERY MAP SECTION ──────────────────────────── */}
 
         {/* Recent sessions */}
         {sessions.length > 0 && (
