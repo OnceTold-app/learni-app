@@ -33,6 +33,14 @@ interface LessonRequest {
   // Current question for answer evaluation
   currentQuestion?: string
   currentCorrectAnswer?: string
+  // Mastery context for topic-aware suggestions
+  masteryContext?: {
+    topicId?: string
+    correctCount?: number
+    isMastered?: boolean
+    streakCurrent?: number
+    relatedTopics?: Array<{ topicId: string; correctCount: number; isMastered: boolean }>
+  }
   // Session stats
   sessionStats?: {
     correctCount: number
@@ -172,13 +180,60 @@ export async function POST(req: NextRequest) {
     ]
     function randomCelebration() { return celebrations[Math.floor(Math.random() * celebrations.length)] }
 
+    // ── Per-challenge specific instructions ──────────────────────────────────
+    const challengeInstructions: Record<string, string> = {
+      dyslexia: 'DYSLEXIA: Use short sentences. Avoid dense text. Never ask to spell under pressure. Break reading into small chunks. Praise effort loudly.',
+      dyscalculia: 'DYSCALCULIA: Extra visual aids always. Break numbers into tiny steps. Use real-world anchors (money, objects). Celebrate process not just correct answers. Never rush.',
+      adhd: 'ADHD: Short bursts only. High energy pacing. Celebrate every single answer. Never dwell on wrong answers — move fast. Keep momentum.',
+      asd: 'ASD: Be literal and precise. No idioms, no sarcasm. Predictable structure — tell them what comes next. Explicit transitions. Avoid open-ended questions.',
+      anxiety: 'MATHS ANXIETY: Heavy encouragement. Normalise mistakes out loud (\'everyone finds this tricky!\'). No time pressure language. Celebrate the attempt not just the answer.',
+      esl: "ESL: Simple vocabulary. No idioms. Check comprehension before moving on. Use their language for celebration words — e.g. 'Très bien!' for French, 'Shabash!' for Hindi/Urdu.",
+    }
+
+    function getChallengeInstruction(challenges?: string): string {
+      if (!challenges) return ''
+      const key = challenges.toLowerCase().trim()
+      // Try exact match first, then partial
+      if (challengeInstructions[key]) return challengeInstructions[key]
+      for (const [k, v] of Object.entries(challengeInstructions)) {
+        if (key.includes(k)) return v
+      }
+      // Fallback for any other challenge: generic but supportive
+      return `LEARNING NOTE (${challenges}): Be extra patient and use more visuals. Adapt pace to this child's needs.`
+    }
+
     // Build child context string
     const profileContext = [
       childProfile?.interests?.length ? `Interests: ${childProfile.interests.join(', ')}. Use these in examples!` : '',
       childProfile?.personality ? `Personality: ${childProfile.personality}. Adapt your pace and style.` : '',
-      childProfile?.challenges ? `Learning note: ${childProfile.challenges}. Be extra patient and use more visuals.` : '',
+      childProfile?.challenges ? getChallengeInstruction(childProfile.challenges) : '',
       childProfile?.parentGoals ? `Parent's goal: ${childProfile.parentGoals}` : '',
     ].filter(Boolean).join(' ')
+
+    // ── Mastery context string ──────────────────────────────────────────────
+    const masteryContextLines: string[] = []
+    if (body.masteryContext) {
+      const mc = body.masteryContext
+      if (mc.topicId) {
+        if (mc.isMastered) {
+          masteryContextLines.push(`${mc.topicId} is MASTERED — challenge with harder variants or move to next tier.`)
+        } else if (typeof mc.correctCount === 'number') {
+          masteryContextLines.push(`${mc.topicId} is at ${mc.correctCount}/30 correct — focus here, building towards mastery.`)
+        }
+      }
+      if (mc.relatedTopics && mc.relatedTopics.length > 0) {
+        for (const rt of mc.relatedTopics) {
+          if (rt.isMastered) {
+            masteryContextLines.push(`${rt.topicId} is mastered — use as review/warmup only.`)
+          } else if (rt.correctCount < 5) {
+            masteryContextLines.push(`${rt.topicId} is weak (${rt.correctCount}/30) — reinforce with basics.`)
+          }
+        }
+      }
+    }
+    const masteryContextStr = masteryContextLines.length > 0
+      ? `\n\n## MASTERY PROGRESS\n${masteryContextLines.join('\n')}\nUse this to guide question difficulty and topic focus.`
+      : ''
 
     // Build the system prompt based on phase
     let systemPrompt: string
@@ -187,7 +242,9 @@ export async function POST(req: NextRequest) {
         systemPrompt = rapidFirePrompt(childName, yearLevel, drillTopics.length > 0 ? drillTopics : ['times tables', 'number bonds'])
         break
       case 'lesson':
-        systemPrompt = tutorPrompt(childName, yearLevel, subject, drillTopics[0] || '') + (profileContext ? `\n\n## CHILD PROFILE\n${profileContext}` : '')
+        systemPrompt = tutorPrompt(childName, yearLevel, subject, drillTopics[0] || '')
+          + (profileContext ? `\n\n## CHILD PROFILE\n${profileContext}` : '')
+          + masteryContextStr
         break
       case 'financial': {
         const today = new Date()
