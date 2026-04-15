@@ -10,6 +10,7 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false)
   const [loadingPhase, setLoadingPhase] = useState('')
   const [error, setError] = useState('')
+  const [couponCode, setCouponCode] = useState('')
 
   useEffect(() => {
     // Capture referral code from URL (?ref=XXXXXX)
@@ -40,10 +41,12 @@ export default function SignupPage() {
 
       if (authError) throw authError
 
-      // Create account record with 7-day trial
+      // Create account record
       if (authData.user) {
+        const isTester = couponCode.trim().toLowerCase() === 'testi'
+        const trialDays = isTester ? 14 : 7
         const trialEnd = new Date()
-        trialEnd.setDate(trialEnd.getDate() + 7)
+        trialEnd.setDate(trialEnd.getDate() + trialDays)
 
         // Generate unique 6-char referral code
         const referralCode = Math.random().toString(36).substring(2, 8).toUpperCase()
@@ -109,18 +112,25 @@ export default function SignupPage() {
         console.warn('Welcome email failed (non-fatal):', emailErr)
       }
 
-      // Redirect to Stripe Checkout
-      setLoadingPhase('Redirecting to payment...')
-      const checkoutRes = await fetch('/api/checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, childCount: 1 }),
-      })
-      const checkoutData = await checkoutRes.json()
-      if (checkoutData.url) {
-        window.location.href = checkoutData.url
+      // Testi code = skip Stripe, go straight to dashboard
+      const isTester = couponCode.trim().toLowerCase() === 'testi'
+      if (isTester) {
+        setLoadingPhase('All set! Taking you in...')
+        window.location.href = '/dashboard'
       } else {
-        throw new Error(checkoutData.error || 'Failed to create checkout session')
+        // Redirect to Stripe Checkout
+        setLoadingPhase('Redirecting to payment...')
+        const checkoutRes = await fetch('/api/checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, childCount: 1 }),
+        })
+        const checkoutData = await checkoutRes.json()
+        if (checkoutData.url) {
+          window.location.href = checkoutData.url
+        } else {
+          throw new Error(checkoutData.error || 'Failed to create checkout session')
+        }
       }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Something went wrong'
@@ -240,6 +250,28 @@ export default function SignupPage() {
             />
           </div>
 
+          <div>
+            <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#0d2b28', marginBottom: '6px' }}>
+              Access code <span style={{ fontWeight: 400, color: '#8abfba' }}>(optional)</span>
+            </label>
+            <input
+              type="text"
+              value={couponCode}
+              onChange={e => setCouponCode(e.target.value)}
+              placeholder="Enter code if you have one"
+              style={{
+                width: '100%',
+                padding: '12px 16px',
+                border: '1.5px solid rgba(13,43,40,0.12)',
+                borderRadius: '12px',
+                fontSize: '15px',
+                fontFamily: "'Plus Jakarta Sans', sans-serif",
+                outline: 'none',
+                boxSizing: 'border-box',
+              }}
+            />
+          </div>
+
           {error && (
             <p style={{ color: '#e53e3e', fontSize: '14px', margin: 0 }}>{error}</p>
           )}
@@ -265,9 +297,11 @@ export default function SignupPage() {
             {loading ? loadingPhase : 'Start free →'}
           </button>
 
-          <p style={{ textAlign: 'center', margin: '4px 0 0', fontSize: '12px', color: '#8abfba' }}>
-            No charge today — $49/month starts after your 7-day trial. Cancel any time.
-          </p>
+          {couponCode.trim().toLowerCase() !== 'testi' && (
+            <p style={{ textAlign: 'center', margin: '4px 0 0', fontSize: '12px', color: '#8abfba' }}>
+              No charge today — $49/month starts after your 7-day trial. Cancel any time.
+            </p>
+          )}
         </form>
 
         <p style={{ textAlign: 'center', marginTop: '20px', fontSize: '13px', color: '#5a8a84' }}>
