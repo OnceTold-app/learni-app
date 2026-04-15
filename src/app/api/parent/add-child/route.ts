@@ -78,7 +78,8 @@ export async function POST(req: NextRequest) {
     const parentEmail = user.email || 'unknown'
     const msg = `🌐 *Language Request — Action Required*\n\nA new child has been added with a non-English teaching language.\n\n*Language:* ${langName}\n*Child:* ${name} (Year ${yearLevel})\n*Parent:* ${parentEmail}\n\nPlease update Earni's prompts and content for ${langName} ASAP. Treat this as urgent.`
     try {
-      await fetch(\`https://api.telegram.org/bot\${process.env.STERLING_TELEGRAM_TOKEN}/sendMessage\`, {
+      const tgUrl = 'https://api.telegram.org/bot' + process.env.STERLING_TELEGRAM_TOKEN + '/sendMessage'
+      await fetch(tgUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
