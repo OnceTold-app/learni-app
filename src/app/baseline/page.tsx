@@ -80,16 +80,36 @@ export default function BaselinePage() {
         complete: data.complete || false,
         results: data.results || null,
       })
+      // Speak Earni's response
+      if (data.earniSays) {
+        speakText(data.earniSays)
+      }
     } catch {
       setState(s => ({ ...s, earniSays: "Hmm, let me try that again." }))
     }
     setLoading(false)
   }
 
+  async function speakText(text: string) {
+    try {
+      const res = await fetch('/api/speak', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text }),
+      })
+      if (!res.ok) return
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      const audio = new Audio(url)
+      audio.play().catch(() => {})
+    } catch { /* non-fatal */ }
+  }
+
   useEffect(() => { fetchQuestion() }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   function handleAnswer(ans: string) {
     if (loading || selectedAnswer) return
+    setTypedAnswer('') // clear input immediately
     const correct = ans.toLowerCase().trim() === state.answer.toLowerCase().trim()
     setSelectedAnswer(ans)
     setIsCorrect(correct)
