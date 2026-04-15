@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
     // Find the account that owns this referral code
     const { data: referrer, error: refError } = await supabase
       .from('accounts')
-      .select('id, email, full_name, referral_free_month')
+      .select('id, email, full_name, referral_credit_days')
       .eq('referral_code', referral_code.toUpperCase())
       .single()
 
@@ -24,26 +24,21 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid referral code' }, { status: 404 })
     }
 
-    // Flag the referrer for a free month (if not already flagged)
-    if (!referrer.referral_free_month) {
-      await supabase
-        .from('accounts')
-        .update({ referral_free_month: true })
-        .eq('id', referrer.id)
-    }
+    // Give the referrer 7 days credit (accumulates if they refer multiple people)
+    const currentCredit = referrer.referral_credit_days || 0
+    await supabase
+      .from('accounts')
+      .update({ referral_credit_days: currentCredit + 7 })
+      .eq('id', referrer.id)
 
-    // Also flag the new user if we can find their account
-    if (new_user_email) {
-      await supabase
-        .from('accounts')
-        .update({ referral_free_month: true })
-        .eq('email', new_user_email)
-    }
+    // New user gets nothing extra — standard 7-day trial is enough
+    // (do not flag new_user_email for any credit)
+    void new_user_email // acknowledged but not used
 
     return NextResponse.json({
       success: true,
       referrer_email: referrer.email,
-      message: 'Both accounts flagged for free month — will apply Stripe coupon on next billing cycle.',
+      message: 'Referrer credited 7 days. New user gets standard trial only.',
     })
   } catch (err) {
     console.error('Referral track error:', err)
