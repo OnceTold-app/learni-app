@@ -31,6 +31,7 @@ export default function AccountPage() {
   const [profileSaving, setProfileSaving] = useState(false)
   const [profileSaved, setProfileSaved] = useState(false)
   const [profileError, setProfileError] = useState('')
+  const [profileMessage, setProfileMessage] = useState('')
 
   useEffect(() => {
     const token = localStorage.getItem('learni_parent_token')
@@ -69,10 +70,14 @@ export default function AccountPage() {
       })
       const data = await res.json()
       if (res.ok) {
-        setAccount(prev => ({ ...prev, name: editName, email: editEmail }))
+        setAccount(prev => ({ ...prev, name: editName }))
         localStorage.setItem('learni_parent_name', editName)
         setProfileSaved(true)
-        setTimeout(() => setProfileSaved(false), 3000)
+        if (editEmail !== account.email) {
+          setProfileError('Name saved. A confirmation link has been sent to ' + editEmail + ' — click it to confirm your new login email.')
+        } else {
+          setTimeout(() => setProfileSaved(false), 3000)
+        }
       } else {
         setProfileError(data.error || 'Failed to save. Please try again.')
       }
@@ -207,6 +212,9 @@ export default function AccountPage() {
 
           {profileError && (
             <div style={{ color: '#c0392b', fontSize: '13px', marginBottom: '10px' }}>{profileError}</div>
+          )}
+          {profileMessage && (
+            <div style={{ color: '#0d2b28', background: '#e8f5f3', borderRadius: '8px', padding: '10px 14px', fontSize: '13px', marginBottom: '10px', lineHeight: 1.6 }}>{profileMessage}</div>
           )}
 
           <button
