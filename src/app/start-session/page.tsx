@@ -8,6 +8,7 @@ interface Category {
   title: string
   desc: string
   options?: SubOption[]
+  pillGroups?: PillGroup[]
   action?: string // direct route
 }
 
@@ -15,6 +16,12 @@ interface SubOption {
   id: string
   label: string
   desc?: string
+}
+
+interface PillGroup {
+  label: string
+  elite?: boolean
+  chips: Array<{ id: string; label: string }>
 }
 
 interface SubjectGroup {
@@ -49,31 +56,84 @@ const SUBJECT_GROUPS: SubjectGroup[] = [
         emoji: '💪',
         title: 'Practice',
         desc: 'Drill what you already know',
-        options: [
-          { id: 'addition-1-10', label: 'Addition (1-10)', desc: 'Number bonds to 10' },
-          { id: 'addition-1-20', label: 'Addition (1-20)', desc: 'Number bonds to 20' },
-          { id: 'addition-1-100', label: 'Addition (1-100)', desc: 'Adding bigger numbers' },
-          { id: 'subtraction-1-10', label: 'Subtraction (1-10)' },
-          { id: 'subtraction-1-20', label: 'Subtraction (1-20)' },
-          { id: 'subtraction-1-100', label: 'Subtraction (1-100)' },
-          { id: 'counting-in-2s', label: 'Counting in 2s', desc: 'Skip counting by 2' },
-          { id: 'counting-in-5s', label: 'Counting in 5s', desc: 'Skip counting by 5' },
-          { id: 'counting-in-10s', label: 'Counting in 10s', desc: 'Skip counting by 10' },
-          { id: 'counting-in-3s', label: 'Counting in 3s', desc: 'Skip counting by 3' },
-          { id: 'counting-in-4s', label: 'Counting in 4s', desc: 'Skip counting by 4' },
-          { id: 'counting-in-6s', label: 'Counting in 6s', desc: 'Skip counting by 6' },
-          { id: 'counting-in-7s', label: 'Counting in 7s', desc: 'Skip counting by 7' },
-          { id: 'counting-in-8s', label: 'Counting in 8s', desc: 'Skip counting by 8' },
-          { id: 'counting-in-9s', label: 'Counting in 9s', desc: 'Skip counting by 9' },
-          { id: 'times-2-5-10', label: 'Times tables (2, 5, 10)' },
-          { id: 'times-3-4-6', label: 'Times tables (3, 4, 6)' },
-          { id: 'times-7-8-9', label: 'Times tables (7, 8, 9)' },
-          { id: 'times-all', label: 'All times tables (1-12)' },
-          { id: 'division-basic', label: 'Division basics' },
-          { id: 'fractions-basic', label: 'Fractions (halves, quarters)' },
-          { id: 'fractions-add', label: 'Adding fractions' },
-          { id: 'decimals', label: 'Decimals' },
-          { id: 'percentages', label: 'Percentages' },
+        pillGroups: [
+          {
+            label: 'COUNTING',
+            chips: [
+              { id: 'counting-2s', label: '2s' },
+              { id: 'counting-5s', label: '5s' },
+              { id: 'counting-10s', label: '10s' },
+              { id: 'counting-3s', label: '3s' },
+              { id: 'counting-4s', label: '4s' },
+              { id: 'counting-6s', label: '6s' },
+              { id: 'counting-7s', label: '7s' },
+              { id: 'counting-8s', label: '8s' },
+              { id: 'counting-9s', label: '9s' },
+            ],
+          },
+          {
+            label: 'ADDITION',
+            chips: [
+              { id: 'addition-1-10', label: '1-10' },
+              { id: 'addition-11-20', label: '11-20' },
+              { id: 'addition-21-50', label: '21-50' },
+              { id: 'addition-51-100', label: '51-100' },
+              { id: 'addition-101-500', label: '101-500' },
+              { id: 'addition-501-1000', label: '501-1K' },
+            ],
+          },
+          {
+            label: 'SUBTRACTION',
+            chips: [
+              { id: 'subtraction-1-10', label: '1-10' },
+              { id: 'subtraction-11-20', label: '11-20' },
+              { id: 'subtraction-21-50', label: '21-50' },
+              { id: 'subtraction-51-100', label: '51-100' },
+              { id: 'subtraction-101-500', label: '101-500' },
+              { id: 'subtraction-501-1000', label: '501-1K' },
+            ],
+          },
+          {
+            label: 'TIMES TABLES',
+            chips: [
+              { id: 'times-2', label: '×2' },
+              { id: 'times-3', label: '×3' },
+              { id: 'times-4', label: '×4' },
+              { id: 'times-5', label: '×5' },
+              { id: 'times-6', label: '×6' },
+              { id: 'times-7', label: '×7' },
+              { id: 'times-8', label: '×8' },
+              { id: 'times-9', label: '×9' },
+              { id: 'times-10', label: '×10' },
+              { id: 'times-11', label: '×11' },
+              { id: 'times-12', label: '×12' },
+            ],
+          },
+          {
+            label: 'DIVISION',
+            chips: [
+              { id: 'division-2', label: '÷2' },
+              { id: 'division-3', label: '÷3' },
+              { id: 'division-4', label: '÷4' },
+              { id: 'division-5', label: '÷5' },
+              { id: 'division-6', label: '÷6' },
+              { id: 'division-7', label: '÷7' },
+              { id: 'division-8', label: '÷8' },
+              { id: 'division-9', label: '÷9' },
+              { id: 'division-10', label: '÷10' },
+              { id: 'division-11', label: '÷11' },
+              { id: 'division-12', label: '÷12' },
+            ],
+          },
+          {
+            label: '⭐ ELITE',
+            elite: true,
+            chips: [
+              { id: 'addition-1001-10000', label: '1K-10K' },
+              { id: 'addition-10001-100000', label: '11K-100K' },
+              { id: 'addition-100001-1000000', label: '100K-1M' },
+            ],
+          },
         ],
       },
       {
@@ -95,7 +155,7 @@ const SUBJECT_GROUPS: SubjectGroup[] = [
         id: 'full',
         emoji: '🚀',
         title: 'Full session',
-        desc: 'Warm up → Lesson → Money smarts → Recap → Stars',
+        desc: 'Lesson → Money → Recap → Stars',
         action: '/session',
       },
 
@@ -106,6 +166,42 @@ const SUBJECT_GROUPS: SubjectGroup[] = [
     emoji: '✏️',
     label: 'Reading & Writing',
     categories: [
+      {
+        id: 'practice',
+        emoji: '💪',
+        title: 'Practice',
+        desc: 'Drill comprehension, writing & spelling',
+        pillGroups: [
+          {
+            label: 'COMPREHENSION',
+            chips: [
+              { id: 'reading-inference', label: 'Story inference' },
+              { id: 'reading-main-idea', label: 'Main idea' },
+              { id: 'reading-vocabulary', label: 'Vocabulary in context' },
+              { id: 'reading-authors-purpose', label: "Author's purpose" },
+            ],
+          },
+          {
+            label: 'WRITING',
+            chips: [
+              { id: 'writing-descriptive', label: 'Descriptive' },
+              { id: 'writing-creative', label: 'Creative' },
+              { id: 'writing-persuasive', label: 'Persuasive' },
+              { id: 'writing-narrative', label: 'Narrative' },
+            ],
+          },
+          {
+            label: 'SPELLING',
+            chips: [
+              { id: 'spelling-yr1-2', label: 'Year 1-2 words' },
+              { id: 'spelling-yr3-4', label: 'Year 3-4 words' },
+              { id: 'spelling-yr5-6', label: 'Year 5-6 words' },
+              { id: 'spelling-yr7-8', label: 'Year 7-8 words' },
+              { id: 'spelling-yr9-10', label: 'Year 9-10 words' },
+            ],
+          },
+        ],
+      },
       {
         id: 'spelling-main',
         emoji: '🔤',
@@ -136,6 +232,23 @@ const SUBJECT_GROUPS: SubjectGroup[] = [
     emoji: '💰',
     label: 'Money & Life',
     categories: [
+      {
+        id: 'practice',
+        emoji: '💪',
+        title: 'Practice',
+        desc: 'Vault lessons — Save, Give, and Goal jars',
+        pillGroups: [
+          {
+            label: 'MONEY BASICS',
+            chips: [
+              { id: 'what-is-saving', label: 'What is Saving?' },
+              { id: 'spending-wisely', label: 'Spending Wisely' },
+              { id: 'setting-a-goal', label: 'Setting a Goal' },
+              { id: 'giving-and-why', label: 'Giving and Why It Matters' },
+            ],
+          },
+        ],
+      },
       {
         id: 'money-vault',
         emoji: '🏛️',
@@ -195,29 +308,6 @@ export default function StartSessionPage() {
   }
 
   const activeGroup = SUBJECT_GROUPS.find(g => g.id === activeSubject) || SUBJECT_GROUPS[0]
-
-  // Sort practice options by year-level relevance
-  function sortPracticeOptions(options: Array<{id: string, label: string, desc?: string}>) {
-    const yr = typeof window !== 'undefined' ? parseInt(localStorage.getItem('learni_year_level') || '5') : 5
-    // Define approximate year level for each topic
-    const topicYearLevel: Record<string, number> = {
-      'counting-in-2s': 1, 'counting-in-5s': 1, 'counting-in-10s': 1,
-      'addition-1-10': 1, 'subtraction-1-10': 1,
-      'counting-in-3s': 2, 'counting-in-4s': 2, 'counting-in-6s': 2,
-      'counting-in-7s': 2, 'counting-in-8s': 2, 'counting-in-9s': 2,
-      'addition-1-20': 2, 'subtraction-1-20': 2,
-      'addition-1-100': 3, 'subtraction-1-100': 3,
-      'times-2-5-10': 3, 'times-3-4-6': 4, 'times-7-8-9': 4, 'times-all': 4,
-      'division-basic': 5, 'fractions-basic': 4, 'fractions-add': 6,
-      'decimals': 6, 'percentages': 7,
-    }
-    return [...options].sort((a, b) => {
-      const aYr = topicYearLevel[a.id] || 5
-      const bYr = topicYearLevel[b.id] || 5
-      // Show closest to child's year level first
-      return Math.abs(aYr - yr) - Math.abs(bYr - yr)
-    })
-  }
 
   return (
     <div style={{
@@ -294,7 +384,7 @@ export default function StartSessionPage() {
                   <div style={{ fontFamily: "'Nunito', sans-serif", fontSize: '15px', fontWeight: 900, color: 'white' }}>{cat.title}</div>
                   <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.35)', marginTop: '2px' }}>{cat.desc}</div>
                 </div>
-                {cat.options && (
+                {(cat.options || cat.pillGroups) && (
                   <span style={{ marginLeft: 'auto', color: 'rgba(255,255,255,0.2)', fontSize: '16px', flexShrink: 0 }}>→</span>
                 )}
               </button>
@@ -309,31 +399,74 @@ export default function StartSessionPage() {
               ← Back
             </button>
 
-            <h2 style={{ fontFamily: "'Nunito', sans-serif", fontSize: '18px', fontWeight: 900, color: 'white', marginBottom: '14px' }}>
+            <h2 style={{ fontFamily: "'Nunito', sans-serif", fontSize: '18px', fontWeight: 900, color: 'white', marginBottom: '4px' }}>
               {selectedCategory.emoji} {selectedCategory.title}
             </h2>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {selectedCategory.options?.map(opt => (
-                <button
-                  key={opt.id}
-                  onClick={() => startSession(opt.id, selectedCategory.id, `${activeGroup.label} — ${opt.label}`)}
-                  style={{
-                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                    background: 'rgba(255,255,255,0.04)',
-                    border: '1px solid rgba(255,255,255,0.08)',
-                    borderRadius: '14px', padding: '14px 16px',
-                    cursor: 'pointer', textAlign: 'left', width: '100%',
-                  }}
-                >
-                  <div style={{ minWidth: 0 }}>
-                    <div style={{ fontSize: '14px', fontWeight: 700, color: 'white' }}>{opt.label}</div>
-                    {opt.desc && <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.3)', marginTop: '2px' }}>{opt.desc}</div>}
+            {/* Pill/chip layout for practice categories */}
+            {selectedCategory.pillGroups ? (
+              <div style={{ paddingBottom: '8px' }}>
+                {selectedCategory.pillGroups.map(group => (
+                  <div key={group.label}>
+                    <div style={{
+                      fontSize: '11px',
+                      fontWeight: 800,
+                      color: 'rgba(255,255,255,0.35)',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.08em',
+                      marginBottom: '8px',
+                      marginTop: '16px',
+                    }}>
+                      {group.label}
+                    </div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                      {group.chips.map(chip => (
+                        <button
+                          key={chip.id}
+                          onClick={() => startSession(chip.id, 'practice', `${activeGroup.label} — ${chip.label}`)}
+                          style={{
+                            padding: '8px 14px',
+                            borderRadius: '20px',
+                            fontSize: '13px',
+                            fontWeight: 700,
+                            background: group.elite ? 'rgba(245,166,35,0.1)' : 'rgba(255,255,255,0.06)',
+                            border: group.elite ? '1.5px solid rgba(245,166,35,0.3)' : '1.5px solid rgba(255,255,255,0.12)',
+                            color: group.elite ? '#f5a623' : 'rgba(255,255,255,0.7)',
+                            cursor: 'pointer',
+                            fontFamily: "'Nunito', sans-serif",
+                          }}
+                        >
+                          {chip.label}
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                  <span style={{ color: '#2ec4b6', fontSize: '13px', fontWeight: 800, flexShrink: 0, marginLeft: '8px' }}>Start →</span>
-                </button>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : (
+              /* Flat list layout for non-practice categories */
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '14px' }}>
+                {selectedCategory.options?.map(opt => (
+                  <button
+                    key={opt.id}
+                    onClick={() => startSession(opt.id, selectedCategory.id, `${activeGroup.label} — ${opt.label}`)}
+                    style={{
+                      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                      background: 'rgba(255,255,255,0.04)',
+                      border: '1px solid rgba(255,255,255,0.08)',
+                      borderRadius: '14px', padding: '14px 16px',
+                      cursor: 'pointer', textAlign: 'left', width: '100%',
+                    }}
+                  >
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ fontSize: '14px', fontWeight: 700, color: 'white' }}>{opt.label}</div>
+                      {opt.desc && <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.3)', marginTop: '2px' }}>{opt.desc}</div>}
+                    </div>
+                    <span style={{ color: '#2ec4b6', fontSize: '13px', fontWeight: 800, flexShrink: 0, marginLeft: '8px' }}>Start →</span>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>
