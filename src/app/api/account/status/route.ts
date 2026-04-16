@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data } = await supabase
         .from('accounts')
-        .select('id, plan, trial_ends_at, subscription_status, referral_code, referral_free_month')
+        .select('id, plan, trial_ends_at, subscription_status, referral_code, referral_free_month, full_name, email')
         .eq('user_id', user.id)
         .single()
       account = data as any
@@ -63,6 +63,10 @@ export async function GET(req: NextRequest) {
     daysLeft,
     plan: account.plan || 'trial',
     subscriptionStatus: account.subscription_status,
+    subscription_status: account.subscription_status,
+    trial_ends_at: account.trial_ends_at || null,
+    name: (account as any).full_name || null,
+    email: (account as any).email || null,
     referralCode: (account as any).referral_code || null,
     referralFreeMonth: (account as any).referral_free_month || false,
   })
