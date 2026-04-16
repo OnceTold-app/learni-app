@@ -635,8 +635,9 @@ export default function SessionPage() {
           historyRef.current = []
           setQuestionsInPhase(0)
           phaseStartRef.current = Date.now()
-          fetchQuestion('financial')
-          return
+          // For practice/challenge sessions use shortFlow (→ reward), full sessions use financial
+          const isPracticeMode = sessionMode === 'practice' || sessionMode === 'challenge' || sessionMode === 'learn'
+          fetchQuestion(isPracticeMode ? 'reward' : 'financial')
         }
       }
       fetchQuestion(state.phase, selected, state.question || '', state.answer)
