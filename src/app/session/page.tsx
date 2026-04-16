@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import MathsVisual from '@/components/maths-visual'
 
 type Phase = 'warmup' | 'lesson' | 'financial' | 'closing' | 'reward'
+// Note: 'reward' phase no longer shows jar allocation — vault lives on kid hub
 
 interface SessionState {
   phase: Phase
@@ -24,10 +25,6 @@ interface SessionState {
   isCorrect: boolean | null
   loading: boolean
   sessionStarted: boolean
-  showJars: boolean
-  jarSave: number
-  jarSpend: number
-  jarGive: number
   elapsedMinutes: number
 }
 
@@ -36,7 +33,8 @@ const PHASE_LABELS: Record<Phase, string> = {
   lesson: '📚 Main Lesson',
   financial: '💰 Money Smarts',
   closing: '⚡ Rapid Fire - Lock It In',
-  reward: '⭐ Stars & Jars',
+  reward: '⭐ Stars Earned',
+  // Jar allocation removed — vault lives on kid hub
 }
 
 const PHASE_TIMES: Record<Phase, number> = {
@@ -96,10 +94,6 @@ export default function SessionPage() {
     isCorrect: null,
     loading: true,
     sessionStarted: false,
-    showJars: false,
-    jarSave: 50,
-    jarSpend: 30,
-    jarGive: 20,
     elapsedMinutes: 0,
   })
 
@@ -207,12 +201,12 @@ export default function SessionPage() {
 
   // Auto-listen after Earni finishes speaking — ALWAYS when mic is on
   useEffect(() => {
-    if (!speaking && micEnabled && !paused && state.sessionStarted && !state.showJars) {
+    if (!speaking && micEnabled && !paused && state.sessionStarted) {
       const timer = setTimeout(() => startListening(), 500)
       return () => clearTimeout(timer)
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [speaking, micEnabled, paused, state.sessionStarted, state.showJars, state.earniSays])
+  }, [speaking, micEnabled, paused, state.sessionStarted, state.earniSays])
   const [showHintOffer, setShowHintOffer] = useState(false)
   const hintTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [celebration, setCelebration] = useState<string | null>(null)
@@ -318,8 +312,11 @@ export default function SessionPage() {
         hint: data.hint || null,
         loading: false,
         sessionStarted: true,
-        showJars: phase === 'reward',
       }))
+      // When reward phase is reached, auto-complete the session (no jar allocation needed)
+      if (phase === 'reward') {
+        setTimeout(() => handleSessionComplete(), 500)
+      }
       // Speak Earni's words + optionally the question
       if (earniText) {
         const questionText = data.question || ''
@@ -353,7 +350,6 @@ export default function SessionPage() {
           totalQuestions: state.totalQuestions,
           subjects: [subject],
           duration: Math.floor((Date.now() - sessionStartRef.current) / 1000),
-          jarAllocation: { save: state.jarSave, spend: state.jarSpend, give: state.jarGive },
         }))
       }
     }
@@ -437,8 +433,7 @@ export default function SessionPage() {
       !state.loading &&
       !speaking &&
       state.question !== null &&
-      state.selectedAnswer === null &&
-      !state.showJars
+      state.selectedAnswer === null
 
     if (!shouldMonitor) return
 
@@ -466,7 +461,7 @@ export default function SessionPage() {
     }, 10000) // Check every 10 seconds (not 5)
 
     return () => clearInterval(check)
-  }, [state.sessionStarted, paused, state.loading, speaking, state.question, state.selectedAnswer, state.showJars, yearLevel])
+  }, [state.sessionStarted, paused, state.loading, speaking, state.question, state.selectedAnswer, yearLevel])
 
   // 20-minute inactivity — show "Are you still there?" overlay, then auto-logout after 60s
   useEffect(() => {
@@ -491,7 +486,6 @@ export default function SessionPage() {
                   totalQuestions: state.totalQuestions,
                   subjects: [subject],
                   duration: Math.floor((Date.now() - sessionStartRef.current) / 1000),
-                  jarAllocation: { save: state.jarSave, spend: state.jarSpend, give: state.jarGive },
                 }),
               })
             } catch { /* best effort */ }
@@ -513,7 +507,7 @@ export default function SessionPage() {
         idleCountdownRef.current = null
       }
     }
-  }, [paused, state.loading, state.sessionStarted, speaking, showIdleOverlay, state.starsEarned, state.correctCount, state.totalQuestions, state.jarSave, state.jarSpend, state.jarGive, subject])
+  }, [paused, state.loading, state.sessionStarted, speaking, showIdleOverlay, state.starsEarned, state.correctCount, state.totalQuestions, subject])
 
   // Also pause on visibility change (tab switch, screen lock)
   useEffect(() => {
@@ -704,7 +698,8 @@ export default function SessionPage() {
     window.location.href = '/kid-hub'
   }
 
-  async function handleJarSubmit() {
+  // Renamed from handleJarSubmit — saves session and shows feedback (no jars anymore)
+  async function handleSessionComplete() {
     // Save session to Supabase
     let sessionId: string | null = null
     try {
@@ -718,13 +713,27 @@ export default function SessionPage() {
           totalQuestions: state.totalQuestions,
           subjects: [subject],
           duration: Math.floor((Date.now() - sessionStartRef.current) / 1000),
-          jarAllocation: { save: state.jarSave, spend: state.jarSpend, give: state.jarGive },
         }),
       })
       const sessionData = await sessionRes.json()
       sessionId = sessionData?.sessionId || null
     } catch (err) {
       console.error('Session save failed:', err)
+    }
+
+    // Track vault module unlock if topic is a Money & Life vault module
+    const vaultModules = ['what-is-saving', 'spending-wisely', 'setting-a-goal', 'giving-and-why']
+    if (sessionTopic && vaultModules.includes(sessionTopic)) {
+      const childId = localStorage.getItem('learni_child_id')
+      if (childId) {
+        try {
+          await fetch(`/api/kid/vault?childId=${childId}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ unlockedModule: sessionTopic }),
+          })
+        } catch { /* best effort */ }
+      }
     }
 
     // Save mastery data
@@ -745,8 +754,8 @@ export default function SessionPage() {
 
   const [typedAnswer, setTypedAnswer] = useState('')
   const isRapidFire = state.phase === 'warmup' || state.phase === 'closing'
-  const isTeaching = !state.question && state.earniSays && !state.showJars && !state.loading
-  const isTypeIn = state.question && state.options.length === 0 && !state.showJars
+  const isTeaching = !state.question && state.earniSays && !state.loading
+  const isTypeIn = state.question && state.options.length === 0
 
   function handleTypedSubmit() {
     if (!typedAnswer.trim() || state.loading || state.selectedAnswer) return
@@ -1112,7 +1121,6 @@ export default function SessionPage() {
                     totalQuestions: state.totalQuestions,
                     subjects: [subject],
                     duration: Math.floor((Date.now() - sessionStartRef.current) / 1000),
-                    jarAllocation: { save: state.jarSave, spend: state.jarSpend, give: state.jarGive },
                   }),
                 })
               } catch { /* */ }
@@ -1600,7 +1608,7 @@ export default function SessionPage() {
         )}
 
         {/* Multiple choice question */}
-        {state.question && state.options.length > 0 && !state.showJars && (
+        {state.question && state.options.length > 0 && (
           <div style={{
             background: 'rgba(255,255,255,0.04)',
             border: '1px solid rgba(255,255,255,0.08)',
@@ -1717,78 +1725,6 @@ export default function SessionPage() {
 
         </div>{/* end session-content */}
 
-        {/* Jar allocation (reward phase) */}
-        {state.showJars && (
-          <div style={{
-            background: 'rgba(255,255,255,0.04)',
-            border: '1px solid rgba(255,255,255,0.08)',
-            borderRadius: '20px',
-            padding: '28px',
-            width: '100%',
-          }}>
-            <div style={{
-              textAlign: 'center',
-              marginBottom: '24px',
-              fontSize: '36px',
-              fontWeight: 900,
-              fontFamily: "'Nunito', sans-serif",
-              color: '#f5a623',
-            }}>
-              ⭐ {state.starsEarned} stars earned!
-            </div>
-
-            <div style={{ fontSize: '14px', color: 'rgba(255,255,255,0.5)', textAlign: 'center', marginBottom: '20px' }}>
-              How do you want to split your stars?
-            </div>
-
-            {[
-              { label: '🐷 Save', key: 'jarSave' as const, color: '#4ade80' },
-              { label: '🛍️ Spend', key: 'jarSpend' as const, color: '#ff9080' },
-              { label: '💙 Give', key: 'jarGive' as const, color: '#93c5fd' },
-            ].map(jar => (
-              <div key={jar.key} style={{ marginBottom: '14px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-                  <span style={{ fontSize: '14px', fontWeight: 700, color: jar.color }}>{jar.label}</span>
-                  <span style={{ fontSize: '14px', fontWeight: 700, color: 'rgba(255,255,255,0.6)' }}>{state[jar.key]}%</span>
-                </div>
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  value={state[jar.key]}
-                  onChange={e => {
-                    const val = parseInt(e.target.value)
-                    const others = 100 - val
-                    if (jar.key === 'jarSave') setState(s => ({ ...s, jarSave: val, jarSpend: Math.round(others * s.jarSpend / (s.jarSpend + s.jarGive || 1)), jarGive: others - Math.round(others * s.jarSpend / (s.jarSpend + s.jarGive || 1)) }))
-                    if (jar.key === 'jarSpend') setState(s => ({ ...s, jarSpend: val, jarSave: Math.round(others * s.jarSave / (s.jarSave + s.jarGive || 1)), jarGive: others - Math.round(others * s.jarSave / (s.jarSave + s.jarGive || 1)) }))
-                    if (jar.key === 'jarGive') setState(s => ({ ...s, jarGive: val, jarSave: Math.round(others * s.jarSave / (s.jarSave + s.jarSpend || 1)), jarSpend: others - Math.round(others * s.jarSave / (s.jarSave + s.jarSpend || 1)) }))
-                  }}
-                  style={{ width: '100%', accentColor: jar.color }}
-                />
-              </div>
-            ))}
-
-            <button
-              onClick={handleJarSubmit}
-              style={{
-                width: '100%',
-                padding: '16px',
-                background: '#2ec4b6',
-                color: 'white',
-                border: 'none',
-                borderRadius: '30px',
-                fontFamily: "'Nunito', sans-serif",
-                fontSize: '18px',
-                fontWeight: 900,
-                cursor: 'pointer',
-                marginTop: '12px',
-              }}
-            >
-              Save & finish session →
-            </button>
-          </div>
-        )}
-
         {/* Loading state */}
         {state.loading && (
           <div style={{
@@ -1817,7 +1753,7 @@ export default function SessionPage() {
         )}
 
         {/* Floating help button — always visible during lesson/financial when question is showing */}
-        {state.question && !state.selectedAnswer && !isRapidFire && !state.showJars && !state.loading && (
+        {state.question && !state.selectedAnswer && !isRapidFire && !state.loading && (
           <button
             onClick={() => {
               lastActivityRef.current = Date.now()
@@ -2025,7 +1961,6 @@ export default function SessionPage() {
                           totalQuestions: state.totalQuestions,
                           subjects: [subject],
                           duration: Math.floor((Date.now() - sessionStartRef.current) / 1000),
-                          jarAllocation: { save: state.jarSave, spend: state.jarSpend, give: state.jarGive },
                         }),
                       })
                     } catch { /* best effort */ }
