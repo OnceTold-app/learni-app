@@ -49,6 +49,8 @@ export default function DashboardPage() {
   const [childrenError, setChildrenError] = useState(false)
   const [parentName, setParentName] = useState('')
   const [referralCode, setReferralCode] = useState<string | null>(null)
+  const [trialEndsAt, setTrialEndsAt] = useState<string | null>(null)
+  const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null)
   const [referralCopied, setReferralCopied] = useState(false)
   const [rewardSettings, setRewardSettings] = useState({ starsPerDollar: 20, weeklyStarCap: 200, rewardsPaused: false })
   const [rewardSettingsDraft, setRewardSettingsDraft] = useState({ starsPerDollar: 20, weeklyStarCap: 200, rewardsPaused: false })
@@ -103,12 +105,16 @@ export default function DashboardPage() {
     }
     setParentName(name)
 
-    // Fetch account status (includes referral code)
+    // Fetch account status (includes referral code + trial info)
     fetch('/api/account/status', {
       headers: { 'Authorization': `Bearer ${localStorage.getItem('learni_parent_token')}` }
     })
       .then(r => r.json())
-      .then(d => { if (d.referralCode) setReferralCode(d.referralCode) })
+      .then(d => {
+        if (d.referralCode) setReferralCode(d.referralCode)
+        if (d.trial_ends_at) setTrialEndsAt(d.trial_ends_at)
+        if (d.subscription_status) setSubscriptionStatus(d.subscription_status)
+      })
       .catch(() => {})
 
     // Fetch children
@@ -297,6 +303,28 @@ export default function DashboardPage() {
         <span style={{ fontFamily: "'Nunito', sans-serif", fontSize: '14px', fontWeight: 800, color: 'rgba(255,255,255,0.6)', letterSpacing: '0.08em', textTransform: 'uppercase' as const }}>The Hub</span>
         <a href="/account" style={{ position: 'absolute', right: '20px', top: '50%', transform: 'translateY(-50%)', fontSize: '13px', color: '#5a8a84', textDecoration: 'none', fontWeight: 500 }}>⚙️ Account</a>
       </div>
+
+      {/* Trial banner */}
+      {subscriptionStatus !== 'active' && trialEndsAt && (() => {
+        const daysLeft = Math.ceil((new Date(trialEndsAt).getTime() - Date.now()) / 86400000)
+        const expired = daysLeft <= 0 && subscriptionStatus === 'trialing'
+        if (expired) return (
+          <div key="trial-expired" style={{ background: 'rgba(229,62,62,0.10)', borderBottom: '1px solid rgba(229,62,62,0.18)', padding: '10px 24px', textAlign: 'center', fontSize: '13px', fontWeight: 600, color: '#c53030' }}>
+            Your trial has ended · <a href="/account" style={{ color: '#c53030', textDecoration: 'underline' }}>Upgrade to continue →</a>
+          </div>
+        )
+        if (daysLeft >= 1 && daysLeft <= 5) return (
+          <div key="trial-warning" style={{ background: 'rgba(200,200,200,0.10)', borderBottom: '1px solid rgba(13,43,40,0.08)', padding: '10px 24px', textAlign: 'center', fontSize: '13px', fontWeight: 500, color: '#5a8a84' }}>
+            Free trial · {daysLeft} day{daysLeft !== 1 ? 's' : ''} remaining
+          </div>
+        )
+        if (daysLeft >= 6 && daysLeft <= 7) return (
+          <div key="trial-urgent" style={{ background: 'rgba(245,166,35,0.12)', borderBottom: '1px solid rgba(245,166,35,0.20)', padding: '10px 24px', textAlign: 'center', fontSize: '13px', fontWeight: 600, color: '#b7791f' }}>
+            Free trial · {daysLeft} day{daysLeft !== 1 ? 's' : ''} remaining — ends soon
+          </div>
+        )
+        return null
+      })()}
 
       <div className="dashboard-main" style={{ maxWidth: '800px', margin: '0 auto', padding: '24px' }}>
         {loading ? (
