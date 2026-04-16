@@ -295,6 +295,7 @@ export default function StartSessionPage() {
   const [childName, setChildName] = useState('')
   const [activeSubject, setActiveSubject] = useState<string>('maths')
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null)
+  const [voiceOn, setVoiceOn] = useState(typeof window !== 'undefined' ? localStorage.getItem('learni_voice_enabled') !== 'false' : true)
 
   useEffect(() => {
     setChildName(localStorage.getItem('learni_child_name') || 'Student')
@@ -328,6 +329,29 @@ export default function StartSessionPage() {
         <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: '13px', marginBottom: '20px' }}>
           Pick a subject, then choose your activity.
         </p>
+
+        {/* Audio indicator */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          padding: '8px 14px',
+          background: 'rgba(255,255,255,0.04)',
+          border: '1px solid rgba(255,255,255,0.08)',
+          borderRadius: '20px',
+          marginBottom: '16px',
+          cursor: 'pointer',
+          width: 'fit-content',
+        }} onClick={() => {
+          const current = localStorage.getItem('learni_voice_enabled') !== 'false'
+          localStorage.setItem('learni_voice_enabled', current ? 'false' : 'true')
+          setVoiceOn(!voiceOn)
+        }}>
+          <span style={{ fontSize: '16px' }}>{voiceOn ? '🔊' : '🔇'}</span>
+          <span style={{ fontSize: '12px', fontWeight: 600, color: 'rgba(255,255,255,0.5)', fontFamily: "'Nunito', sans-serif" }}>
+            {voiceOn ? 'Sound on' : 'Sound off'}
+          </span>
+        </div>
 
         {/* Subject tabs */}
         <div className="hide-scrollbar" style={{
@@ -473,3 +497,4 @@ export default function StartSessionPage() {
     </div>
   )
 }
+
