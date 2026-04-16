@@ -24,6 +24,23 @@ interface SessionSummary {
   questions_total: number
 }
 
+interface WeeklyStats {
+  totalStars: number
+  dollarsOwed: number
+  streak: number
+}
+
+function getRelativeTime(dateStr: string | null): string {
+  if (!dateStr) return 'No sessions yet'
+  const date = new Date(dateStr)
+  const now = new Date()
+  const diffMs = now.getTime() - date.getTime()
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
+  if (diffDays === 0) return 'Last session: today'
+  if (diffDays === 1) return 'Last session: yesterday'
+  return `Last session: ${diffDays} days ago`
+}
+
 export default function DashboardPage() {
   const [children, setChildren] = useState<Child[]>([])
   const [selectedChild, setSelectedChild] = useState<string | null>(null)
@@ -33,8 +50,6 @@ export default function DashboardPage() {
   const [parentName, setParentName] = useState('')
   const [referralCode, setReferralCode] = useState<string | null>(null)
   const [referralCopied, setReferralCopied] = useState(false)
-  const [trialDaysLeft, setTrialDaysLeft] = useState<number | null>(null)
-  const [isTrialing, setIsTrialing] = useState(false)
   const [rewardSettings, setRewardSettings] = useState({ starsPerDollar: 20, weeklyStarCap: 200, rewardsPaused: false })
   const [rewardSettingsDraft, setRewardSettingsDraft] = useState({ starsPerDollar: 20, weeklyStarCap: 200, rewardsPaused: false })
   const [rewardSaving, setRewardSaving] = useState(false)
@@ -42,6 +57,9 @@ export default function DashboardPage() {
   const [payoutLoading, setPayoutLoading] = useState(false)
   const [payoutSuccess, setPayoutSuccess] = useState(false)
   const [showInactivityWarning, setShowInactivityWarning] = useState(false)
+  const [childWeeklyStats, setChildWeeklyStats] = useState<Record<string, WeeklyStats>>({})
+  const [childLastSession, setChildLastSession] = useState<Record<string, string>>({})
+  const [applyToAll, setApplyToAll] = useState(false)
   const lastActivityRef = useRef(Date.now())
 
   // Inactivity timeout — log parent out after 10 minutes
@@ -82,18 +100,12 @@ export default function DashboardPage() {
     }
     setParentName(name)
 
-    // Fetch account status (includes referral code and trial info)
+    // Fetch account status (includes referral code)
     fetch('/api/account/status', {
       headers: { 'Authorization': `Bearer ${localStorage.getItem('learni_parent_token')}` }
     })
       .then(r => r.json())
-      .then(d => {
-        if (d.referralCode) setReferralCode(d.referralCode)
-        if (d.isTrialing) {
-          setIsTrialing(true)
-          setTrialDaysLeft(typeof d.daysLeft === 'number' ? d.daysLeft : null)
-        }
-      })
+      .then(d => { if (d.referralCode) setReferralCode(d.referralCode) })
       .catch(() => {})
 
     // Fetch children
@@ -106,9 +118,37 @@ export default function DashboardPage() {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('learni_parent_token')}` }
       })
       const data = await res.json()
-      setChildren(data.children || [])
-      if (data.children?.length > 0) {
-        setSelectedChild(data.children[0].id)
+      const kids: Child[] = data.children || []
+      setChildren(kids)
+      if (kids.length > 0) {
+        setSelectedChild(kids[0].id)
+      }
+
+      // Compute last session relative times from child data
+      const lastSessionMap: Record<string, string> = {}
+      kids.forEach(c => {
+        lastSessionMap[c.id] = getRelativeTime(c.last_session)
+      })
+      setChildLastSession(lastSessionMap)
+
+      // Fetch weekly stats for all children in parallel
+      if (kids.length > 1) {
+        const weeklyResults = await Promise.all(
+          kids.map(c =>
+            fetch(`/api/kid/stats?childId=${c.id}&period=week`)
+              .then(r => r.json())
+              .catch(() => ({ totalStars: 0, dollarsOwed: 0, streak: 0 }))
+          )
+        )
+        const weeklyMap: Record<string, WeeklyStats> = {}
+        kids.forEach((c, i) => {
+          weeklyMap[c.id] = {
+            totalStars: weeklyResults[i].totalStars || 0,
+            dollarsOwed: weeklyResults[i].dollarsOwed || 0,
+            streak: weeklyResults[i].streak || c.streak_days || 0,
+          }
+        })
+        setChildWeeklyStats(weeklyMap)
       }
     } catch {
       setChildrenError(true)
@@ -136,18 +176,26 @@ export default function DashboardPage() {
     } catch { /* */ }
   }
 
+  async function saveRewardSettingsForChild(childId: string) {
+    await fetch('/api/parent/reward-settings', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('learni_parent_token')}`,
+      },
+      body: JSON.stringify({ childId, ...rewardSettingsDraft }),
+    })
+  }
+
   async function saveRewardSettings() {
     if (!selectedChild) return
     setRewardSaving(true)
     try {
-      await fetch('/api/parent/reward-settings', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('learni_parent_token')}`,
-        },
-        body: JSON.stringify({ childId: selectedChild, ...rewardSettingsDraft }),
-      })
+      if (applyToAll && children.length > 1) {
+        await Promise.all(children.map(c => saveRewardSettingsForChild(c.id)))
+      } else {
+        await saveRewardSettingsForChild(selectedChild)
+      }
       setRewardSettings(rewardSettingsDraft)
       setRewardSaved(true)
       setTimeout(() => setRewardSaved(false), 2500)
@@ -226,21 +274,6 @@ export default function DashboardPage() {
         <span style={{ fontFamily: "'Nunito', sans-serif", fontSize: '14px', fontWeight: 800, color: 'rgba(255,255,255,0.6)', letterSpacing: '0.08em', textTransform: 'uppercase' as const }}>The Hub</span>
         <a href="/account" style={{ position: 'absolute', right: '20px', top: '50%', transform: 'translateY(-50%)', fontSize: '13px', color: '#5a8a84', textDecoration: 'none', fontWeight: 500 }}>⚙️ Account</a>
       </div>
-
-      {/* Trial badge */}
-      {isTrialing && trialDaysLeft !== null && (
-        <div style={{ background: '#f0faf9', borderBottom: '1px solid rgba(46,196,182,0.15)', padding: '8px 24px', display: 'flex', justifyContent: 'center' }}>
-          <span style={{
-            display: 'inline-flex', alignItems: 'center', gap: '6px',
-            background: 'rgba(46,196,182,0.12)', color: '#1a9e92',
-            border: '1px solid rgba(46,196,182,0.25)', borderRadius: '20px',
-            padding: '4px 14px', fontSize: '13px', fontWeight: 600,
-          }}>
-            <span style={{ width: '6px', height: '6px', background: '#2ec4b6', borderRadius: '50%', display: 'inline-block' }} />
-            Free trial · {trialDaysLeft} day{trialDaysLeft !== 1 ? 's' : ''} remaining
-          </span>
-        </div>
-      )}
 
       <div className="dashboard-main" style={{ maxWidth: '800px', margin: '0 auto', padding: '24px' }}>
         {loading ? (
@@ -353,6 +386,60 @@ export default function DashboardPage() {
           </div>
         ) : (
           <>
+            {/* Family Overview Summary Row — only show when 2+ children */}
+            {children.length > 1 && (
+              <div style={{ marginBottom: '20px' }}>
+                <div style={{ fontSize: '11px', fontWeight: 600, color: '#5a8a84', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px' }}>
+                  Family overview
+                </div>
+                <div style={{
+                  display: 'flex',
+                  gap: '10px',
+                  overflowX: 'auto',
+                  paddingBottom: '4px',
+                  scrollbarWidth: 'none',
+                }}>
+                  {children.map(c => {
+                    const stats = childWeeklyStats[c.id]
+                    const isSelected = c.id === selectedChild
+                    return (
+                      <button
+                        key={c.id}
+                        onClick={() => setSelectedChild(c.id)}
+                        style={{
+                          minWidth: '160px',
+                          maxWidth: '160px',
+                          flexShrink: 0,
+                          background: 'rgba(255,255,255,0.04)',
+                          border: isSelected ? '1.5px solid #2ec4b6' : '1.5px solid rgba(255,255,255,0.08)',
+                          borderRadius: '12px',
+                          padding: '12px 16px',
+                          cursor: 'pointer',
+                          textAlign: 'left',
+                          backdropFilter: 'blur(4px)',
+                          backgroundColor: isSelected ? 'rgba(46,196,182,0.08)' : '#0d2b28',
+                          transition: 'all 0.15s',
+                        }}
+                      >
+                        <div style={{ fontFamily: "'Nunito', sans-serif", fontWeight: 900, fontSize: '14px', color: 'white', marginBottom: '8px' }}>
+                          {c.name}
+                        </div>
+                        <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.55)', marginBottom: '3px' }}>
+                          ⭐ {stats?.totalStars ?? 0} this week
+                        </div>
+                        <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.55)', marginBottom: '3px' }}>
+                          💰 ${stats?.dollarsOwed !== undefined ? Number(stats.dollarsOwed).toFixed(2) : '0.00'} owed
+                        </div>
+                        <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.55)' }}>
+                          🔥 {stats?.streak ?? c.streak_days ?? 0} day streak
+                        </div>
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+
             {/* Children list */}
             <div style={{ display: 'flex', gap: '10px', marginBottom: '24px', flexWrap: 'wrap' }}>
               {children.map(c => (
@@ -406,6 +493,9 @@ export default function DashboardPage() {
                   <div style={{ textAlign: 'left', flex: 1 }}>
                     <div style={{ fontFamily: "'Nunito', sans-serif", fontWeight: 900, fontSize: '15px', color: '#0d2b28' }}>{c.name}</div>
                     <div style={{ fontSize: '12px', color: '#5a8a84' }}>Year {c.year_level} · ⭐ {c.total_stars} stars</div>
+                    <div style={{ fontSize: '11px', color: '#8abfba', marginTop: '2px' }}>
+                      {childLastSession[c.id] || (c.last_session ? getRelativeTime(c.last_session) : 'No sessions yet')}
+                    </div>
                   </div>
                   {c.id === selectedChild && (
                     <a
@@ -556,10 +646,24 @@ export default function DashboardPage() {
                   cursor: rewardSaving ? 'default' : 'pointer',
                   transition: 'background 0.15s',
                   marginBottom: '12px',
+                  display: 'block',
                 }}
               >
                 {rewardSaved ? '✓ Saved!' : rewardSaving ? 'Saving…' : 'Save settings'}
               </button>
+
+              {/* Apply to all children checkbox */}
+              {children.length > 1 && (
+                <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', marginBottom: '16px' }}>
+                  <input
+                    type="checkbox"
+                    checked={applyToAll}
+                    onChange={e => setApplyToAll(e.target.checked)}
+                    style={{ width: '16px', height: '16px', accentColor: '#2ec4b6', cursor: 'pointer' }}
+                  />
+                  <span style={{ fontSize: '13px', color: '#5a8a84', fontWeight: 500 }}>Apply this rate to all my children</span>
+                </label>
+              )}
 
               {/* Payout button */}
               <div style={{ marginBottom: '12px' }}>
@@ -646,43 +750,12 @@ export default function DashboardPage() {
                   fontSize: '14px',
                   fontWeight: 700,
                   textDecoration: 'none',
-                  marginBottom: '12px',
+                  marginBottom: '24px',
                   border: '1px solid rgba(13,43,40,0.08)',
                 }}
               >
                 📊 View {child.name}&apos;s progress report
               </a>
-            )}
-
-            {/* Print Report — gated behind first session */}
-            {child && (
-              <div style={{ marginBottom: '24px' }}>
-                <button
-                  onClick={() => { if (sessions.length > 0 && totalStars > 0) window.print() }}
-                  disabled={sessions.length === 0 || totalStars === 0}
-                  title={sessions.length === 0 || totalStars === 0 ? 'Complete a session to unlock your first report' : 'Print report'}
-                  style={{
-                    width: '100%',
-                    background: sessions.length === 0 || totalStars === 0 ? '#f0f0f0' : 'white',
-                    color: sessions.length === 0 || totalStars === 0 ? '#aaa' : '#0d2b28',
-                    padding: '14px',
-                    borderRadius: '12px',
-                    textAlign: 'center',
-                    fontFamily: "'Nunito', sans-serif",
-                    fontSize: '14px',
-                    fontWeight: 700,
-                    border: '1px solid rgba(13,43,40,0.08)',
-                    cursor: sessions.length === 0 || totalStars === 0 ? 'not-allowed' : 'pointer',
-                  }}
-                >
-                  🖨️ Print report
-                </button>
-                {(sessions.length === 0 || totalStars === 0) && (
-                  <p style={{ fontSize: '11px', color: '#8abfba', textAlign: 'center', marginTop: '4px', marginBottom: 0 }}>
-                    Complete a session to unlock your first report
-                  </p>
-                )}
-              </div>
             )}
 
             {/* Refer a friend */}
@@ -803,6 +876,7 @@ export default function DashboardPage() {
           .dashboard-stats-grid { grid-template-columns: 1fr 1fr !important; }
           .dashboard-child-card { padding: 16px !important; }
         }
+        div::-webkit-scrollbar { display: none; }
       `}</style>
     </div>
   )

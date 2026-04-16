@@ -5,26 +5,49 @@ export async function GET(req: NextRequest) {
   const childId = req.nextUrl.searchParams.get('childId')
   if (!childId) return NextResponse.json({ error: 'childId required' }, { status: 400 })
 
+  const period = req.nextUrl.searchParams.get('period') || 'all'
+
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL || '',
     process.env.SUPABASE_SERVICE_ROLE_KEY || ''
   )
 
+  // Determine date filter based on period
+  const now = new Date()
+  let periodStart: string | null = null
+  if (period === 'week') {
+    const d = new Date(now)
+    d.setDate(d.getDate() - 7)
+    periodStart = d.toISOString()
+  } else if (period === 'month') {
+    const d = new Date(now)
+    d.setDate(d.getDate() - 30)
+    periodStart = d.toISOString()
+  }
+
   // Get total stars from star_ledger — column is 'stars' not 'amount'
-  const { data: starData } = await supabase
+  let starQuery = supabase
     .from('star_ledger')
     .select('stars')
     .eq('learner_id', childId)
+  if (periodStart) {
+    starQuery = starQuery.gte('created_at', periodStart)
+  }
+  const { data: starData } = await starQuery
 
   const totalStars = (starData || []).reduce((sum, row) => sum + (row.stars || 0), 0)
 
   // Get sessions
-  const { data: sessions } = await supabase
+  let sessionQuery = supabase
     .from('sessions')
     .select('id, completed_at, duration_seconds, stars_earned, subject, questions_correct, questions_total')
     .eq('learner_id', childId)
     .order('completed_at', { ascending: false })
     .limit(10)
+  if (periodStart) {
+    sessionQuery = sessionQuery.gte('completed_at', periodStart)
+  }
+  const { data: sessions } = await sessionQuery
 
   // Calculate total stars from sessions if star_ledger is empty
   const sessionStars = (sessions || []).reduce((sum, s) => sum + (s.stars_earned || 0), 0)
