@@ -396,7 +396,7 @@ Remember: you're a tutor, not a quiz machine. Teach first. Questions come AFTER 
         const q = await fetchBankQuestion(topicId, yearLevel)
         if (q) {
           const greeting = phase === 'warmup'
-            ? `Let's warm up your brain, ${childName}! Ready? 🔥 Personal best: ${sessionStats.personalBest} — let's beat it!`
+            ? `Hey ${childName}! Let's go — first question:`
             : `Last round — let's see if today's lesson stuck. No thinking, just knowing. Go! ⚡`
           return NextResponse.json({
             phase, source: 'bank',
