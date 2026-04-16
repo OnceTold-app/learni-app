@@ -287,9 +287,14 @@ export default function SessionPage() {
         sessionStarted: true,
         showJars: phase === 'reward',
       }))
-      // Speak Earni's words — question waits until speech finishes
+      // Speak Earni's words + the question so younger kids who can't read still hear everything
       if (earniText) {
-        speak(earniText)
+        const questionText = data.question || ''
+        // Combine earniSays + question into one TTS call so it reads naturally
+        const fullText = questionText && !earniText.includes(questionText)
+          ? `${earniText} ${questionText}`
+          : earniText
+        speak(fullText)
       }
       // Reset hint timer
       setShowHintOffer(false)
