@@ -8,7 +8,7 @@ const PASSWORD = process.env.SMTP_PASSWORD || ''
 
 export async function POST(request: Request) {
   try {
-    const { email, name } = await request.json()
+    const { email, name, childName, childUsername, childPin, trialEndDate } = await request.json()
 
     if (!email || !name) {
       return NextResponse.json({ error: 'email and name required' }, { status: 400 })
@@ -42,99 +42,50 @@ export async function POST(request: Request) {
           <tr>
             <td style="background:#ffffff;border-radius:20px;padding:40px 40px 32px;box-shadow:0 4px 24px rgba(0,0,0,0.06);">
 
-              <!-- Greeting -->
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+
+                <!-- Greeting -->
                 <tr>
-                  <td style="padding-bottom:8px;">
-                    <span style="font-size:36px;">👋</span>
+                  <td style="padding-bottom:20px;">
+                    <h1 style="margin:0;font-family:Georgia,serif;font-size:26px;font-weight:900;color:#0d2b28;line-height:1.3;">Hey ${firstName},</h1>
                   </td>
                 </tr>
+
+                <!-- Intro -->
                 <tr>
-                  <td style="padding-bottom:12px;">
-                    <h1 style="margin:0;font-family:Georgia,serif;font-size:26px;font-weight:900;color:#0d2b28;line-height:1.2;">Hey ${firstName}, welcome to Learni!</h1>
+                  <td style="padding-bottom:24px;">
+                    <p style="margin:0;font-size:15px;color:#4a7a74;line-height:1.8;">Welcome to Learni. I'm Earni${childName ? ` — ${childName}'s new study buddy` : ''}.</p>
+                    ${trialEndDate ? `<p style="margin:12px 0 0;font-size:15px;color:#4a7a74;line-height:1.8;">Your 7-day free trial has started. It ends on <strong style="color:#0d2b28;">${trialEndDate}</strong>.</p>` : '<p style="margin:12px 0 0;font-size:15px;color:#4a7a74;line-height:1.8;">Your 7-day free trial has started.</p>'}
                   </td>
                 </tr>
+
+                ${childName && childUsername && childPin ? `
+                <!-- Login details -->
                 <tr>
-                  <td style="padding-bottom:32px;">
-                    <p style="margin:0;font-size:15px;color:#4a7a74;line-height:1.7;">I'm Earni — your child's new AI tutor. Your 7-day free trial has started. Let's get your first session going.</p>
+                  <td style="padding-bottom:24px;">
+                    <p style="margin:0 0 12px;font-size:15px;color:#0d2b28;font-weight:700;">Here's how ${childName} logs in:</p>
+                    <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="background:#f0faf9;border-radius:12px;padding:16px 20px;width:100%;">
+                      <tr>
+                        <td style="padding:6px 0;font-size:14px;color:#4a7a74;line-height:1.8;">
+                          → Go to <a href="https://learniapp.co/kid-login" style="color:#2ec4b6;text-decoration:none;font-weight:600;">learniapp.co/kid-login</a><br>
+                          → Username: <strong style="color:#0d2b28;">${childUsername}</strong><br>
+                          → PIN: <strong style="color:#0d2b28;">${childPin}</strong>
+                        </td>
+                      </tr>
+                    </table>
                   </td>
                 </tr>
+                ` : ''}
 
                 <!-- Divider -->
                 <tr>
                   <td style="padding-bottom:24px;border-top:1px solid #e8f5f3;">&nbsp;</td>
                 </tr>
 
-                <!-- Steps heading -->
+                <!-- Reward nudge -->
                 <tr>
-                  <td style="padding-bottom:20px;">
-                    <p style="margin:0;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#2ec4b6;">Get started in 3 steps</p>
-                  </td>
-                </tr>
-
-                <!-- Step 1 -->
-                <tr>
-                  <td style="padding-bottom:16px;">
-                    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
-                      <tr>
-                        <td width="40" valign="top" style="padding-right:14px;">
-                          <table role="presentation" cellpadding="0" cellspacing="0" border="0">
-                            <tr>
-                              <td width="32" height="32" align="center" valign="middle" style="background-color:#2ec4b6;border-radius:50%;width:32px;height:32px;">
-                                <span style="font-size:13px;font-weight:900;color:#ffffff;line-height:32px;">1</span>
-                              </td>
-                            </tr>
-                          </table>
-                        </td>
-                        <td valign="middle">
-                          <p style="margin:0;font-size:14px;color:#0d2b28;line-height:1.6;"><strong>Open your <a href="https://learniapp.co/dashboard" style="color:#2ec4b6;text-decoration:none;">Parent Hub</a></strong> and add your child — name, age, and year level.</p>
-                        </td>
-                      </tr>
-                    </table>
-                  </td>
-                </tr>
-
-                <!-- Step 2 -->
-                <tr>
-                  <td style="padding-bottom:16px;">
-                    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
-                      <tr>
-                        <td width="40" valign="top" style="padding-right:14px;">
-                          <table role="presentation" cellpadding="0" cellspacing="0" border="0">
-                            <tr>
-                              <td width="32" height="32" align="center" valign="middle" style="background-color:#2ec4b6;border-radius:50%;width:32px;height:32px;">
-                                <span style="font-size:13px;font-weight:900;color:#ffffff;line-height:32px;">2</span>
-                              </td>
-                            </tr>
-                          </table>
-                        </td>
-                        <td valign="middle">
-                          <p style="margin:0;font-size:14px;color:#0d2b28;line-height:1.6;"><strong>Your child picks a username and 4-digit PIN</strong> — that's their personal login.</p>
-                        </td>
-                      </tr>
-                    </table>
-                  </td>
-                </tr>
-
-                <!-- Step 3 -->
-                <tr>
-                  <td style="padding-bottom:32px;">
-                    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
-                      <tr>
-                        <td width="40" valign="top" style="padding-right:14px;">
-                          <table role="presentation" cellpadding="0" cellspacing="0" border="0">
-                            <tr>
-                              <td width="32" height="32" align="center" valign="middle" style="background-color:#2ec4b6;border-radius:50%;width:32px;height:32px;">
-                                <span style="font-size:13px;font-weight:900;color:#ffffff;line-height:32px;">3</span>
-                              </td>
-                            </tr>
-                          </table>
-                        </td>
-                        <td valign="middle">
-                          <p style="margin:0;font-size:14px;color:#0d2b28;line-height:1.6;"><strong>First session starts</strong> — I run a quick baseline to find their exact level, then we're off. Sessions take 15–20 min. ⭐</p>
-                        </td>
-                      </tr>
-                    </table>
+                  <td style="padding-bottom:28px;">
+                    <p style="margin:0;font-size:15px;color:#4a7a74;line-height:1.8;">One thing worth doing first: head to your Hub and set a reward rate. Even $1 for every 20 stars makes a difference — kids notice when effort actually pays off.</p>
                   </td>
                 </tr>
 
@@ -144,17 +95,18 @@ export async function POST(request: Request) {
                     <table role="presentation" cellpadding="0" cellspacing="0" border="0">
                       <tr>
                         <td align="center" style="background-color:#2ec4b6;border-radius:50px;padding:0;">
-                          <a href="https://learniapp.co/dashboard" style="display:inline-block;padding:16px 40px;font-size:16px;font-weight:700;color:#ffffff;text-decoration:none;border-radius:50px;letter-spacing:-0.2px;">Go to my Hub →</a>
+                          <a href="https://learniapp.co/dashboard" style="display:inline-block;padding:16px 40px;font-size:16px;font-weight:700;color:#ffffff;text-decoration:none;border-radius:50px;letter-spacing:-0.2px;">Open my Hub →</a>
                         </td>
                       </tr>
                     </table>
                   </td>
                 </tr>
 
-                <!-- Reward note -->
+                <!-- Sign-off -->
                 <tr>
-                  <td style="background:#f0faf9;border-radius:12px;padding:16px 20px;">
-                    <p style="margin:0;font-size:13px;color:#4a7a74;line-height:1.7;">💰 <strong>Don't forget to set your reward rate</strong> in the Hub — kids earn stars for correct answers, and you decide how much each star is worth. Real money, real motivation.</p>
+                  <td style="padding-bottom:8px;">
+                    <p style="margin:0;font-size:15px;color:#4a7a74;line-height:1.8;">Any questions, just reply to this email.</p>
+                    <p style="margin:12px 0 0;font-size:15px;color:#0d2b28;font-weight:700;">— Earni</p>
                   </td>
                 </tr>
 
@@ -206,19 +158,22 @@ export async function POST(request: Request) {
 </body>
 </html>`
 
-    const plainBody = `Hey ${firstName}!
+    const plainBody = `Hey ${firstName},
 
-I'm Earni — your child's new AI tutor. Your 7-day free trial has started.
+Welcome to Learni. I'm Earni${childName ? ` — ${childName}'s new study buddy` : ''}.
 
-Get started in 3 steps:
+${trialEndDate ? `Your 7-day free trial has started. It ends on ${trialEndDate}.` : 'Your 7-day free trial has started.'}
+${childName && childUsername && childPin ? `
+Here's how ${childName} logs in:
+→ Go to learniapp.co/kid-login
+→ Username: ${childUsername}
+→ PIN: ${childPin}
+` : ''}
+One thing worth doing first: head to your Hub and set a reward rate. Even $1 for every 20 stars makes a difference — kids notice when effort actually pays off.
 
-1. Open your Hub → learniapp.co/dashboard and add your child (name, age, year level)
-2. Your child picks a username and 4-digit PIN — that's their login
-3. First session: I run a quick baseline to find their exact level, then we're off
+Open my Hub → https://learniapp.co/dashboard
 
-Sessions take 15-20 min. Kids earn stars ⭐ for correct answers — you set the reward rate in the Hub.
-
-Go to your Hub → https://learniapp.co/dashboard
+Any questions, just reply to this email.
 
 — Earni
 AI Tutor at Learni | learniapp.co`
@@ -237,7 +192,9 @@ AI Tutor at Learni | learniapp.co`
     await transporter.sendMail({
       from: `Earni from Learni <${EMAIL}>`,
       to: email,
-      subject: `Welcome to Learni, ${firstName}! 👋`,
+      subject: childName
+        ? `Welcome to Learni, ${firstName}! ${childName} is all set 🎉`
+        : `Welcome to Learni, ${firstName}! 👋`,
       text: plainBody,
       html: htmlBody,
     })

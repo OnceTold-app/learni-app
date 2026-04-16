@@ -103,10 +103,15 @@ export default function SignupPage() {
 
       // Send welcome email (fire and forget — don't block signup)
       try {
+        const trialEndDate = (() => {
+          const d = new Date()
+          d.setDate(d.getDate() + 7)
+          return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })
+        })()
         await fetch('/api/auth/welcome', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, name }),
+          body: JSON.stringify({ email, name, trialEndDate }),
         })
       } catch (emailErr) {
         console.warn('Welcome email failed (non-fatal):', emailErr)
