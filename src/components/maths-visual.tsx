@@ -40,6 +40,8 @@ export default function MathsVisual({ visual }: { visual: Visual }) {
 }
 
 function DotArray({ rows, cols }: { rows: number; cols: number }) {
+  // NOTE: Never show the answer (= rows*cols) here — this is a support visual, not an answer reveal
+  // Showing the answer while the child is trying to work it out teaches nothing
   return (
     <div style={{
       background: 'rgba(46,196,182,0.06)',
@@ -52,7 +54,7 @@ function DotArray({ rows, cols }: { rows: number; cols: number }) {
       gap: '8px',
     }}>
       <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)', marginBottom: '4px' }}>
-        {rows} × {cols}
+        Count the dots →
       </div>
       {Array.from({ length: rows }).map((_, r) => (
         <div key={r} style={{ display: 'flex', gap: '10px' }}>
@@ -67,9 +69,6 @@ function DotArray({ rows, cols }: { rows: number; cols: number }) {
           ))}
         </div>
       ))}
-      <div style={{ fontSize: '13px', color: '#2ec4b6', fontWeight: 800, fontFamily: "'Nunito', sans-serif", marginTop: '6px' }}>
-        = {rows * cols}
-      </div>
     </div>
   )
 }
