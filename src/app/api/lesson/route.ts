@@ -304,10 +304,19 @@ export async function POST(req: NextRequest) {
                   ? `Celebrate then give the next ${subject} question.`
                   : `Celebrate! Then give the next ${subject} problem. Increase difficulty if streak >= 3. ${sessionStats.streakCount >= 3 ? 'INCREASE difficulty.' : ''}${sessionStats.correctCount > 0 && sessionStats.totalQuestions > 3 && (sessionStats.correctCount / sessionStats.totalQuestions) < 0.4 ? ' DECREASE difficulty.' : ''}`
               } ${subjectNote}`
-            : `${childName} answered "${answer}" to "${currentQuestion}" — INCORRECT. Correct: "${currentCorrectAnswer}". ${
+            : `${childName} answered "${answer}" to "${currentQuestion}" — INCORRECT (correct answer: "${currentCorrectAnswer}").
+
+${
                 phase === 'warmup' || phase === 'closing'
-                  ? `Kindly correct, then give a different ${subject} question.`
-                  : `Use the misconception engine for ${subject}: re-explain differently, give a simpler ${subject} example. Never make them feel bad.`
+                  ? `Kindly correct them and give a different ${subject} question.`
+                  : `WRONG ANSWER PROTOCOL — follow exactly:
+1. FIRST, immediately acknowledge the wrong answer warmly but clearly:
+   - Year 1-3: Say "Ooh, not quite! Let's figure it out together."
+   - Year 4-7: Say "Not quite — let's look at why."
+   - Year 8-13: Say "That's not correct — let's work through it."
+2. THEN give a hint or re-explanation
+3. Do NOT skip straight to re-explanation — the child must know they got it wrong first
+4. Keep it warm and brief — never make them feel bad`
               } ${subjectNote}`,
         })
       }
