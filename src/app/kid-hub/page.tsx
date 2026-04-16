@@ -53,6 +53,8 @@ export default function KidHubPage() {
   const [goalName, setGoalName] = useState('')
   const [goalTarget, setGoalTarget] = useState('')
   const [savingGoal, setSavingGoal] = useState(false)
+  const [welcomeBack, setWelcomeBack] = useState<string | null>(null)
+  const [welcomeBackAction, setWelcomeBackAction] = useState('/session')
 
   useEffect(() => {
     const id = localStorage.getItem('learni_child_id')
@@ -76,6 +78,41 @@ export default function KidHubPage() {
         localStorage.setItem('learni_cached_stars', String(freshStars))
         setStreak(data.streak || 0)
         setSessions(data.sessions || [])
+        // Welcome back message
+        const sessionsArr = data.sessions || []
+        if (sessionsArr.length > 0) {
+          const lastSess = sessionsArr[0]
+          const hoursAgo = Math.floor((Date.now() - new Date(lastSess.completed_at).getTime()) / 3600000)
+          const lastTopic = lastSess.subject || 'your last lesson'
+          const kidName = localStorage.getItem('learni_child_name') || ''
+          const dName = kidName ? kidName.charAt(0).toUpperCase() + kidName.slice(1).toLowerCase() : kidName
+          let wbMsg = ''
+          if (hoursAgo >= 1 && hoursAgo < 24) {
+            wbMsg = `Welcome back, ${dName}! Last time you worked on ${lastTopic}. Ready to keep going?`
+          } else if (hoursAgo >= 24 && hoursAgo < 168) {
+            wbMsg = `Good to see you, ${dName}! Last time: ${lastTopic}. Pick up where you left off?`
+          } else if (hoursAgo >= 168) {
+            wbMsg = `Hey ${dName} — it's been a week! Let's warm up before we dive back in.`
+            setWelcomeBackAction('/start-session')
+          }
+          if (wbMsg) {
+            setWelcomeBack(wbMsg)
+            const yl = parseInt(localStorage.getItem('learni_year_level') || '1')
+            if (yl <= 6) {
+              fetch('/api/speak', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text: wbMsg }),
+              }).then(res => res.ok ? res.blob() : null).then(blob => {
+                if (blob) {
+                  const url = URL.createObjectURL(blob)
+                  const audio = new Audio(url)
+                  audio.play().catch(() => {})
+                }
+              }).catch(() => {})
+            }
+          }
+        }
         // Check if baseline needed (no sessions yet)
         if (!data.sessions || data.sessions.length === 0) {
           setNeedsBaseline(true)
@@ -1266,6 +1303,48 @@ export default function KidHubPage() {
         </div>
         {/* ─── END MASTERY MAP SECTION ──────────────────────────── */}
 
+        {/* Welcome back card */}
+        {welcomeBack && (
+          <div style={{
+            background: 'rgba(46,196,182,0.08)',
+            border: '1px solid rgba(46,196,182,0.15)',
+            borderRadius: '16px',
+            padding: '16px 20px',
+            marginBottom: '24px',
+          }}>
+            <p style={{
+              fontFamily: "'Nunito', sans-serif",
+              fontSize: '15px',
+              fontWeight: 700,
+              color: 'white',
+              margin: '0 0 12px',
+              lineHeight: 1.5,
+            }}>{welcomeBack}</p>
+            <button
+              onClick={() => {
+                if (welcomeBackAction === '/session' && sessions.length > 0) {
+                  localStorage.setItem('learni_session_topic', sessions[0].subject || '')
+                  localStorage.setItem('learni_subject', sessions[0].subject || '')
+                }
+                window.location.href = welcomeBackAction
+              }}
+              style={{
+                padding: '10px 20px',
+                background: 'linear-gradient(135deg, #2ec4b6, #1ab5a8)',
+                border: 'none',
+                borderRadius: '100px',
+                fontFamily: "'Nunito', sans-serif",
+                fontSize: '14px',
+                fontWeight: 900,
+                color: 'white',
+                cursor: 'pointer',
+              }}
+            >
+              {welcomeBackAction === '/session' ? 'Continue →' : 'Start session →'}
+            </button>
+          </div>
+        )}
+
         {/* ─── EARNINGS HISTORY SECTION ──────────────────────────── */}
         <div style={{ marginBottom: '24px' }}>
           <button
@@ -1456,4 +1535,5 @@ export default function KidHubPage() {
     </div>
   )
 }
+
 
