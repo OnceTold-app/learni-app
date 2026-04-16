@@ -176,7 +176,7 @@ export default function OnboardingPage() {
                 <label style={labelStyle}>4-digit PIN <span style={{ color: '#8abfba', fontWeight: 400 }}>(for child login)</span></label>
                 <input type="text" value={pin} onChange={e => setPin(e.target.value.replace(/\D/g, '').slice(0, 4))} placeholder="0000" maxLength={4} inputMode="numeric"
                   style={{ ...inputStyle, letterSpacing: '8px', textAlign: 'center', fontSize: '24px', fontFamily: "'Nunito', sans-serif", fontWeight: 900 }} />
-                <p style={{ fontSize: '12px', color: '#5a8a84', marginTop: '-10px', marginBottom: '0' }}>Your child types this to log in — keep it simple, like their birth year</p>
+                <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', marginTop: '4px', marginBottom: '0' }}>Your child types this to log in — keep it simple, like their birth year</p>
               </div>
             </div>
 
