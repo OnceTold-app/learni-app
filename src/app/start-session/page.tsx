@@ -137,6 +137,18 @@ const SUBJECT_GROUPS: SubjectGroup[] = [
     label: 'Money & Life',
     categories: [
       {
+        id: 'money-vault',
+        emoji: '🏛️',
+        title: 'Money Vault lessons',
+        desc: 'Unlock your vault — Save, Give, and Goal jars',
+        options: [
+          { id: 'what-is-saving', label: 'What is Saving?', desc: 'Unlock your Save jar' },
+          { id: 'spending-wisely', label: 'Spending Wisely', desc: 'Part 1 of unlocking your Goal jar' },
+          { id: 'setting-a-goal', label: 'Setting a Goal', desc: 'Unlock your Goal jar' },
+          { id: 'giving-and-why', label: 'Giving and Why It Matters', desc: 'Unlock your Give impact page' },
+        ],
+      },
+      {
         id: 'money-basics',
         emoji: '🪙',
         title: 'Money basics',
