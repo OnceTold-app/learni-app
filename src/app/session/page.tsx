@@ -64,6 +64,7 @@ export default function SessionPage() {
   const sessionTopic = typeof window !== 'undefined' ? localStorage.getItem('learni_session_topic') || '' : ''
   // learnerId for spaced repetition question bank
   const learnerId = typeof window !== 'undefined' ? localStorage.getItem('learni_child_id') || '' : ''
+  const [sessionStarsPerDollar, setSessionStarsPerDollar] = useState(0) // 0 = rate not set
   const [focusAreas, setFocusAreas] = useState<string[]>([])
   const [weakTopics, setWeakTopics] = useState<string[]>([])
   const [reviewTopics, setReviewTopics] = useState<string[]>([])
@@ -399,6 +400,17 @@ export default function SessionPage() {
           if (d.childProfile) setChildProfile(d.childProfile)
         })
         .catch(() => {})
+
+      // Fetch reward settings to show dollar equivalent in session
+      const parentToken = localStorage.getItem('learni_parent_token')
+      if (parentToken && childId) {
+        fetch(`/api/parent/reward-settings?childId=${childId}`, {
+          headers: { 'Authorization': `Bearer ${parentToken}` },
+        })
+          .then(r => r.json())
+          .then(d => { if (d.starsPerDollar > 0) setSessionStarsPerDollar(d.starsPerDollar) })
+          .catch(() => {})
+      }
     }
   }, [])
 
@@ -1194,7 +1206,7 @@ export default function SessionPage() {
             transition: 'all 0.3s',
             transform: celebration ? 'scale(1.15)' : 'scale(1)',
           }}>
-            ⭐ {state.starsEarned}
+            ⭐ {state.starsEarned}{sessionStarsPerDollar > 0 ? ` · $${(state.starsEarned / sessionStarsPerDollar).toFixed(2)}` : ''}
           </span>
         </div>
       </div>

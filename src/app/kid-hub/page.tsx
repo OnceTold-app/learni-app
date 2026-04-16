@@ -37,6 +37,8 @@ export default function KidHubPage() {
   const [factMastery, setFactMastery] = useState<FactMasteryData[]>([])
   const [masteryExpanded, setMasteryExpanded] = useState(false)
   const [showHeatmap, setShowHeatmap] = useState(false)
+  const [starsPerDollar, setStarsPerDollar] = useState(20)
+  const [rateSet, setRateSet] = useState(false)
   const [earningsExpanded, setEarningsExpanded] = useState(false)
   const [ledger, setLedger] = useState<Array<{ id: string; type: string; stars: number; dollar_value: number | null; note: string | null; created_at: string; session_id: string | null }>>([]) 
   const [lifetimeStats, setLifetimeStats] = useState<{ totalEarned: number; totalPaidOut: number; lastPayout: { dollar_value: number | null; created_at: string } | null }>({ totalEarned: 0, totalPaidOut: 0, lastPayout: null })
@@ -101,6 +103,19 @@ export default function KidHubPage() {
         setLedger(ledgerData.ledger || [])
         setLifetimeStats(ledgerData.lifetimeStats || { totalEarned: 0, totalPaidOut: 0, lastPayout: null })
       }
+
+      // Load reward settings (parent token required)
+      const parentToken = localStorage.getItem('learni_parent_token')
+      if (parentToken) {
+        const rewardRes = await fetch(`/api/parent/reward-settings?childId=${childId}`, {
+          headers: { 'Authorization': `Bearer ${parentToken}` },
+        })
+        if (rewardRes.ok) {
+          const rewardData = await rewardRes.json()
+          setStarsPerDollar(rewardData.starsPerDollar || 20)
+          setRateSet(true)
+        }
+      }
     } catch {
       setStatsError(true)
     }
@@ -109,6 +124,7 @@ export default function KidHubPage() {
 
   const displayUsername = username || childName
   const displayName = (name: string) => name ? name.charAt(0).toUpperCase() + name.slice(1).toLowerCase() : name
+  const starsToDollars = (stars: number) => (stars / starsPerDollar).toFixed(2)
 
   const hasCachedData = typeof window !== 'undefined' && localStorage.getItem('learni_cached_stars') !== null
   if (loading && !hasCachedData) {
@@ -383,6 +399,11 @@ export default function KidHubPage() {
           }}>
             <div style={{ fontSize: '28px', fontWeight: 900, fontFamily: "'Nunito', sans-serif", color: '#f5a623' }}>⭐ {totalStars}</div>
             <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', marginTop: '4px', fontWeight: 600 }}>Stars</div>
+            {rateSet ? (
+              <div style={{ fontSize: '11px', color: '#f5a623', marginTop: '2px', fontWeight: 700 }}>= ${starsToDollars(totalStars)} earned</div>
+            ) : (
+              <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', marginTop: '2px', fontWeight: 600, lineHeight: 1.3 }}>Ask your parent to set your reward rate!</div>
+            )}
           </div>
           <div style={{
             background: 'rgba(255,255,255,0.06)',
@@ -714,7 +735,7 @@ export default function KidHubPage() {
               {/* Lifetime total */}
               <div style={{ marginBottom: '12px', padding: '12px', background: 'rgba(46,196,182,0.08)', borderRadius: '12px', border: '1px solid rgba(46,196,182,0.15)' }}>
                 <div style={{ fontSize: '15px', fontWeight: 800, color: '#2ec4b6', fontFamily: "'Nunito', sans-serif" }}>
-                  ⭐ {lifetimeStats.totalEarned.toLocaleString()} stars earned = ${(lifetimeStats.totalEarned / 20).toFixed(2)} total
+                  ⭐ {lifetimeStats.totalEarned.toLocaleString()} stars earned{rateSet ? ` = $${starsToDollars(lifetimeStats.totalEarned)} total` : ''}
                 </div>
               </div>
 
@@ -746,7 +767,7 @@ export default function KidHubPage() {
                         <div style={{ fontSize: '13px', fontWeight: 700, color: entry.type === 'payout' ? '#4ade80' : '#2ec4b6' }}>
                           {entry.type === 'payout'
                             ? `💰 Paid out: ${entry.stars} ⭐${entry.dollar_value ? ` = $${Number(entry.dollar_value).toFixed(2)}` : ''}`
-                            : `+${entry.stars} ⭐ ${entry.note || 'Session'}`}
+                            : `+${entry.stars} ⭐ · $${starsToDollars(entry.stars)} ${entry.note || 'Session'}`}
                         </div>
                       </div>
                     </div>
