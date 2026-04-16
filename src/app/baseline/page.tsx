@@ -34,6 +34,8 @@ function renderMarkdown(text: string): string {
     .replace(/\n/g, '<br />')
 }
 
+const displayName = (name: string) => name ? name.charAt(0).toUpperCase() + name.slice(1).toLowerCase() : name
+
 export default function BaselinePage() {
   const childName = typeof window !== 'undefined' ? localStorage.getItem('learni_child_name') || 'Student' : 'Student'
   const yearLevel = typeof window !== 'undefined' ? parseInt(localStorage.getItem('learni_year_level') || '5') : 5

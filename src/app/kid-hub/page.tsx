@@ -107,7 +107,8 @@ export default function KidHubPage() {
     setLoading(false)
   }
 
-  const displayName = username || childName
+  const displayUsername = username || childName
+  const displayName = (name: string) => name ? name.charAt(0).toUpperCase() + name.slice(1).toLowerCase() : name
 
   const hasCachedData = typeof window !== 'undefined' && localStorage.getItem('learni_cached_stars') !== null
   if (loading && !hasCachedData) {
@@ -282,7 +283,7 @@ export default function KidHubPage() {
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={avatarUrl}
-              alt={displayName}
+              alt={displayUsername}
               width={120}
               height={120}
               style={{
@@ -309,7 +310,7 @@ export default function KidHubPage() {
               margin: '0 auto 16px',
               boxShadow: '0 0 0 6px rgba(46,196,182,0.15)',
             }}>
-              {displayName.charAt(0).toUpperCase()}
+              {displayUsername.charAt(0).toUpperCase()}
             </div>
           )}
           <h1 style={{
@@ -318,7 +319,7 @@ export default function KidHubPage() {
             fontWeight: 900,
             color: 'white',
             marginBottom: '4px',
-          }}>Hey {displayName}! 👋</h1>
+          }}>Hey {displayName(childName)}! 👋</h1>
           {/* Rank */}
           {(() => {
             const rank = getCurrentRank(totalStars, topicsMastered)

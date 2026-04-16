@@ -54,6 +54,8 @@ function renderMarkdown(text: string): string {
     .replace(/\n/g, '<br />')
 }
 
+const displayName = (name: string) => name ? name.charAt(0).toUpperCase() + name.slice(1).toLowerCase() : name
+
 export default function SessionPage() {
   const childName = typeof window !== 'undefined' ? localStorage.getItem('learni_child_name') || 'Student' : 'Student'
   const yearLevel = typeof window !== 'undefined' ? parseInt(localStorage.getItem('learni_year_level') || '5') : 5
@@ -777,7 +779,7 @@ export default function SessionPage() {
             Your free trial has ended
           </h1>
           <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '15px', marginBottom: '28px', lineHeight: 1.6 }}>
-            {childName} was doing great! Subscribe to keep learning with Earni.
+            {displayName(childName)} was doing great! Subscribe to keep learning with Earni.
           </p>
           <a href="/subscribe" style={{
             display: 'block', padding: '18px', background: 'linear-gradient(135deg, #2ec4b6, #1ab5a8)',
@@ -826,7 +828,7 @@ export default function SessionPage() {
             color: 'white',
             marginBottom: '8px',
           }}>
-            Before we start, {childName}...
+            Before we start, {displayName(childName)}...
           </h1>
 
           <div style={{
