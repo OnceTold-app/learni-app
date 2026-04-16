@@ -38,7 +38,7 @@ export default function KidHubPage() {
   const [masteryExpanded, setMasteryExpanded] = useState(false)
   const [showHeatmap, setShowHeatmap] = useState(false)
   const [starsPerDollar, setStarsPerDollar] = useState(20)
-  const [rateSet, setRateSet] = useState(false)
+  const [rateSet, setRateSet] = useState(true) // default true with 20 stars = $1
   const [earningsExpanded, setEarningsExpanded] = useState(false)
   const [ledger, setLedger] = useState<Array<{ id: string; type: string; stars: number; dollar_value: number | null; note: string | null; created_at: string; session_id: string | null }>>([]) 
   const [lifetimeStats, setLifetimeStats] = useState<{ totalEarned: number; totalPaidOut: number; lastPayout: { dollar_value: number | null; created_at: string } | null }>({ totalEarned: 0, totalPaidOut: 0, lastPayout: null })
@@ -124,8 +124,10 @@ export default function KidHubPage() {
         })
         if (rewardRes.ok) {
           const rewardData = await rewardRes.json()
-          setStarsPerDollar(rewardData.starsPerDollar || 20)
-          setRateSet(true)
+          const rate = rewardData.starsPerDollar
+          setStarsPerDollar(rate || 20)
+          // Only show 'ask parent' if rate is explicitly 0 or null
+          setRateSet(rate !== null && rate !== undefined && rate > 0)
         }
       }
 
