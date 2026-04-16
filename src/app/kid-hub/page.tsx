@@ -42,6 +42,10 @@ export default function KidHubPage() {
   const [earningsExpanded, setEarningsExpanded] = useState(false)
   const [ledger, setLedger] = useState<Array<{ id: string; type: string; stars: number; dollar_value: number | null; note: string | null; created_at: string; session_id: string | null }>>([]) 
   const [lifetimeStats, setLifetimeStats] = useState<{ totalEarned: number; totalPaidOut: number; lastPayout: { dollar_value: number | null; created_at: string } | null }>({ totalEarned: 0, totalPaidOut: 0, lastPayout: null })
+  // Money Vault state
+  const [vaultTier, setVaultTier] = useState(1)
+  const [jarSplit, setJarSplit] = useState<{ save: number; spend: number; give: number }>({ save: 50, spend: 40, give: 10 })
+  const [goalVault, setGoalVault] = useState<{ name: string; target: number; cause?: string } | null>(null)
 
   useEffect(() => {
     const id = localStorage.getItem('learni_child_id')
@@ -116,6 +120,17 @@ export default function KidHubPage() {
           setRateSet(true)
         }
       }
+
+      // Load vault data
+      try {
+        const vaultRes = await fetch(`/api/kid/vault?childId=${childId}`)
+        if (vaultRes.ok) {
+          const vaultData = await vaultRes.json()
+          setVaultTier(vaultData.vaultTier || 1)
+          setJarSplit(vaultData.jarSplit || { save: 50, spend: 40, give: 10 })
+          setGoalVault(vaultData.goalVault || null)
+        }
+      } catch { /* best effort — vault columns may not exist yet */ }
     } catch {
       setStatsError(true)
     }
@@ -486,6 +501,192 @@ export default function KidHubPage() {
         >
           Start learning with Earni →
         </a>
+
+        {/* ─── MONEY VAULT SECTION ─────────────────────────────── */}
+        <div style={{ marginBottom: '24px' }}>
+          <h2 style={{ fontFamily: "'Nunito', sans-serif", fontSize: '18px', fontWeight: 700, color: 'white', marginBottom: '14px', marginTop: 0 }}>
+            Your Money
+          </h2>
+
+          {/* Tier 1 — Piggy Bank (always unlocked) */}
+          <div style={{
+            background: 'rgba(255,255,255,0.04)',
+            border: '1.5px solid #2ec4b6',
+            borderRadius: '16px',
+            padding: '16px',
+            textAlign: 'center',
+            marginBottom: '10px',
+          }}>
+            <div style={{ fontSize: '48px', marginBottom: '8px' }}>🐷</div>
+            <div style={{ fontFamily: "'Nunito', sans-serif", fontSize: '20px', fontWeight: 900, color: '#f5a623' }}>⭐ {totalStars} stars</div>
+            {rateSet && (
+              <div style={{ fontSize: '16px', fontWeight: 700, color: '#2ec4b6', marginTop: '4px' }}>
+                = ${(totalStars / starsPerDollar).toFixed(2)} earned
+              </div>
+            )}
+            {!rateSet && (
+              <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.3)', marginTop: '4px' }}>Ask a parent to set your reward rate</div>
+            )}
+          </div>
+
+          {/* Tier 2 — Three Jars */}
+          {vaultTier < 2 ? (
+            <button
+              onClick={async () => {
+                try {
+                  const res = await fetch('/api/speak', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text: 'Finish the What is Saving lesson to unlock this!' }),
+                  })
+                  if (res.ok) {
+                    const blob = await res.blob()
+                    const url = URL.createObjectURL(blob)
+                    const audio = new Audio(url)
+                    audio.play().catch(() => {})
+                  }
+                } catch { /* best effort */ }
+                window.location.href = '/start-session'
+              }}
+              style={{
+                display: 'block', width: '100%', textAlign: 'left',
+                background: 'rgba(255,255,255,0.04)',
+                border: '1px solid rgba(255,255,255,0.08)',
+                borderRadius: '16px', padding: '16px',
+                cursor: 'pointer', marginBottom: '10px', opacity: 0.5,
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span style={{ fontSize: '24px' }}>🔒</span>
+                <div>
+                  <div style={{ fontFamily: "'Nunito', sans-serif", fontSize: '14px', fontWeight: 900, color: 'white' }}>Three Jars</div>
+                  <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', marginTop: '2px' }}>Complete &apos;What is Saving?&apos; to unlock your jars</div>
+                </div>
+              </div>
+            </button>
+          ) : (
+            <div style={{
+              background: 'rgba(255,255,255,0.04)',
+              border: '1px solid rgba(255,255,255,0.08)',
+              borderRadius: '16px', padding: '16px', marginBottom: '10px',
+            }}>
+              <div style={{ fontFamily: "'Nunito', sans-serif", fontSize: '14px', fontWeight: 900, color: 'white', marginBottom: '12px' }}>Your Jars</div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', marginBottom: '10px' }}>
+                {[
+                  { emoji: '💰', label: 'Save', pct: jarSplit.save, color: '#4ade80' },
+                  { emoji: '🛍️', label: 'Spend', pct: jarSplit.spend, color: '#ff9080' },
+                  { emoji: '🤝', label: 'Give', pct: jarSplit.give, color: '#93c5fd' },
+                ].map(jar => (
+                  <div key={jar.label} style={{
+                    background: 'rgba(255,255,255,0.04)',
+                    border: `1px solid ${jar.color}33`,
+                    borderRadius: '12px', padding: '10px', textAlign: 'center',
+                  }}>
+                    <div style={{ fontSize: '22px', marginBottom: '4px' }}>{jar.emoji}</div>
+                    <div style={{ fontSize: '11px', fontWeight: 700, color: jar.color }}>{jar.label}</div>
+                    {rateSet && (
+                      <div style={{ fontSize: '13px', fontWeight: 900, color: 'white', marginTop: '2px' }}>
+                        ${(totalStars / starsPerDollar * jar.pct / 100).toFixed(2)}
+                      </div>
+                    )}
+                    <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)' }}>{jar.pct}%</div>
+                  </div>
+                ))}
+              </div>
+              <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.3)', textAlign: 'right', cursor: 'pointer' }}>Adjust split →</div>
+            </div>
+          )}
+
+          {/* Tier 3 — Goal Jar */}
+          {vaultTier < 3 ? (
+            <div style={{
+              background: 'rgba(255,255,255,0.04)',
+              border: '1px solid rgba(255,255,255,0.08)',
+              borderRadius: '16px', padding: '16px', marginBottom: '10px', opacity: 0.5,
+              display: 'flex', alignItems: 'center', gap: '10px',
+            }}>
+              <span style={{ fontSize: '24px' }}>🔒</span>
+              <div>
+                <div style={{ fontFamily: "'Nunito', sans-serif", fontSize: '14px', fontWeight: 900, color: 'white' }}>Goal Jar</div>
+                <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', marginTop: '2px' }}>Complete &apos;Spending Wisely&apos; and &apos;Setting a Goal&apos; to unlock your Goal jar</div>
+              </div>
+            </div>
+          ) : goalVault ? (
+            <div style={{
+              background: 'rgba(255,255,255,0.04)',
+              border: '1px solid rgba(255,255,255,0.08)',
+              borderRadius: '16px', padding: '16px', marginBottom: '10px',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
+                <span style={{ fontSize: '22px' }}>🎯</span>
+                <div style={{ fontFamily: "'Nunito', sans-serif", fontSize: '14px', fontWeight: 900, color: 'white' }}>{goalVault.name}</div>
+              </div>
+              {rateSet && (
+                <>
+                  <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.5)', marginBottom: '8px' }}>
+                    ${(totalStars / starsPerDollar * jarSplit.save / 100).toFixed(2)} / ${goalVault.target.toFixed(2)}
+                  </div>
+                  <div style={{ background: 'rgba(255,255,255,0.06)', borderRadius: '8px', height: '8px', overflow: 'hidden' }}>
+                    <div style={{
+                      background: '#2ec4b6',
+                      height: '100%',
+                      borderRadius: '8px',
+                      width: `${Math.min(100, (totalStars / starsPerDollar * jarSplit.save / 100) / goalVault.target * 100).toFixed(0)}%`,
+                      transition: 'width 0.5s ease',
+                    }} />
+                  </div>
+                </>
+              )}
+            </div>
+          ) : (
+            <div style={{
+              background: 'rgba(255,255,255,0.04)',
+              border: '1px solid rgba(255,255,255,0.08)',
+              borderRadius: '16px', padding: '16px', marginBottom: '10px',
+              display: 'flex', alignItems: 'center', gap: '10px',
+            }}>
+              <span style={{ fontSize: '22px' }}>🎯</span>
+              <div>
+                <div style={{ fontFamily: "'Nunito', sans-serif", fontSize: '14px', fontWeight: 900, color: 'white' }}>Goal Jar unlocked!</div>
+                <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', marginTop: '2px' }}>Ask a parent to help you set your first goal</div>
+              </div>
+            </div>
+          )}
+
+          {/* Tier 4 — Give Impact */}
+          {vaultTier < 4 ? (
+            <div style={{
+              background: 'rgba(255,255,255,0.04)',
+              border: '1px solid rgba(255,255,255,0.08)',
+              borderRadius: '16px', padding: '16px', opacity: 0.5,
+              display: 'flex', alignItems: 'center', gap: '10px',
+            }}>
+              <span style={{ fontSize: '24px' }}>🔒</span>
+              <div>
+                <div style={{ fontFamily: "'Nunito', sans-serif", fontSize: '14px', fontWeight: 900, color: 'white' }}>Give Impact</div>
+                <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', marginTop: '2px' }}>Complete &apos;Giving and Why It Matters&apos; to unlock your Give impact page</div>
+              </div>
+            </div>
+          ) : (
+            <div style={{
+              background: 'rgba(255,255,255,0.04)',
+              border: '1px solid rgba(147,197,253,0.3)',
+              borderRadius: '16px', padding: '16px',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                <span style={{ fontSize: '22px' }}>🤝</span>
+                <div style={{ fontFamily: "'Nunito', sans-serif", fontSize: '14px', fontWeight: 900, color: '#93c5fd' }}>Give Impact</div>
+              </div>
+              {rateSet ? (
+                <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.6)' }}>
+                  You&apos;ve set aside ${(totalStars / starsPerDollar * jarSplit.give / 100).toFixed(2)} to give back — amazing work! 💙
+                </div>
+              ) : (
+                <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.3)' }}>Set your reward rate to see your give impact</div>
+              )}
+            </div>
+          )}
+        </div>
 
         {/* ─── MASTERY MAP SECTION ─────────────────────────────── */}
         <div style={{ marginBottom: '24px' }}>
