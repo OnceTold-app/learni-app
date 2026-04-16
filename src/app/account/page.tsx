@@ -186,7 +186,7 @@ export default function AccountPage() {
         <span style={{ width: '80px' }} />
       </div>
 
-      <div style={{ maxWidth: '640px', margin: '0 auto', padding: '32px 24px' }}>
+      <div className="account-content" style={{ maxWidth: '640px', margin: '0 auto', padding: '32px 24px' }}>
 
         {/* Section 1 — Your Account */}
         <div style={cardStyle}>
@@ -372,6 +372,11 @@ export default function AccountPage() {
         </div>
 
       </div>
+      <style jsx global>{`
+        @media (min-width: 768px) {
+          .account-content { max-width: 740px !important; }
+        }
+      `}</style>
     </div>
   )
 }
