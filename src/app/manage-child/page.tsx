@@ -24,6 +24,7 @@ export default function ManageChildPage() {
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
   const [showRemove, setShowRemove] = useState(false)
+  const [isDirty, setIsDirty] = useState(false)
 
   useEffect(() => {
     const id = new URLSearchParams(window.location.search).get('id')
@@ -47,30 +48,31 @@ export default function ManageChildPage() {
     }
   }
 
-  async function handleSave(field: string, value: string) {
+  async function handleSaveAll() {
     setLoading(true)
     setMessage('')
     setError('')
 
-    const updates: Record<string, unknown> = {}
-    if (field === 'pin') updates.pin = value
-    if (field === 'username') updates.username = value
-    if (field === 'yearLevel') updates.yearLevel = parseInt(value)
-    if (field === 'name') updates.name = value
-    if (field === 'sessionLanguage') updates.session_language = value
-
     try {
       const res = await fetch('/api/parent/update-child', {
-        method: 'POST',
+        method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('learni_parent_token')}`,
         },
-        body: JSON.stringify({ childId, updates }),
+        body: JSON.stringify({
+          childId,
+          name,
+          username,
+          ...(pin ? { pin } : {}),
+          yearLevel: parseInt(yearLevel),
+          session_language: sessionLanguage,
+        }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
-      setMessage('Saved ✓')
+      setMessage('✓ Saved!')
+      setIsDirty(false)
       setTimeout(() => setMessage(''), 2000)
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Failed to save')
@@ -108,19 +110,7 @@ export default function ManageChildPage() {
     outline: 'none',
     boxSizing: 'border-box',
     background: 'white',
-  }
-
-  const btnStyle: React.CSSProperties = {
-    padding: '12px 20px',
-    background: '#2ec4b6',
-    color: 'white',
-    border: 'none',
-    borderRadius: '12px',
-    fontFamily: "'Nunito', sans-serif",
-    fontSize: '14px',
-    fontWeight: 800,
-    cursor: 'pointer',
-    whiteSpace: 'nowrap',
+    width: '100%',
   }
 
   return (
@@ -146,10 +136,11 @@ export default function ManageChildPage() {
           {/* Name */}
           <div style={{ background: 'white', borderRadius: '14px', padding: '16px 20px', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
             <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#5a8a84', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Name</label>
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <input value={name} onChange={e => setName(e.target.value)} style={inputStyle} />
-              <button onClick={() => handleSave('name', name)} disabled={loading} style={btnStyle}>Save</button>
-            </div>
+            <input
+              value={name}
+              onChange={e => { setName(e.target.value); setIsDirty(true) }}
+              style={inputStyle}
+            />
           </div>
 
           {/* Username */}
@@ -157,8 +148,12 @@ export default function ManageChildPage() {
             <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#5a8a84', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Username</label>
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
               <span style={{ color: '#2ec4b6', fontWeight: 800, fontSize: '16px' }}>@</span>
-              <input value={username} onChange={e => setUsername(e.target.value.replace(/[^a-zA-Z0-9_\-]/g, '').slice(0, 20))} placeholder="not set yet" style={inputStyle} />
-              <button onClick={() => handleSave('username', username)} disabled={loading} style={btnStyle}>Save</button>
+              <input
+                value={username}
+                onChange={e => { setUsername(e.target.value.replace(/[^a-zA-Z0-9_\-]/g, '').slice(0, 20)); setIsDirty(true) }}
+                placeholder="not set yet"
+                style={inputStyle}
+              />
             </div>
             <p style={{ fontSize: '11px', color: '#8abfba', marginTop: '6px' }}>Your child uses this to log in. Letters, numbers, dashes only.</p>
           </div>
@@ -166,36 +161,65 @@ export default function ManageChildPage() {
           {/* PIN */}
           <div style={{ background: 'white', borderRadius: '14px', padding: '16px 20px', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
             <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#5a8a84', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>PIN</label>
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <input value={pin} onChange={e => setPin(e.target.value.replace(/\D/g, '').slice(0, 4))} placeholder="Enter new 4-digit PIN" maxLength={4} inputMode="numeric" style={{ ...inputStyle, letterSpacing: '6px', textAlign: 'center', fontFamily: "'Nunito', sans-serif", fontWeight: 900, fontSize: '20px' }} />
-              <button onClick={() => handleSave('pin', pin)} disabled={loading || pin.length < 4} style={{ ...btnStyle, opacity: pin.length < 4 ? 0.5 : 1 }}>Reset PIN</button>
-            </div>
+            <input
+              value={pin}
+              onChange={e => { setPin(e.target.value.replace(/\D/g, '').slice(0, 4)); setIsDirty(true) }}
+              placeholder="Enter new 4-digit PIN"
+              maxLength={4}
+              inputMode="numeric"
+              style={{ ...inputStyle, letterSpacing: '6px', textAlign: 'center', fontFamily: "'Nunito', sans-serif", fontWeight: 900, fontSize: '20px' }}
+            />
+            <p style={{ fontSize: '11px', color: '#8abfba', marginTop: '6px' }}>Leave blank to keep existing PIN unchanged.</p>
           </div>
 
           {/* Year level */}
           <div style={{ background: 'white', borderRadius: '14px', padding: '16px 20px', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
             <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#5a8a84', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Year level</label>
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <select value={yearLevel} onChange={e => setYearLevel(e.target.value)} style={{ ...inputStyle, cursor: 'pointer' }}>
-                {Array.from({ length: 13 }, (_, i) => i + 1).map(y => (
-                  <option key={y} value={y}>Year {y}</option>
-                ))}
-              </select>
-              <button onClick={() => handleSave('yearLevel', yearLevel)} disabled={loading} style={btnStyle}>Save</button>
-            </div>
+            <select
+              value={yearLevel}
+              onChange={e => { setYearLevel(e.target.value); setIsDirty(true) }}
+              style={{ ...inputStyle, cursor: 'pointer' }}
+            >
+              {Array.from({ length: 13 }, (_, i) => i + 1).map(y => (
+                <option key={y} value={y}>Year {y}</option>
+              ))}
+            </select>
           </div>
 
           {/* Teaching language */}
           <div style={{ background: 'white', borderRadius: '14px', padding: '16px 20px', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
             <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#5a8a84', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Teaching language</label>
             <p style={{ fontSize: '11px', color: '#8abfba', marginTop: '-4px', marginBottom: '8px' }}>What language Earni teaches in</p>
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <select value={sessionLanguage} onChange={e => setSessionLanguage(e.target.value)} style={{ ...inputStyle, cursor: 'pointer' }}>
-                {LANGUAGES.map(l => <option key={l.value} value={l.value}>{l.label}</option>)}
-              </select>
-              <button onClick={() => handleSave('sessionLanguage', sessionLanguage)} disabled={loading} style={btnStyle}>Save</button>
-            </div>
+            <select
+              value={sessionLanguage}
+              onChange={e => { setSessionLanguage(e.target.value); setIsDirty(true) }}
+              style={{ ...inputStyle, cursor: 'pointer' }}
+            >
+              {LANGUAGES.map(l => <option key={l.value} value={l.value}>{l.label}</option>)}
+            </select>
           </div>
+
+          {/* Single Save Changes button */}
+          <button
+            onClick={handleSaveAll}
+            disabled={!isDirty || loading}
+            style={{
+              width: '100%',
+              padding: '16px',
+              background: !isDirty ? '#c8e6e4' : '#2ec4b6',
+              color: 'white',
+              border: 'none',
+              borderRadius: '14px',
+              fontFamily: "'Nunito', sans-serif",
+              fontSize: '16px',
+              fontWeight: 900,
+              cursor: !isDirty ? 'default' : 'pointer',
+              transition: 'background 0.15s',
+              boxShadow: isDirty ? '0 4px 16px rgba(46,196,182,0.25)' : 'none',
+            }}
+          >
+            {loading ? 'Saving…' : 'Save changes'}
+          </button>
 
           {/* Remove child */}
           <div style={{ marginTop: '12px' }}>
@@ -209,8 +233,30 @@ export default function ManageChildPage() {
                   This will permanently delete {name}&apos;s sessions, stars, and all data. This cannot be undone.
                 </p>
                 <div style={{ display: 'flex', gap: '8px' }}>
-                  <button onClick={handleRemove} style={{ ...btnStyle, background: '#e53e3e' }}>Yes, remove {name}</button>
-                  <button onClick={() => setShowRemove(false)} style={{ ...btnStyle, background: '#f7fafa', color: '#0d2b28' }}>Cancel</button>
+                  <button onClick={handleRemove} style={{
+                    padding: '12px 20px',
+                    background: '#e53e3e',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '12px',
+                    fontFamily: "'Nunito', sans-serif",
+                    fontSize: '14px',
+                    fontWeight: 800,
+                    cursor: 'pointer',
+                    whiteSpace: 'nowrap',
+                  }}>Yes, remove {name}</button>
+                  <button onClick={() => setShowRemove(false)} style={{
+                    padding: '12px 20px',
+                    background: '#f7fafa',
+                    color: '#0d2b28',
+                    border: 'none',
+                    borderRadius: '12px',
+                    fontFamily: "'Nunito', sans-serif",
+                    fontSize: '14px',
+                    fontWeight: 800,
+                    cursor: 'pointer',
+                    whiteSpace: 'nowrap',
+                  }}>Cancel</button>
                 </div>
               </div>
             )}
