@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { getCurrentRank, getNextRank, getProgressToNextRank } from '@/lib/ranks'
 import { Skeleton, SkeletonStyles } from '@/components/ui/skeleton'
+import EarniFAB from '@/components/earni-fab'
 import TimesTableHeatmap, { FactMasteryData } from '@/components/times-table-heatmap'
 import { ALL_MASTERY_TOPICS } from '@/lib/question-bank-generator'
 
@@ -1524,6 +1525,7 @@ export default function KidHubPage() {
           Switch user
         </button>
       </div>
+      <EarniFAB context="child_portal" size="child" />
       <style jsx global>{`
         @media (min-width: 768px) {
           .kid-hub-content { max-width: 700px !important; }

@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { SkeletonLight, SkeletonStyles } from '@/components/ui/skeleton'
 import { track } from '@/lib/posthog'
+import EarniFAB from '@/components/earni-fab'
 
 interface Child {
   id: string
@@ -953,6 +954,7 @@ export default function DashboardPage() {
         </div>
       )}
 
+      <EarniFAB context="parent_portal" size="parent" />
       <style jsx global>{`
         @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap');
         @media (min-width: 768px) {

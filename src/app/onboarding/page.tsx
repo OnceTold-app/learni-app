@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import EarniFAB from '@/components/earni-fab'
 
 const YEAR_LEVELS = Array.from({ length: 13 }, (_, i) => i + 1)
 
@@ -362,6 +363,7 @@ export default function OnboardingPage() {
           Step {step} of {totalSteps} · Your data is secure and never sold
         </p>
       </div>
+      <EarniFAB context="parent_portal" size="parent" />
     </div>
   )
 }

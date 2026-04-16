@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import EarniFAB from '@/components/earni-fab'
 
 interface Category {
   id: string
@@ -494,6 +495,7 @@ export default function StartSessionPage() {
           </div>
         )}
       </div>
+      <EarniFAB context="child_portal" size="child" />
     </div>
   )
 }

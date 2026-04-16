@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import EarniFAB from '@/components/earni-fab'
 
 interface AccountStatus {
   name?: string
@@ -370,6 +371,7 @@ export default function AccountPage() {
         </div>
 
       </div>
+      <EarniFAB context="parent_portal" size="parent" />
       <style jsx global>{`
         @media (min-width: 768px) {
           .account-content { max-width: 740px !important; }

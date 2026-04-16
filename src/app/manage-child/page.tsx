@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import EarniFAB from '@/components/earni-fab'
 
 const LANGUAGES = [
   { value: 'en', label: 'English' },
@@ -260,6 +261,7 @@ export default function ManageChildPage() {
           </div>
         </div>
       </div>
+      <EarniFAB context="parent_portal" size="parent" />
     </div>
   )
 }
