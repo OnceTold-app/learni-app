@@ -18,7 +18,11 @@ export default function KidHubPage() {
   const [childName, setChildName] = useState('')
   const [username, setUsername] = useState('')
   const [avatarUrl, setAvatarUrl] = useState('')
-  const [totalStars, setTotalStars] = useState(0)
+  const [totalStars, setTotalStars] = useState(() => {
+    if (typeof window === 'undefined') return 0
+    const cached = localStorage.getItem('learni_cached_stars')
+    return cached ? parseInt(cached) : 0
+  })
   const [streak, setStreak] = useState(0)
   const [sessions, setSessions] = useState<SessionData[]>([])
   const [loading, setLoading] = useState(true)
@@ -49,7 +53,9 @@ export default function KidHubPage() {
       const res = await fetch(`/api/kid/stats?childId=${childId}`)
       if (res.ok) {
         const data = await res.json()
-        setTotalStars(data.totalStars || 0)
+        const freshStars = data.totalStars || 0
+        setTotalStars(freshStars)
+        localStorage.setItem('learni_cached_stars', String(freshStars))
         setStreak(data.streak || 0)
         setSessions(data.sessions || [])
         // Check if baseline needed (no sessions yet)
@@ -91,7 +97,8 @@ export default function KidHubPage() {
 
   const displayName = username || childName
 
-  if (loading) {
+  const hasCachedData = typeof window !== 'undefined' && localStorage.getItem('learni_cached_stars') !== null
+  if (loading && !hasCachedData) {
     return (
       <div style={{
         minHeight: '100vh',
