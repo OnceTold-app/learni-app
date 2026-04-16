@@ -1296,18 +1296,30 @@ export default function SessionPage() {
             }}>
               🤖
             </div>
-            <div
-              style={{
-                fontSize: '16px',
-                fontWeight: 600,
-                lineHeight: 1.6,
-                fontFamily: "'Nunito', sans-serif",
-                color: 'rgba(255,255,255,0.9)',
-                flex: 1,
-                paddingTop: '6px',
-              }}
-              dangerouslySetInnerHTML={{ __html: renderMarkdown(state.earniSays) }}
-            />
+            <div style={{ flex: 1 }}>
+              <div
+                style={{
+                  fontSize: '16px',
+                  fontWeight: 600,
+                  lineHeight: 1.6,
+                  fontFamily: "'Nunito', sans-serif",
+                  color: 'rgba(255,255,255,0.9)',
+                  paddingTop: '6px',
+                }}
+                dangerouslySetInnerHTML={{ __html: renderMarkdown(state.earniSays) }}
+              />
+              {speaking && (
+                <div style={{ display: 'flex', gap: '4px', alignItems: 'center', justifyContent: 'center', marginTop: '8px' }}>
+                  {[0, 1, 2].map(i => (
+                    <div key={i} style={{
+                      width: '6px', height: '20px', background: '#2ec4b6', borderRadius: '3px',
+                      animation: `earni-speak 1.2s ease-in-out infinite`,
+                      animationDelay: `${i * 0.15}s`,
+                    }} />
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         )}
 
@@ -2106,6 +2118,10 @@ export default function SessionPage() {
 
       <style jsx global>{`
         @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap');
+        @keyframes earni-speak {
+          0%, 60%, 100% { transform: scaleY(0.4); opacity: 0.4; }
+          30% { transform: scaleY(1); opacity: 1; }
+        }
         @keyframes pulse0 { 0%,100%{transform:scaleY(1)} 50%{transform:scaleY(0.3)} }
         @keyframes pulse1 { 0%,100%{transform:scaleY(1)} 60%{transform:scaleY(0.3)} }
         @keyframes pulse2 { 0%,100%{transform:scaleY(1)} 70%{transform:scaleY(0.3)} }
