@@ -40,7 +40,7 @@ export async function GET(req: NextRequest) {
     .from('sessions')
     .select('*')
     .eq('learner_id', childId)
-    .order('created_at', { ascending: false })
+    .order('completed_at', { ascending: false })
     .limit(20)
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
