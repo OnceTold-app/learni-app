@@ -27,6 +27,13 @@ interface BaselineState {
   } | null
 }
 
+function renderMarkdown(text: string): string {
+  return text
+    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*([^*]+)\*/g, '<em>$1</em>')
+    .replace(/\n/g, '<br />')
+}
+
 export default function BaselinePage() {
   const childName = typeof window !== 'undefined' ? localStorage.getItem('learni_child_name') || 'Student' : 'Student'
   const yearLevel = typeof window !== 'undefined' ? parseInt(localStorage.getItem('learni_year_level') || '5') : 5
@@ -301,9 +308,10 @@ export default function BaselinePage() {
                 {starCount} stars earned
               </span>
             </div>
-            <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: '15px', marginBottom: '28px', lineHeight: 1.5 }}>
-              {state.earniSays}
-            </p>
+            <p
+              style={{ color: 'rgba(255,255,255,0.55)', fontSize: '15px', marginBottom: '28px', lineHeight: 1.5 }}
+              dangerouslySetInnerHTML={{ __html: renderMarkdown(state.earniSays) }}
+            />
 
             <div style={{
               background: 'rgba(255,255,255,0.04)',
@@ -368,13 +376,14 @@ export default function BaselinePage() {
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   fontSize: '20px', flexShrink: 0,
                 }}>🤖</div>
-                <div style={{
-                  background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)',
-                  borderRadius: '16px', padding: '14px 18px', fontSize: '16px',
-                  fontWeight: 600, lineHeight: 1.5, fontFamily: "'Nunito', sans-serif", flex: 1,
-                }}>
-                  {state.earniSays}
-                </div>
+                <div
+                  style={{
+                    background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)',
+                    borderRadius: '16px', padding: '14px 18px', fontSize: '16px',
+                    fontWeight: 600, lineHeight: 1.5, fontFamily: "'Nunito', sans-serif", flex: 1,
+                  }}
+                  dangerouslySetInnerHTML={{ __html: renderMarkdown(state.earniSays) }}
+                />
               </div>
             )}
 

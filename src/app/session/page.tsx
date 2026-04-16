@@ -47,6 +47,13 @@ const PHASE_TIMES: Record<Phase, number> = {
   reward: 3,
 }
 
+function renderMarkdown(text: string): string {
+  return text
+    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*([^*]+)\*/g, '<em>$1</em>')
+    .replace(/\n/g, '<br />')
+}
+
 export default function SessionPage() {
   const childName = typeof window !== 'undefined' ? localStorage.getItem('learni_child_name') || 'Student' : 'Student'
   const yearLevel = typeof window !== 'undefined' ? parseInt(localStorage.getItem('learni_year_level') || '5') : 5
@@ -1275,17 +1282,18 @@ export default function SessionPage() {
             }}>
               🤖
             </div>
-            <div style={{
-              fontSize: '16px',
-              fontWeight: 600,
-              lineHeight: 1.6,
-              fontFamily: "'Nunito', sans-serif",
-              color: 'rgba(255,255,255,0.9)',
-              flex: 1,
-              paddingTop: '6px',
-            }}>
-              {state.earniSays}
-            </div>
+            <div
+              style={{
+                fontSize: '16px',
+                fontWeight: 600,
+                lineHeight: 1.6,
+                fontFamily: "'Nunito', sans-serif",
+                color: 'rgba(255,255,255,0.9)',
+                flex: 1,
+                paddingTop: '6px',
+              }}
+              dangerouslySetInnerHTML={{ __html: renderMarkdown(state.earniSays) }}
+            />
           </div>
         )}
 
