@@ -163,15 +163,15 @@ export default function NavBar() {
                   <div style={{ padding: '6px 0' }}>
                     {isKid && (
                       <a href="/kid-hub" style={menuItemStyle} onClick={() => setMenuOpen(false)}>
-                        <span style={menuIconStyle}>🏠</span>
-                        My Hub
+                            <span style={menuIconStyle}>🏠</span>
+                          My Hub
                       </a>
                     )}
                     {isParent && (
                       <>
                         <a href="/dashboard" style={menuItemStyle} onClick={() => setMenuOpen(false)}>
-                          <span style={menuIconStyle}>🏠</span>
-                          The Hub
+                          <span style={menuIconStyle}>⚙️</span>
+                          Parent Hub
                         </a>
                         <a href="/onboarding" style={menuItemStyle} onClick={() => setMenuOpen(false)}>
                           <span style={menuIconStyle}>👶</span>
