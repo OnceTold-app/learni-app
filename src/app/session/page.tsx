@@ -110,6 +110,10 @@ export default function SessionPage() {
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const [listening, setListening] = useState(false)
   const [micEnabled, setMicEnabled] = useState(false)
+  const [readQuestionsAloud, setReadQuestionsAloud] = useState(() => {
+    // Smart default: on for younger kids (Year 1-4), off for older
+    return yearLevel <= 4
+  })
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const recognitionRef = useRef<any>(null)
 
@@ -304,11 +308,11 @@ export default function SessionPage() {
         sessionStarted: true,
         showJars: phase === 'reward',
       }))
-      // Speak Earni's words + the question so younger kids who can't read still hear everything
+      // Speak Earni's words + optionally the question
       if (earniText) {
         const questionText = data.question || ''
-        // Combine earniSays + question into one TTS call so it reads naturally
-        const fullText = questionText && !earniText.includes(questionText)
+        // Only append question if readQuestionsAloud is on
+        const fullText = readQuestionsAloud && questionText && !earniText.includes(questionText)
           ? `${earniText} ${questionText}`
           : earniText
         speak(fullText)
@@ -834,6 +838,49 @@ export default function SessionPage() {
                 position: 'absolute',
                 top: '3px',
                 left: micEnabled ? '23px' : '3px',
+                transition: 'left 0.2s',
+              }} />
+            </button>
+          </div>
+
+          {/* Read questions aloud toggle */}
+          <div style={{
+            background: 'rgba(255,255,255,0.04)',
+            border: '1px solid rgba(255,255,255,0.08)',
+            borderRadius: '16px',
+            padding: '14px 20px',
+            marginBottom: '20px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+          }}>
+            <div>
+              <div style={{ fontSize: '14px', fontWeight: 700, color: 'white' }}>📖 Read questions aloud</div>
+              <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.35)', marginTop: '2px' }}>
+                {readQuestionsAloud ? 'Earni will read every question out loud' : 'Questions shown on screen only'}
+              </div>
+            </div>
+            <button
+              onClick={() => setReadQuestionsAloud(r => !r)}
+              style={{
+                width: '48px',
+                height: '28px',
+                borderRadius: '14px',
+                border: 'none',
+                background: readQuestionsAloud ? '#2ec4b6' : 'rgba(255,255,255,0.15)',
+                cursor: 'pointer',
+                position: 'relative',
+                transition: 'background 0.2s',
+              }}
+            >
+              <div style={{
+                width: '22px',
+                height: '22px',
+                borderRadius: '50%',
+                background: 'white',
+                position: 'absolute',
+                top: '3px',
+                left: readQuestionsAloud ? '23px' : '3px',
                 transition: 'left 0.2s',
               }} />
             </button>
