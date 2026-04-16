@@ -982,11 +982,11 @@ function FocusAreas({ childId, childName }: { childId: string; childName: string
 
   return (
     <div style={{ marginBottom: '24px' }}>
-      <h3 style={{ fontFamily: "'Nunito', sans-serif", fontWeight: 900, color: '#0d2b28', marginBottom: '8px' }}>
+      <h3 style={{ fontFamily: "'Nunito', sans-serif", fontWeight: 900, color: '#0d2b28', marginBottom: '4px' }}>
         Focus areas for {childName}
       </h3>
-      <p style={{ fontSize: '13px', color: '#5a8a84', marginBottom: '12px' }}>
-        Tell Earni what to prioritise in sessions
+      <p style={{ fontSize: '12px', color: '#5a8a84', marginTop: '4px', marginBottom: '12px' }}>
+        Earni will prioritise these topics in warmup drills and lesson themes — it won&apos;t limit sessions to them
       </p>
 
       {/* Current focus areas */}
