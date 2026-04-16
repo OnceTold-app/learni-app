@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
   if (!account) return NextResponse.json({ error: 'Account not found' }, { status: 404 })
 
   const body = await req.json()
-  const { name, age, yearLevel, pin, language, sessionLanguage, school, interests, personality, challenges, parentGoals } = body
+  const { name, age, yearLevel, pin, language, sessionLanguage, school, interests, personality, challenges, parentGoals, username } = body
 
   if (!name || !yearLevel) {
     return NextResponse.json({ error: 'Name and year level required' }, { status: 400 })
@@ -46,6 +46,7 @@ export async function POST(req: NextRequest) {
     .insert({
       account_id: account.id,
       name,
+      username: username ? username.toLowerCase().trim() : null,
       age: age || null,
       year_level: yearLevel,
       curriculum: 'nz',
