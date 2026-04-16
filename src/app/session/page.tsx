@@ -1227,9 +1227,9 @@ export default function SessionPage() {
         padding: '0',
         background: 'rgba(0,0,0,0.2)',
       }}>
-        {(['warmup', 'lesson', 'financial', 'closing', 'reward'] as Phase[]).map((p, i) => {
+        {(['lesson', 'financial', 'closing', 'reward'] as Phase[]).map((p, i) => {
           const isCurrent = state.phase === p
-          const isPast = ['warmup', 'lesson', 'financial', 'closing', 'reward'].indexOf(state.phase) > i
+          const isPast = ['lesson', 'financial', 'closing', 'reward'].indexOf(state.phase) > i
           const labels: Record<Phase, string> = { warmup: '⚡ Warm Up', lesson: '📚 Lesson', financial: '💰 Money', closing: '⚡ Recap', reward: '⭐ Stars' }
           const phaseMins: Record<Phase, number> = { warmup: 3, lesson: 12, financial: 5, closing: 5, reward: 0 }
           const elapsed = isCurrent ? Math.min((Date.now() - phaseStartRef.current) / 60000 / (phaseMins[p] || 1), 1) : 0
