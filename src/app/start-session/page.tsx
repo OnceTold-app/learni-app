@@ -186,7 +186,7 @@ export default function StartSessionPage() {
 
   // Sort practice options by year-level relevance
   function sortPracticeOptions(options: Array<{id: string, label: string, desc?: string}>) {
-    const yr = yearLevel
+    const yr = typeof window !== 'undefined' ? parseInt(localStorage.getItem('learni_year_level') || '5') : 5
     // Define approximate year level for each topic
     const topicYearLevel: Record<string, number> = {
       'counting-in-2s': 1, 'counting-in-5s': 1, 'counting-in-10s': 1,
