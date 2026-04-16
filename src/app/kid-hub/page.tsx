@@ -45,7 +45,14 @@ export default function KidHubPage() {
   // Money Vault state
   const [vaultTier, setVaultTier] = useState(1)
   const [jarSplit, setJarSplit] = useState<{ save: number; spend: number; give: number }>({ save: 50, spend: 40, give: 10 })
-  const [goalVault, setGoalVault] = useState<{ name: string; target: number; cause?: string } | null>(null)
+  const [goalVault, setGoalVault] = useState<{ name: string; target: number; progress?: number; cause?: string | null } | null>(null)
+  const [editingJarSplit, setEditingJarSplit] = useState(false)
+  const [draftSplit, setDraftSplit] = useState<{ save: number; spend: number; give: number }>({ save: 50, spend: 40, give: 10 })
+  const [savingJarSplit, setSavingJarSplit] = useState(false)
+  const [yearLevel, setYearLevel] = useState(1)
+  const [goalName, setGoalName] = useState('')
+  const [goalTarget, setGoalTarget] = useState('')
+  const [savingGoal, setSavingGoal] = useState(false)
 
   useEffect(() => {
     const id = localStorage.getItem('learni_child_id')
@@ -55,6 +62,7 @@ export default function KidHubPage() {
     setChildName(name)
     setUsername(uname || '')
     setAvatarUrl(localStorage.getItem('learni_avatar_url') || '')
+    setYearLevel(parseInt(localStorage.getItem('learni_year_level') || '1'))
     fetchData(id)
   }, [])
 
@@ -127,7 +135,9 @@ export default function KidHubPage() {
         if (vaultRes.ok) {
           const vaultData = await vaultRes.json()
           setVaultTier(vaultData.vaultTier || 1)
-          setJarSplit(vaultData.jarSplit || { save: 50, spend: 40, give: 10 })
+          const loadedSplit = vaultData.jarSplit || { save: 50, spend: 40, give: 10 }
+          setJarSplit(loadedSplit)
+          setDraftSplit(loadedSplit)
           setGoalVault(vaultData.goalVault || null)
         }
       } catch { /* best effort — vault columns may not exist yet */ }
@@ -135,6 +145,90 @@ export default function KidHubPage() {
       setStatsError(true)
     }
     setLoading(false)
+  }
+
+  const totalDollars = rateSet ? totalStars / starsPerDollar : 0
+
+  function adjustJarSplit(
+    key: 'save' | 'spend' | 'give',
+    newVal: number,
+    current: { save: number; spend: number; give: number }
+  ): { save: number; spend: number; give: number } {
+    const clamped = Math.min(80, Math.max(10, Math.round(newVal)))
+    const delta = clamped - current[key]
+    if (delta === 0) return current
+    const others = (['save', 'spend', 'give'] as const).filter(k => k !== key)
+    const totalOthers = others.reduce((s, k) => s + current[k], 0)
+    const result = { ...current, [key]: clamped }
+    let toDistribute = -delta
+    others.forEach((k, i) => {
+      if (i === others.length - 1) {
+        result[k] = Math.min(80, Math.max(10, current[k] + toDistribute))
+      } else {
+        const share = totalOthers > 0 ? Math.round(toDistribute * current[k] / totalOthers) : 0
+        result[k] = Math.min(80, Math.max(10, current[k] + share))
+        toDistribute -= (result[k] - current[k])
+      }
+    })
+    // Fix rounding to ensure total = 100
+    const total = result.save + result.spend + result.give
+    if (total !== 100) {
+      const adjustable = others.filter(k => {
+        const diff = 100 - total
+        return diff > 0 ? result[k] < 80 : result[k] > 10
+      })
+      if (adjustable.length > 0) result[adjustable[adjustable.length - 1]] += (100 - total)
+    }
+    return result
+  }
+
+  async function saveJarSplitFn() {
+    const childId = localStorage.getItem('learni_child_id')
+    if (!childId) return
+    setSavingJarSplit(true)
+    try {
+      await fetch(`/api/kid/vault?childId=${childId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ jarSplit: draftSplit }),
+      })
+      setJarSplit({ ...draftSplit })
+      setEditingJarSplit(false)
+    } catch { /* best effort */ }
+    setSavingJarSplit(false)
+  }
+
+  async function saveGoalVault() {
+    const childId = localStorage.getItem('learni_child_id')
+    if (!childId || !goalName.trim() || !goalTarget) return
+    setSavingGoal(true)
+    try {
+      const target = parseFloat(goalTarget)
+      const newGoal = { name: goalName.trim(), target, progress: 0, cause: null }
+      await fetch(`/api/kid/vault?childId=${childId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ goalVault: newGoal }),
+      })
+      setGoalVault(newGoal)
+      setGoalName('')
+      setGoalTarget('')
+    } catch { /* best effort */ }
+    setSavingGoal(false)
+  }
+
+  async function saveCause(cause: string) {
+    const childId = localStorage.getItem('learni_child_id')
+    if (!childId) return
+    const updated = goalVault ? { ...goalVault, cause } : { name: '', target: 0, progress: 0, cause }
+    setGoalVault(updated)
+    try {
+      await fetch(`/api/kid/vault?childId=${childId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ goalVault: updated }),
+      })
+    } catch { /* best effort */ }
   }
 
   const displayUsername = username || childName
@@ -567,33 +661,149 @@ export default function KidHubPage() {
           ) : (
             <div style={{
               background: 'rgba(255,255,255,0.04)',
-              border: '1px solid rgba(255,255,255,0.08)',
+              border: '1.5px solid rgba(46,196,182,0.3)',
               borderRadius: '16px', padding: '16px', marginBottom: '10px',
             }}>
               <div style={{ fontFamily: "'Nunito', sans-serif", fontSize: '14px', fontWeight: 900, color: 'white', marginBottom: '12px' }}>Your Jars</div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', marginBottom: '10px' }}>
-                {[
-                  { emoji: '💰', label: 'Save', pct: jarSplit.save, color: '#4ade80' },
-                  { emoji: '🛍️', label: 'Spend', pct: jarSplit.spend, color: '#ff9080' },
-                  { emoji: '🤝', label: 'Give', pct: jarSplit.give, color: '#93c5fd' },
-                ].map(jar => (
+              {/* Jar display cards */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', marginBottom: '12px' }}>
+                {([
+                  { emoji: '💰', label: 'Save', key: 'save' as const, pct: jarSplit.save, color: '#4ade80' },
+                  { emoji: '🛍️', label: 'Spend', key: 'spend' as const, pct: jarSplit.spend, color: '#ff9080' },
+                  { emoji: '🤝', label: 'Give', key: 'give' as const, pct: jarSplit.give, color: '#93c5fd' },
+                ]).map(jar => (
                   <div key={jar.label} style={{
                     background: 'rgba(255,255,255,0.04)',
-                    border: `1px solid ${jar.color}33`,
+                    border: `1px solid ${jar.color}55`,
                     borderRadius: '12px', padding: '10px', textAlign: 'center',
                   }}>
                     <div style={{ fontSize: '22px', marginBottom: '4px' }}>{jar.emoji}</div>
                     <div style={{ fontSize: '11px', fontWeight: 700, color: jar.color }}>{jar.label}</div>
-                    {rateSet && (
-                      <div style={{ fontSize: '13px', fontWeight: 900, color: 'white', marginTop: '2px' }}>
-                        ${(totalStars / starsPerDollar * jar.pct / 100).toFixed(2)}
-                      </div>
-                    )}
-                    <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)' }}>{jar.pct}%</div>
+                    <div style={{ fontSize: '13px', fontWeight: 900, color: 'white', marginTop: '2px' }}>
+                      ${(totalDollars * jar.pct / 100).toFixed(2)}
+                    </div>
+                    <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', marginTop: '2px' }}>{jar.pct}%</div>
                   </div>
                 ))}
               </div>
-              <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.3)', textAlign: 'right', cursor: 'pointer' }}>Adjust split →</div>
+
+              {/* Edit mode */}
+              {!editingJarSplit ? (
+                <button
+                  onClick={() => { setDraftSplit({ ...jarSplit }); setEditingJarSplit(true) }}
+                  style={{
+                    background: 'none', border: '1px solid rgba(46,196,182,0.3)',
+                    borderRadius: '20px', padding: '6px 14px',
+                    fontSize: '12px', fontWeight: 700, color: '#2ec4b6',
+                    cursor: 'pointer', display: 'block', marginLeft: 'auto',
+                  }}
+                >
+                  Adjust split →
+                </button>
+              ) : (
+                <div style={{ marginTop: '4px' }}>
+                  <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', marginBottom: '10px', fontWeight: 600 }}>
+                    Each jar: min 10%, max 80% · total must equal 100%
+                  </div>
+                  {yearLevel <= 4 ? (
+                    /* +/- buttons for Year 1-4 */
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '12px' }}>
+                      {([
+                        { emoji: '💰', label: 'Save', key: 'save' as const, color: '#4ade80' },
+                        { emoji: '🛍️', label: 'Spend', key: 'spend' as const, color: '#ff9080' },
+                        { emoji: '🤝', label: 'Give', key: 'give' as const, color: '#93c5fd' },
+                      ]).map(jar => (
+                        <div key={jar.key} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                          <span style={{ fontSize: '16px', width: '20px' }}>{jar.emoji}</span>
+                          <span style={{ fontSize: '12px', fontWeight: 700, color: jar.color, width: '36px' }}>{jar.label}</span>
+                          <button
+                            onClick={() => setDraftSplit(adjustJarSplit(jar.key, draftSplit[jar.key] - 5, draftSplit))}
+                            disabled={draftSplit[jar.key] <= 10}
+                            style={{
+                              width: '32px', height: '32px', borderRadius: '50%',
+                              background: draftSplit[jar.key] <= 10 ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.1)',
+                              border: '1px solid rgba(255,255,255,0.15)',
+                              color: draftSplit[jar.key] <= 10 ? 'rgba(255,255,255,0.2)' : 'white',
+                              fontSize: '18px', fontWeight: 700, cursor: draftSplit[jar.key] <= 10 ? 'not-allowed' : 'pointer',
+                              display: 'flex', alignItems: 'center', justifyContent: 'center',
+                              lineHeight: 1,
+                            }}
+                          >−</button>
+                          <div style={{
+                            flex: 1, textAlign: 'center',
+                            fontFamily: "'Nunito', sans-serif", fontSize: '18px', fontWeight: 900, color: 'white',
+                          }}>
+                            {draftSplit[jar.key]}%
+                          </div>
+                          <button
+                            onClick={() => setDraftSplit(adjustJarSplit(jar.key, draftSplit[jar.key] + 5, draftSplit))}
+                            disabled={draftSplit[jar.key] >= 80}
+                            style={{
+                              width: '32px', height: '32px', borderRadius: '50%',
+                              background: draftSplit[jar.key] >= 80 ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.1)',
+                              border: '1px solid rgba(255,255,255,0.15)',
+                              color: draftSplit[jar.key] >= 80 ? 'rgba(255,255,255,0.2)' : 'white',
+                              fontSize: '18px', fontWeight: 700, cursor: draftSplit[jar.key] >= 80 ? 'not-allowed' : 'pointer',
+                              display: 'flex', alignItems: 'center', justifyContent: 'center',
+                              lineHeight: 1,
+                            }}
+                          >+</button>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    /* Sliders for Year 5+ */
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '12px' }}>
+                      {([
+                        { emoji: '💰', label: 'Save', key: 'save' as const, color: '#4ade80' },
+                        { emoji: '🛍️', label: 'Spend', key: 'spend' as const, color: '#ff9080' },
+                        { emoji: '🤝', label: 'Give', key: 'give' as const, color: '#93c5fd' },
+                      ]).map(jar => (
+                        <div key={jar.key}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                            <span style={{ fontSize: '12px', fontWeight: 700, color: jar.color }}>{jar.emoji} {jar.label}</span>
+                            <span style={{ fontSize: '12px', fontWeight: 900, color: 'white', fontFamily: "'Nunito', sans-serif" }}>{draftSplit[jar.key]}%</span>
+                          </div>
+                          <input
+                            type="range" min={10} max={80} step={5}
+                            value={draftSplit[jar.key]}
+                            onChange={e => setDraftSplit(adjustJarSplit(jar.key, parseInt(e.target.value), draftSplit))}
+                            style={{ width: '100%', accentColor: jar.color }}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button
+                      onClick={saveJarSplitFn}
+                      disabled={savingJarSplit}
+                      style={{
+                        flex: 1, padding: '10px',
+                        background: 'linear-gradient(135deg, #2ec4b6, #1ab5a8)',
+                        border: 'none', borderRadius: '20px',
+                        fontFamily: "'Nunito', sans-serif", fontSize: '14px', fontWeight: 900,
+                        color: 'white', cursor: savingJarSplit ? 'not-allowed' : 'pointer',
+                        opacity: savingJarSplit ? 0.7 : 1,
+                      }}
+                    >
+                      {savingJarSplit ? 'Saving…' : 'Save split ✓'}
+                    </button>
+                    <button
+                      onClick={() => setEditingJarSplit(false)}
+                      style={{
+                        padding: '10px 16px',
+                        background: 'rgba(255,255,255,0.06)',
+                        border: '1px solid rgba(255,255,255,0.12)',
+                        borderRadius: '20px', fontSize: '13px', fontWeight: 700,
+                        color: 'rgba(255,255,255,0.5)', cursor: 'pointer',
+                      }}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
@@ -611,47 +821,141 @@ export default function KidHubPage() {
                 <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', marginTop: '2px' }}>Complete &apos;Spending Wisely&apos; and &apos;Setting a Goal&apos; to unlock your Goal jar</div>
               </div>
             </div>
-          ) : goalVault ? (
-            <div style={{
-              background: 'rgba(255,255,255,0.04)',
-              border: '1px solid rgba(255,255,255,0.08)',
-              borderRadius: '16px', padding: '16px', marginBottom: '10px',
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
-                <span style={{ fontSize: '22px' }}>🎯</span>
-                <div style={{ fontFamily: "'Nunito', sans-serif", fontSize: '14px', fontWeight: 900, color: 'white' }}>{goalVault.name}</div>
-              </div>
-              {rateSet && (
-                <>
-                  <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.5)', marginBottom: '8px' }}>
-                    ${(totalStars / starsPerDollar * jarSplit.save / 100).toFixed(2)} / ${goalVault.target.toFixed(2)}
+          ) : (() => {
+            const saveProgress = totalDollars * jarSplit.save / 100
+            if (!goalVault) {
+              /* Setup card */
+              return (
+                <div style={{
+                  background: 'rgba(255,255,255,0.04)',
+                  border: '1.5px solid rgba(245,166,35,0.3)',
+                  borderRadius: '16px', padding: '18px', marginBottom: '10px',
+                }}>
+                  <div style={{ textAlign: 'center', marginBottom: '14px' }}>
+                    <div style={{ fontSize: '36px', marginBottom: '6px' }}>🎯</div>
+                    <div style={{ fontFamily: "'Nunito', sans-serif", fontSize: '16px', fontWeight: 900, color: 'white' }}>What are you saving up for?</div>
                   </div>
-                  <div style={{ background: 'rgba(255,255,255,0.06)', borderRadius: '8px', height: '8px', overflow: 'hidden' }}>
+                  <input
+                    type="text"
+                    value={goalName}
+                    onChange={e => setGoalName(e.target.value.slice(0, 20))}
+                    placeholder="e.g. New bike, Roblox..."
+                    maxLength={20}
+                    style={{
+                      width: '100%', padding: '10px 14px',
+                      background: 'rgba(255,255,255,0.06)',
+                      border: '1px solid rgba(255,255,255,0.12)',
+                      borderRadius: '12px', fontSize: '14px', fontWeight: 600,
+                      color: 'white', outline: 'none', marginBottom: '10px',
+                      boxSizing: 'border-box',
+                    }}
+                  />
+                  <div style={{ position: 'relative', marginBottom: '12px' }}>
+                    <span style={{
+                      position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)',
+                      fontSize: '14px', fontWeight: 700, color: 'rgba(255,255,255,0.5)',
+                    }}>$</span>
+                    <input
+                      type="number"
+                      value={goalTarget}
+                      onChange={e => setGoalTarget(e.target.value)}
+                      placeholder="Target amount (NZD)"
+                      min={1}
+                      style={{
+                        width: '100%', padding: '10px 14px 10px 24px',
+                        background: 'rgba(255,255,255,0.06)',
+                        border: '1px solid rgba(255,255,255,0.12)',
+                        borderRadius: '12px', fontSize: '14px', fontWeight: 600,
+                        color: 'white', outline: 'none',
+                        boxSizing: 'border-box',
+                      }}
+                    />
+                  </div>
+                  <button
+                    onClick={saveGoalVault}
+                    disabled={savingGoal || !goalName.trim() || !goalTarget || parseFloat(goalTarget) <= 0}
+                    style={{
+                      width: '100%', padding: '12px',
+                      background: (!goalName.trim() || !goalTarget || parseFloat(goalTarget) <= 0)
+                        ? 'rgba(255,255,255,0.06)'
+                        : 'linear-gradient(135deg, #f5a623, #e8940a)',
+                      border: 'none', borderRadius: '20px',
+                      fontFamily: "'Nunito', sans-serif", fontSize: '15px', fontWeight: 900,
+                      color: (!goalName.trim() || !goalTarget || parseFloat(goalTarget) <= 0) ? 'rgba(255,255,255,0.3)' : 'white',
+                      cursor: (!goalName.trim() || !goalTarget || parseFloat(goalTarget) <= 0) ? 'not-allowed' : 'pointer',
+                    }}
+                  >
+                    {savingGoal ? 'Setting…' : 'Set my goal →'}
+                  </button>
+                </div>
+              )
+            } else if (saveProgress >= goalVault.target) {
+              /* Celebration card */
+              return (
+                <div style={{
+                  background: 'linear-gradient(135deg, rgba(245,166,35,0.15), rgba(46,196,182,0.1))',
+                  border: '1.5px solid rgba(245,166,35,0.4)',
+                  borderRadius: '16px', padding: '18px', marginBottom: '10px', textAlign: 'center',
+                }}>
+                  <div style={{ fontSize: '40px', marginBottom: '8px' }}>🎉</div>
+                  <div style={{ fontFamily: "'Nunito', sans-serif", fontSize: '18px', fontWeight: 900, color: '#f5a623', marginBottom: '6px' }}>You did it!</div>
+                  <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.6)', marginBottom: '14px' }}>
+                    You saved ${saveProgress.toFixed(2)} for {goalVault.name}!
+                  </div>
+                  <button
+                    onClick={async () => {
+                      const childId = localStorage.getItem('learni_child_id')
+                      if (!childId) return
+                      setGoalVault(null)
+                      await fetch(`/api/kid/vault?childId=${childId}`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ goalVault: null }),
+                      })
+                    }}
+                    style={{
+                      padding: '10px 24px',
+                      background: 'linear-gradient(135deg, #2ec4b6, #1ab5a8)',
+                      border: 'none', borderRadius: '20px',
+                      fontFamily: "'Nunito', sans-serif", fontSize: '14px', fontWeight: 900,
+                      color: 'white', cursor: 'pointer',
+                    }}
+                  >
+                    Set a new goal →
+                  </button>
+                </div>
+              )
+            } else {
+              /* Progress card */
+              const progressPct = Math.min((saveProgress / goalVault.target) * 100, 100)
+              return (
+                <div style={{
+                  background: 'rgba(255,255,255,0.04)',
+                  border: '1.5px solid rgba(46,196,182,0.3)',
+                  borderRadius: '16px', padding: '16px', marginBottom: '10px',
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
+                    <span style={{ fontSize: '22px' }}>🎯</span>
+                    <div style={{ fontFamily: "'Nunito', sans-serif", fontSize: '14px', fontWeight: 900, color: 'white' }}>{goalVault.name}</div>
+                  </div>
+                  <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.5)', marginBottom: '8px' }}>
+                    ${saveProgress.toFixed(2)} / ${goalVault.target.toFixed(2)}
+                  </div>
+                  <div style={{ background: 'rgba(255,255,255,0.08)', borderRadius: '8px', height: '10px', overflow: 'hidden' }}>
                     <div style={{
-                      background: '#2ec4b6',
-                      height: '100%',
-                      borderRadius: '8px',
-                      width: `${Math.min(100, (totalStars / starsPerDollar * jarSplit.save / 100) / goalVault.target * 100).toFixed(0)}%`,
+                      background: 'linear-gradient(90deg, #2ec4b6, #4ade80)',
+                      height: '100%', borderRadius: '8px',
+                      width: `${progressPct.toFixed(0)}%`,
                       transition: 'width 0.5s ease',
                     }} />
                   </div>
-                </>
-              )}
-            </div>
-          ) : (
-            <div style={{
-              background: 'rgba(255,255,255,0.04)',
-              border: '1px solid rgba(255,255,255,0.08)',
-              borderRadius: '16px', padding: '16px', marginBottom: '10px',
-              display: 'flex', alignItems: 'center', gap: '10px',
-            }}>
-              <span style={{ fontSize: '22px' }}>🎯</span>
-              <div>
-                <div style={{ fontFamily: "'Nunito', sans-serif", fontSize: '14px', fontWeight: 900, color: 'white' }}>Goal Jar unlocked!</div>
-                <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', marginTop: '2px' }}>Ask a parent to help you set your first goal</div>
-              </div>
-            </div>
-          )}
+                  <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)', marginTop: '6px', textAlign: 'right' }}>
+                    {progressPct.toFixed(0)}% there!
+                  </div>
+                </div>
+              )
+            }
+          })()}
 
           {/* Tier 4 — Give Impact */}
           {vaultTier < 4 ? (
@@ -667,25 +971,84 @@ export default function KidHubPage() {
                 <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', marginTop: '2px' }}>Complete &apos;Giving and Why It Matters&apos; to unlock your Give impact page</div>
               </div>
             </div>
-          ) : (
-            <div style={{
-              background: 'rgba(255,255,255,0.04)',
-              border: '1px solid rgba(147,197,253,0.3)',
-              borderRadius: '16px', padding: '16px',
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                <span style={{ fontSize: '22px' }}>🤝</span>
-                <div style={{ fontFamily: "'Nunito', sans-serif", fontSize: '14px', fontWeight: 900, color: '#93c5fd' }}>Give Impact</div>
-              </div>
-              {rateSet ? (
-                <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.6)' }}>
-                  You&apos;ve set aside ${(totalStars / starsPerDollar * jarSplit.give / 100).toFixed(2)} to give back — amazing work! 💙
+          ) : (() => {
+            const giveDollars = totalDollars * jarSplit.give / 100
+            const impactStatement =
+              giveDollars < 1 ? 'Every cent adds up — keep going.'
+              : giveDollars < 5 ? 'This could buy a meal for someone who needs one.'
+              : giveDollars < 20 ? 'This could buy a book for a child who doesn\'t have one.'
+              : 'This could make a real difference. What cause matters to you?'
+            const causes = [
+              { key: 'environment', emoji: '🌿', label: 'Environment' },
+              { key: 'animals', emoji: '🐾', label: 'Animals' },
+              { key: 'people', emoji: '👐', label: 'People' },
+            ]
+            const selectedCause = goalVault?.cause || null
+            return (
+              <div style={{
+                background: 'rgba(255,255,255,0.04)',
+                border: '1.5px solid rgba(147,197,253,0.3)',
+                borderRadius: '16px', padding: '18px',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
+                  <span style={{ fontSize: '22px' }}>🤝</span>
+                  <div style={{ fontFamily: "'Nunito', sans-serif", fontSize: '15px', fontWeight: 900, color: '#93c5fd' }}>Give Impact</div>
                 </div>
-              ) : (
-                <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.3)' }}>Set your reward rate to see your give impact</div>
-              )}
-            </div>
-          )}
+                {/* Earni unlock message */}
+                <div style={{
+                  background: 'rgba(147,197,253,0.08)',
+                  border: '1px solid rgba(147,197,253,0.15)',
+                  borderRadius: '12px', padding: '10px 12px', marginBottom: '12px',
+                  fontSize: '13px', color: 'rgba(255,255,255,0.6)', lineHeight: 1.5,
+                }}>
+                  Your Give jar has money in it. That money can actually help someone. What matters to you?
+                </div>
+                {/* Give balance */}
+                <div style={{ textAlign: 'center', marginBottom: '12px' }}>
+                  <div style={{ fontFamily: "'Nunito', sans-serif", fontSize: '28px', fontWeight: 900, color: '#93c5fd' }}>
+                    ${giveDollars.toFixed(2)}
+                  </div>
+                  <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', marginTop: '2px' }}>in your Give jar</div>
+                </div>
+                {/* Impact statement */}
+                <div style={{
+                  fontSize: '13px', fontWeight: 700, color: 'rgba(255,255,255,0.7)',
+                  textAlign: 'center', marginBottom: '14px', lineHeight: 1.5,
+                }}>
+                  💡 {impactStatement}
+                </div>
+                {/* Cause selector */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', marginBottom: '12px' }}>
+                  {causes.map(cause => (
+                    <button
+                      key={cause.key}
+                      onClick={() => saveCause(cause.key)}
+                      style={{
+                        padding: '12px 8px',
+                        background: selectedCause === cause.key ? 'rgba(46,196,182,0.15)' : 'rgba(255,255,255,0.04)',
+                        border: selectedCause === cause.key ? '2px solid #2ec4b6' : '1px solid rgba(255,255,255,0.1)',
+                        borderRadius: '12px',
+                        cursor: 'pointer',
+                        textAlign: 'center',
+                        transition: 'all 0.15s ease',
+                      }}
+                    >
+                      <div style={{ fontSize: '24px', marginBottom: '4px' }}>{cause.emoji}</div>
+                      <div style={{
+                        fontSize: '11px', fontWeight: 700,
+                        color: selectedCause === cause.key ? '#2ec4b6' : 'rgba(255,255,255,0.6)',
+                        fontFamily: "'Nunito', sans-serif",
+                      }}>{cause.label}</div>
+                    </button>
+                  ))}
+                </div>
+                {/* NZ charities note */}
+                <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.25)', textAlign: 'center', marginTop: '4px' }}>
+                  KiwiHarvest · SPCA · Department of Conservation
+                </div>
+              </div>
+            )
+          })()}
         </div>
 
         {/* ─── MASTERY MAP SECTION ─────────────────────────────── */}
