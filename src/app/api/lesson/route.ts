@@ -244,6 +244,7 @@ export async function POST(req: NextRequest) {
       case 'lesson':
         systemPrompt = tutorPrompt(childName, yearLevel, subject, drillTopics[0] || '')
           + (profileContext ? `\n\n## CHILD PROFILE\n${profileContext}` : '')
+          + `\n\n## YEAR LEVEL CEILING\nCRITICAL: Never escalate difficulty more than 1 year above the child's registered year level (Year ${yearLevel}).\n- Max difficulty: Year ${yearLevel + 1} content\n- If child is consistently correct, stay at ceiling \u2014 do NOT keep escalating\n- If child is performing above ceiling for 3+ questions in a row, include a note in earniSays: "You're flying through this! I'll let your parent know you might be ready for harder work."\n- Never teach concepts from 2+ years above their level`
           + masteryContextStr
         break
       case 'financial': {
