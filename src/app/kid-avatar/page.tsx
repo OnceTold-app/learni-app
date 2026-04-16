@@ -92,6 +92,8 @@ export default function KidAvatarPage() {
   })
   const [saving, setSaving] = useState(false)
   const [activeTab, setActiveTab] = useState('skin')
+  const [styleSelected, setStyleSelected] = useState(false)
+  const [avatarStyle, setAvatarStyle] = useState<'feminine' | 'masculine' | 'own' | null>(null)
 
   useEffect(() => {
     setChildName(localStorage.getItem('learni_child_name') || '')
@@ -99,6 +101,19 @@ export default function KidAvatarPage() {
 
   function set(key: string, val: string) {
     setOpts(o => ({ ...o, [key]: val }))
+  }
+
+  function applyStylePreset(style: 'feminine' | 'masculine' | 'own') {
+    setAvatarStyle(style)
+    setStyleSelected(true)
+    if (style === 'feminine') {
+      setOpts(o => ({ ...o, topType: 'LongHairStraight', hairColor: 'Auburn', facialHairType: 'Blank', clotheType: 'BlazerShirt', skinColor: 'Light' }))
+    } else if (style === 'masculine') {
+      setOpts(o => ({ ...o, topType: 'ShortHairShortFlat', hairColor: 'BrownDark', facialHairType: 'Blank', clotheType: 'ShirtCrewNeck', skinColor: 'Light' }))
+    } else {
+      // My own style — keep defaults, just proceed
+      setOpts(o => ({ ...o }))
+    }
   }
 
   async function handleSave() {
@@ -125,6 +140,52 @@ export default function KidAvatarPage() {
     { id: 'clothes', label: '👕', title: 'Clothes' },
     { id: 'extras', label: '✨', title: 'Extras' },
   ]
+
+  // Show style selector first if not yet chosen
+  if (!styleSelected) {
+    return (
+      <div style={{ minHeight: '100vh', background: 'linear-gradient(180deg, #0d2b28, #143330)', fontFamily: "'Plus Jakarta Sans', sans-serif", display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
+        <h2 style={{ fontFamily: "'Nunito', sans-serif", fontSize: '24px', fontWeight: 900, color: 'white', marginBottom: '8px', textAlign: 'center' }}>
+          Pick a starting style
+        </h2>
+        <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '14px', marginBottom: '40px', textAlign: 'center' }}>
+          You can change everything after — this is just your starting point.
+        </p>
+        <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', justifyContent: 'center', maxWidth: '420px' }}>
+          {[
+            { id: 'feminine' as const, emoji: '👧', label: 'Feminine' },
+            { id: 'masculine' as const, emoji: '👦', label: 'Masculine' },
+            { id: 'own' as const, emoji: '🌟', label: 'My own style' },
+          ].map(({ id, emoji, label }) => (
+            <button
+              key={id}
+              onClick={() => applyStylePreset(id)}
+              style={{
+                width: '120px',
+                padding: '24px 16px',
+                background: 'rgba(255,255,255,0.06)',
+                border: '2px solid rgba(255,255,255,0.12)',
+                borderRadius: '20px',
+                cursor: 'pointer',
+                color: 'white',
+                textAlign: 'center',
+                transition: 'all 0.15s',
+              }}
+            >
+              <div style={{ fontSize: '48px', marginBottom: '12px' }}>{emoji}</div>
+              <div style={{ fontFamily: "'Nunito', sans-serif", fontWeight: 700, fontSize: '14px' }}>{label}</div>
+            </button>
+          ))}
+        </div>
+        <button
+          onClick={() => applyStylePreset('own')}
+          style={{ marginTop: '32px', background: 'none', border: 'none', color: 'rgba(255,255,255,0.3)', fontSize: '13px', cursor: 'pointer' }}
+        >
+          Skip →
+        </button>
+      </div>
+    )
+  }
 
   return (
     <div style={{
