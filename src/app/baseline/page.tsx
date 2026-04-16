@@ -96,7 +96,9 @@ export default function BaselinePage() {
       })
       // Speak Earni's response
       if (data.earniSays) {
-        speakText(data.earniSays)
+        const q = data.question || ''
+        const fullText = q && !data.earniSays.includes(q) ? `${data.earniSays} ${q}` : data.earniSays
+        speakText(fullText)
       }
     } catch {
       setState(s => ({ ...s, earniSays: "Right. Let's try again." }))
