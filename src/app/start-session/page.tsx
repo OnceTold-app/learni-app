@@ -184,6 +184,29 @@ export default function StartSessionPage() {
 
   const activeGroup = SUBJECT_GROUPS.find(g => g.id === activeSubject) || SUBJECT_GROUPS[0]
 
+  // Sort practice options by year-level relevance
+  function sortPracticeOptions(options: Array<{id: string, label: string, desc?: string}>) {
+    const yr = yearLevel
+    // Define approximate year level for each topic
+    const topicYearLevel: Record<string, number> = {
+      'counting-in-2s': 1, 'counting-in-5s': 1, 'counting-in-10s': 1,
+      'addition-1-10': 1, 'subtraction-1-10': 1,
+      'counting-in-3s': 2, 'counting-in-4s': 2, 'counting-in-6s': 2,
+      'counting-in-7s': 2, 'counting-in-8s': 2, 'counting-in-9s': 2,
+      'addition-1-20': 2, 'subtraction-1-20': 2,
+      'addition-1-100': 3, 'subtraction-1-100': 3,
+      'times-2-5-10': 3, 'times-3-4-6': 4, 'times-7-8-9': 4, 'times-all': 4,
+      'division-basic': 5, 'fractions-basic': 4, 'fractions-add': 6,
+      'decimals': 6, 'percentages': 7,
+    }
+    return [...options].sort((a, b) => {
+      const aYr = topicYearLevel[a.id] || 5
+      const bYr = topicYearLevel[b.id] || 5
+      // Show closest to child's year level first
+      return Math.abs(aYr - yr) - Math.abs(bYr - yr)
+    })
+  }
+
   return (
     <div style={{
       minHeight: '100vh',
