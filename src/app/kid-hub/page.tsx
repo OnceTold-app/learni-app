@@ -36,6 +36,7 @@ export default function KidHubPage() {
   const [topicMastery, setTopicMastery] = useState<Array<{ topic_id: string; tier: number; correct_count: number; streak_current: number; is_mastered: boolean }>>([])
   const [factMastery, setFactMastery] = useState<FactMasteryData[]>([])
   const [masteryExpanded, setMasteryExpanded] = useState(false)
+  const [showHeatmap, setShowHeatmap] = useState(false)
 
   useEffect(() => {
     const id = localStorage.getItem('learni_child_id')
@@ -513,82 +514,154 @@ export default function KidHubPage() {
               borderRadius: '0 0 16px 16px',
               padding: '16px',
             }}>
-              {/* Times table heatmap */}
-              <div style={{ marginBottom: '20px' }}>
-                <h3 style={{
-                  fontFamily: "'Nunito', sans-serif",
-                  fontSize: '13px',
-                  fontWeight: 800,
-                  color: 'rgba(255,255,255,0.5)',
-                  marginBottom: '10px',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.06em',
-                }}>Times Tables</h3>
-                <TimesTableHeatmap masteryData={factMastery} />
+              {/* Times Table Detail — collapsible heatmap */}
+              <div style={{ marginBottom: '16px' }}>
+                <button
+                  onClick={() => setShowHeatmap(x => !x)}
+                  style={{
+                    background: 'rgba(255,255,255,0.05)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    borderRadius: '10px',
+                    padding: '6px 12px',
+                    fontSize: '12px',
+                    fontWeight: 700,
+                    color: 'rgba(255,255,255,0.5)',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                  }}
+                >
+                  📊 Times Table Detail {showHeatmap ? '▲' : '▼'}
+                </button>
+                {showHeatmap && (
+                  <div style={{ marginTop: '12px' }}>
+                    <TimesTableHeatmap masteryData={factMastery} />
+                  </div>
+                )}
               </div>
 
-              {/* Topic tick-list grouped by tier */}
-              {[1, 2, 3].map(tier => {
-                const tierTopics = ALL_MASTERY_TOPICS.filter(t => t.tier === tier)
+              {/* Category rows */}
+              {(() => {
                 const tmMap = new Map(topicMastery.map(r => [r.topic_id, r]))
+
+                const CATEGORIES: Array<{ key: string; label: string }> = [
+                  { key: 'counting', label: 'Counting' },
+                  { key: 'addition', label: 'Addition' },
+                  { key: 'subtraction', label: 'Subtraction' },
+                  { key: 'times-tables', label: 'Times Tables' },
+                  { key: 'division', label: 'Division' },
+                ]
+
+                const eliteTopics = ALL_MASTERY_TOPICS.filter(t => t.tier === 3)
+
+                const renderChip = (topic: typeof ALL_MASTERY_TOPICS[number], isElite: boolean) => {
+                  const row = tmMap.get(topic.id)
+                  const isMastered = row?.is_mastered === true
+                  const inProgress = row && !isMastered && row.correct_count > 0
+
+                  let chipStyle: React.CSSProperties
+                  if (isMastered && isElite) {
+                    chipStyle = {
+                      background: 'rgba(245,166,35,0.2)',
+                      border: '1px solid rgba(245,166,35,0.6)',
+                      color: '#f5a623',
+                    }
+                  } else if (isMastered) {
+                    chipStyle = {
+                      background: 'rgba(46,196,182,0.15)',
+                      border: '1px solid rgba(46,196,182,0.5)',
+                      color: '#2ec4b6',
+                    }
+                  } else if (inProgress) {
+                    chipStyle = {
+                      background: 'rgba(245,166,35,0.12)',
+                      border: '1px solid rgba(245,166,35,0.4)',
+                      color: '#f5a623',
+                    }
+                  } else {
+                    chipStyle = {
+                      background: 'rgba(255,255,255,0.04)',
+                      border: '1px solid rgba(255,255,255,0.1)',
+                      color: 'rgba(255,255,255,0.4)',
+                    }
+                  }
+
+                  return (
+                    <button
+                      key={topic.id}
+                      onClick={() => {
+                        localStorage.setItem('learni_session_topic', topic.id)
+                        localStorage.setItem('learni_subject', 'Maths')
+                        localStorage.setItem('learni_session_mode', 'practice')
+                        window.location.href = '/session'
+                      }}
+                      style={{
+                        ...chipStyle,
+                        borderRadius: '8px',
+                        padding: '4px 10px',
+                        fontSize: '12px',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        fontFamily: "'Nunito', sans-serif",
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {topic.sub_level}
+                      {inProgress && (
+                        <span style={{ fontSize: '10px' }}>{row!.correct_count}/{topic.mastery_threshold}</span>
+                      )}
+                    </button>
+                  )
+                }
+
                 return (
-                  <div key={tier} style={{ marginBottom: '16px' }}>
-                    <h3 style={{
-                      fontFamily: "'Nunito', sans-serif",
-                      fontSize: '13px',
-                      fontWeight: 800,
-                      color: tier === 3 ? '#f5a623' : tier === 2 ? '#2ec4b6' : 'rgba(255,255,255,0.5)',
-                      marginBottom: '8px',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.06em',
-                    }}>
-                      {tier === 1 ? '🟢 Tier 1 - Foundations' : tier === 2 ? '🔵 Tier 2 - Fluency' : '⭐ Tier 3 - Elite'}
-                    </h3>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                      {tierTopics.map(topic => {
-                        const row = tmMap.get(topic.id)
-                        const isMastered = row?.is_mastered === true
-                        const inProgress = row && !isMastered && row.correct_count > 0
-                        const pct = row ? Math.min(Math.round((row.correct_count / topic.mastery_threshold) * 100), 100) : 0
-                        return (
-                          <div key={topic.id} style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '8px',
-                            padding: '6px 8px',
-                            background: isMastered ? 'rgba(46,196,182,0.08)' : inProgress ? 'rgba(245,166,35,0.06)' : 'rgba(255,255,255,0.02)',
-                            borderRadius: '8px',
-                            border: isMastered ? '1px solid rgba(46,196,182,0.15)' : '1px solid transparent',
+                  <>
+                    {CATEGORIES.map(({ key, label }) => {
+                      const topics = ALL_MASTERY_TOPICS.filter(t => t.category === key && t.tier !== 3)
+                      if (topics.length === 0) return null
+                      return (
+                        <div key={key} style={{ marginBottom: '12px' }}>
+                          <div style={{
+                            fontSize: '11px',
+                            fontWeight: 800,
+                            color: 'rgba(255,255,255,0.35)',
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.08em',
+                            marginBottom: '6px',
                           }}>
-                            <span style={{ fontSize: '14px', flexShrink: 0 }}>
-                              {isMastered ? (tier === 3 ? '⭐' : '✅') : inProgress ? '🔶' : '⬜'}
-                            </span>
-                            <span style={{
-                              flex: 1,
-                              fontSize: '12px',
-                              fontWeight: 700,
-                              color: isMastered ? '#2ec4b6' : inProgress ? '#f5a623' : 'rgba(255,255,255,0.45)',
-                              fontFamily: "'Nunito', sans-serif",
-                            }}>
-                              {topic.name}
-                            </span>
-                            {inProgress && (
-                              <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', fontWeight: 700 }}>
-                                {row!.correct_count}/{topic.mastery_threshold}
-                              </span>
-                            )}
-                            {inProgress && (
-                              <div style={{ width: '40px', height: '4px', background: 'rgba(255,255,255,0.08)', borderRadius: '2px', overflow: 'hidden', flexShrink: 0 }}>
-                                <div style={{ height: '100%', width: `${pct}%`, background: '#f5a623', borderRadius: '2px' }} />
-                              </div>
-                            )}
+                            {label}
                           </div>
-                        )
-                      })}
-                    </div>
-                  </div>
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                            {topics.map(topic => renderChip(topic, false))}
+                          </div>
+                        </div>
+                      )
+                    })}
+
+                    {eliteTopics.length > 0 && (
+                      <div style={{ marginBottom: '12px' }}>
+                        <div style={{
+                          fontSize: '11px',
+                          fontWeight: 800,
+                          color: 'rgba(245,166,35,0.7)',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.08em',
+                          marginBottom: '6px',
+                        }}>
+                          ⭐ Elite
+                        </div>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                          {eliteTopics.map(topic => renderChip(topic, true))}
+                        </div>
+                      </div>
+                    )}
+                  </>
                 )
-              })}
+              })()}
             </div>
           )}
         </div>
