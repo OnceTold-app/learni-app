@@ -44,7 +44,7 @@ export default function SignupPage() {
       // Create account record
       if (authData.user) {
         const isTester = couponCode.trim().toLowerCase() === 'testi'
-        const trialDays = isTester ? 14 : 7
+        const trialDays = 7
         const trialEnd = new Date()
         trialEnd.setDate(trialEnd.getDate() + trialDays)
 
