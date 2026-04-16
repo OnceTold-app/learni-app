@@ -138,8 +138,6 @@ export default function AccountPage() {
     fontSize: '12px',
     fontWeight: 600,
     color: '#5a8a84',
-    textTransform: 'uppercase' as const,
-    letterSpacing: '0.05em',
     marginBottom: '4px',
   }
 
