@@ -37,6 +37,8 @@ export default function DashboardPage() {
   const [rewardSettingsDraft, setRewardSettingsDraft] = useState({ starsPerDollar: 20, weeklyStarCap: 200, rewardsPaused: false })
   const [rewardSaving, setRewardSaving] = useState(false)
   const [rewardSaved, setRewardSaved] = useState(false)
+  const [payoutLoading, setPayoutLoading] = useState(false)
+  const [payoutSuccess, setPayoutSuccess] = useState(false)
   const [showInactivityWarning, setShowInactivityWarning] = useState(false)
   const lastActivityRef = useRef(Date.now())
 
@@ -143,6 +145,45 @@ export default function DashboardPage() {
       setTimeout(() => setRewardSaved(false), 2500)
     } catch { /* */ }
     setRewardSaving(false)
+  }
+
+  async function refreshChildStats(childId: string) {
+    try {
+      const res = await fetch(`/api/kid/stats?childId=${childId}`)
+      if (res.ok) {
+        const data = await res.json()
+        setChildren(prev => prev.map(c =>
+          c.id === childId ? { ...c, total_stars: data.totalStars || 0 } : c
+        ))
+      }
+    } catch { /* */ }
+  }
+
+  async function handlePayout() {
+    if (!selectedChild || totalStars === 0 || rewardSettings.rewardsPaused) return
+    setPayoutLoading(true)
+    try {
+      const res = await fetch('/api/parent/payout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('learni_parent_token')}`,
+        },
+        body: JSON.stringify({
+          childId: selectedChild,
+          stars: totalStars,
+          dollarValue: parseFloat(dollarsOwed),
+        }),
+      })
+      if (res.ok) {
+        setPayoutSuccess(true)
+        setTimeout(() => {
+          setPayoutSuccess(false)
+          if (selectedChild) refreshChildStats(selectedChild)
+        }, 1500)
+      }
+    } catch { /* */ }
+    setPayoutLoading(false)
   }
 
   async function fetchSessions(childId: string) {
@@ -497,6 +538,43 @@ export default function DashboardPage() {
                 {rewardSaved ? '✓ Saved!' : rewardSaving ? 'Saving…' : 'Save settings'}
               </button>
 
+              {/* Payout button */}
+              <div style={{ marginBottom: '12px' }}>
+                <button
+                  onClick={handlePayout}
+                  disabled={payoutLoading || totalStars === 0 || rewardSettings.rewardsPaused}
+                  style={{
+                    background: payoutSuccess ? '#1a9e92' : (totalStars === 0 || rewardSettings.rewardsPaused) ? '#c8e6e4' : '#2ec4b6',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '12px',
+                    padding: '10px 20px',
+                    fontFamily: "'Nunito', sans-serif",
+                    fontWeight: 800,
+                    fontSize: '14px',
+                    cursor: (payoutLoading || totalStars === 0 || rewardSettings.rewardsPaused) ? 'default' : 'pointer',
+                    transition: 'background 0.15s',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                  }}
+                >
+                  {payoutLoading ? (
+                    <>
+                      <span style={{ display: 'inline-block', width: '14px', height: '14px', border: '2px solid rgba(255,255,255,0.4)', borderTopColor: 'white', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
+                      Processing…
+                    </>
+                  ) : payoutSuccess ? (
+                    '✓ Marked as paid! Stars reset.'
+                  ) : (
+                    `💰 Mark $${dollarsOwed} as paid →`
+                  )}
+                </button>
+                <p style={{ fontSize: '11px', color: '#8abfba', margin: '6px 0 0' }}>
+                  This records a payout in your child&apos;s ledger and resets their balance.
+                </p>
+              </div>
+
               <p style={{ fontSize: '11px', color: '#8abfba', margin: 0 }}>
                 You set the rate — Earni tracks the stars. When it&apos;s time to pay out, just hand over the cash!
               </p>
@@ -666,6 +744,7 @@ export default function DashboardPage() {
         @media (min-width: 768px) {
           .dashboard-main { max-width: 900px !important; margin: 0 auto !important; }
         }
+        @keyframes spin { to { transform: rotate(360deg); } }
         @media (max-width: 480px) {
           .dashboard-stats-grid { grid-template-columns: 1fr 1fr !important; }
           .dashboard-child-card { padding: 16px !important; }
