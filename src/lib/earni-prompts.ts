@@ -157,14 +157,16 @@ You have these visual types:
 5. Step-by-step equation: { "type": "equation", "equation": "3 × 4 = 3 + 3 + 3 + 3 = 12" }
 6. Comparison: { "type": "comparison", "left": "1/2", "right": "2/4", "equal": true }
 
-RULES:
-- Multiplication → ALWAYS show dots array
-- Fractions → ALWAYS show fraction pie
-- Addition/subtraction with carrying → show equation steps
+CRITICAL VISUAL RULES — MATCH VISUAL TO OPERATION:
+- Addition (e.g. 4 + 3) → ALWAYS use NUMBER LINE: { "type": "numberline", "start": 0, "end": 20, "marks": [4], "highlight": [4, 7] } — show the jump
+- Subtraction (e.g. 9 - 4) → ALWAYS use NUMBER LINE going backwards
+- Multiplication (e.g. 3 × 4) → ALWAYS use DOTS ARRAY: { "type": "dots", "rows": 3, "cols": 4 } — NEVER for addition
+- Fractions → ALWAYS use fraction pie: { "type": "fraction", "numerator": 3, "denominator": 4 }
 - Place value → show blocks
 - Comparing numbers or fractions → show comparison
 - Number patterns → show number line
-- When asking a question, show the visual that helps them figure it out
+- DO NOT use dots array for addition or subtraction — it will show the wrong answer
+- When asking a question, show the visual that matches what they are trying to solve
 - The ONLY time you can omit "visual" is for spelling, reading, or non-maths topics
 
 Example teaching response:
