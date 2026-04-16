@@ -646,12 +646,43 @@ export default function DashboardPage() {
                   fontSize: '14px',
                   fontWeight: 700,
                   textDecoration: 'none',
-                  marginBottom: '24px',
+                  marginBottom: '12px',
                   border: '1px solid rgba(13,43,40,0.08)',
                 }}
               >
                 📊 View {child.name}&apos;s progress report
               </a>
+            )}
+
+            {/* Print Report — gated behind first session */}
+            {child && (
+              <div style={{ marginBottom: '24px' }}>
+                <button
+                  onClick={() => { if (sessions.length > 0 && totalStars > 0) window.print() }}
+                  disabled={sessions.length === 0 || totalStars === 0}
+                  title={sessions.length === 0 || totalStars === 0 ? 'Complete a session to unlock your first report' : 'Print report'}
+                  style={{
+                    width: '100%',
+                    background: sessions.length === 0 || totalStars === 0 ? '#f0f0f0' : 'white',
+                    color: sessions.length === 0 || totalStars === 0 ? '#aaa' : '#0d2b28',
+                    padding: '14px',
+                    borderRadius: '12px',
+                    textAlign: 'center',
+                    fontFamily: "'Nunito', sans-serif",
+                    fontSize: '14px',
+                    fontWeight: 700,
+                    border: '1px solid rgba(13,43,40,0.08)',
+                    cursor: sessions.length === 0 || totalStars === 0 ? 'not-allowed' : 'pointer',
+                  }}
+                >
+                  🖨️ Print report
+                </button>
+                {(sessions.length === 0 || totalStars === 0) && (
+                  <p style={{ fontSize: '11px', color: '#8abfba', textAlign: 'center', marginTop: '4px', marginBottom: 0 }}>
+                    Complete a session to unlock your first report
+                  </p>
+                )}
+              </div>
             )}
 
             {/* Refer a friend */}
