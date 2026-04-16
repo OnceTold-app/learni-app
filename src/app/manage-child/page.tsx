@@ -4,11 +4,8 @@ import { useState, useEffect } from 'react'
 
 const LANGUAGES = [
   { value: 'en', label: 'English' },
-  { value: 'mi', label: 'Te Reo Māori' },
-  { value: 'af', label: 'Afrikaans' },
   { value: 'zh', label: 'Mandarin' },
   { value: 'hi', label: 'Hindi' },
-  { value: 'sm', label: 'Samoan' },
   { value: 'fr', label: 'French' },
   { value: 'es', label: 'Spanish' },
 ]
