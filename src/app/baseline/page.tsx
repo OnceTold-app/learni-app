@@ -277,7 +277,7 @@ export default function BaselinePage() {
         maxWidth: '600px',
         margin: '0 auto',
         width: '100%',
-      }}>
+      }} className="baseline-content">
         {/* Complete screen */}
         {state.complete && state.results ? (
           <div style={{ textAlign: 'center', width: '100%' }}>
@@ -478,6 +478,9 @@ export default function BaselinePage() {
       </div>
 
       <style jsx global>{`
+        @media (min-width: 768px) {
+          .baseline-content { max-width: 700px !important; }
+        }
         @keyframes levelFlash {
           0% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
           20% { opacity: 1; transform: translate(-50%, -50%) scale(1.05); }
