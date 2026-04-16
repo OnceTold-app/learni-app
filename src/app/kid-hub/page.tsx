@@ -30,7 +30,7 @@ export default function KidHubPage() {
   const [needsBaseline, setNeedsBaseline] = useState(false)
   const [baselineLevelName, setBaselineLevelName] = useState('')
   const [topicsMastered, setTopicsMastered] = useState(0)
-  const [badges, setBadges] = useState<Array<{ id: string; name: string; emoji: string; desc: string; earned: boolean; isNew: boolean }>>([])
+  const [badges, setBadges] = useState<Array<{ id: string; name: string; emoji: string; desc: string; earned: boolean; isNew: boolean; earnedAt?: string | null }>>([])
   // Mastery map state
   const [tierSummary, setTierSummary] = useState<Array<{ tier: number; total: number; mastered: number }>>([])
   const [topicMastery, setTopicMastery] = useState<Array<{ topic_id: string; tier: number; correct_count: number; streak_current: number; is_mastered: boolean }>>([])
@@ -836,6 +836,13 @@ export default function KidHubPage() {
                   )}
                   <div style={{ fontSize: '24px' }}>{b.emoji}</div>
                   <div style={{ fontSize: '10px', fontWeight: 700, color: 'rgba(255,255,255,0.6)', marginTop: '4px' }}>{b.name}</div>
+                  {b.earned ? (
+                    <div style={{ fontSize: '9px', fontWeight: 600, color: '#2ec4b6', marginTop: '3px' }}>
+                      {b.earnedAt ? `Earned ${new Date(b.earnedAt).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' })}` : 'Earned'}
+                    </div>
+                  ) : (
+                    <div style={{ fontSize: '9px', fontWeight: 500, color: 'rgba(255,255,255,0.3)', marginTop: '3px' }}>{b.desc}</div>
+                  )}
                 </div>
               ))}
             </div>

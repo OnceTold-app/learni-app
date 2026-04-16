@@ -96,10 +96,13 @@ export async function GET(req: NextRequest) {
     }
   }
 
+  const earnedMap = Object.fromEntries((earned || []).map(e => [e.badge_id, e.earned_at]))
+
   const allBadges = BADGES.map(b => ({
     ...b,
     earned: earnedIds.includes(b.id) || newBadges.includes(b.id),
     isNew: newBadges.includes(b.id),
+    earnedAt: earnedMap[b.id] || null,
     check: undefined,
   }))
 
