@@ -551,15 +551,28 @@ export default function KidHubPage() {
                         const inProgress = row && !isMastered && row.correct_count > 0
                         const pct = row ? Math.min(Math.round((row.correct_count / topic.mastery_threshold) * 100), 100) : 0
                         return (
-                          <div key={topic.id} style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '8px',
-                            padding: '6px 8px',
-                            background: isMastered ? 'rgba(46,196,182,0.08)' : inProgress ? 'rgba(245,166,35,0.06)' : 'rgba(255,255,255,0.02)',
-                            borderRadius: '8px',
-                            border: isMastered ? '1px solid rgba(46,196,182,0.15)' : '1px solid transparent',
-                          }}>
+                        return (
+                          <button
+                            key={topic.id}
+                            onClick={() => {
+                              localStorage.setItem('learni_session_topic', topic.id)
+                              localStorage.setItem('learni_subject', 'Maths')
+                              localStorage.setItem('learni_session_mode', 'practice')
+                              window.location.href = '/session'
+                            }}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '8px',
+                              padding: '8px 10px',
+                              background: isMastered ? 'rgba(46,196,182,0.08)' : inProgress ? 'rgba(245,166,35,0.08)' : 'rgba(255,255,255,0.03)',
+                              borderRadius: '8px',
+                              border: isMastered ? '1px solid rgba(46,196,182,0.15)' : inProgress ? '1px solid rgba(245,166,35,0.2)' : '1px solid rgba(255,255,255,0.06)',
+                              cursor: 'pointer',
+                              width: '100%',
+                              textAlign: 'left',
+                            }}
+                          >
                             <span style={{ fontSize: '14px', flexShrink: 0 }}>
                               {isMastered ? (tier === 3 ? '⭐' : '✅') : inProgress ? '🔶' : '⬜'}
                             </span>
@@ -582,7 +595,9 @@ export default function KidHubPage() {
                                 <div style={{ height: '100%', width: `${pct}%`, background: '#f5a623', borderRadius: '2px' }} />
                               </div>
                             )}
-                          </div>
+                            <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.15)', marginLeft: '2px' }}>▶</span>
+                          </button>
+                        )
                         )
                       })}
                     </div>
