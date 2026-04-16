@@ -196,7 +196,7 @@ export default function OnboardingPage() {
                     <option value="">Select</option>
                     {YEAR_LEVELS.map(y => <option key={y} value={y}>Year {y}</option>)}
                   </select>
-                  <p style={{ fontSize: '11px', color: '#8abfba', marginTop: '4px', marginBottom: 0 }}>Not sure? Age 5–6 = Yr 1 · Age 7 = Yr 2 · Age 8 = Yr 3 · Age 9 = Yr 4 · Age 10 = Yr 5 · Age 11 = Yr 6 · Age 12 = Yr 7 · Age 13 = Yr 8</p>
+                  <p style={{ fontSize: '11px', color: '#8abfba', marginTop: '4px', marginBottom: 0 }}>Not sure? Age 5–6 = Yr 1 · Age 7 = Yr 2 · Age 8 = Yr 3 · Age 9 = Yr 4 · Age 10 = Yr 5 · Age 11 = Yr 6 · Age 12 = Yr 7 · Age 13 = Yr 8 · Age 14 = Yr 9 · Age 15 = Yr 10 · Age 16 = Yr 11 · Age 17 = Yr 12 · Age 18 = Yr 13</p>
                 </div>
               </div>
 
