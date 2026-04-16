@@ -114,11 +114,22 @@ export default function SessionPage() {
   const recognitionRef = useRef<any>(null)
 
   // Speech-to-text — listen to the kid
-  function startListening() {
-    if (!micEnabled || speaking) return
+  function startListening(force = false) {
+    if (!micEnabled && !force) return
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
-    if (!SR) return
+    if (!SR) {
+      alert('Voice input is not supported in this browser. Try Chrome on Android or desktop.')
+      return
+    }
+    
+    // Stop Earni speaking if forced (user tapped mic button)
+    if (force && audioRef.current) {
+      audioRef.current.pause()
+      audioRef.current = null
+      setSpeaking(false)
+    }
+    if (speaking && !force) return
     
     if (recognitionRef.current) {
       try { recognitionRef.current.stop() } catch { /* */ }
@@ -127,11 +138,17 @@ export default function SessionPage() {
     const recognition = new SR()
     recognition.continuous = false
     recognition.interimResults = false
-    recognition.lang = 'en-NZ'
+    recognition.lang = navigator.language || 'en'
     
     recognition.onstart = () => setListening(true)
     recognition.onend = () => setListening(false)
-    recognition.onerror = () => setListening(false)
+    recognition.onerror = (e: any) => {
+      setListening(false)
+      console.warn('Speech recognition error:', e.error)
+      if (e.error === 'not-allowed') {
+        alert('Microphone access was denied. Please allow microphone access in your browser settings.')
+      }
+    }
     
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     recognition.onresult = (event: any) => {
@@ -1328,7 +1345,7 @@ export default function SessionPage() {
                   onClick={() => {
                     lastActivityRef.current = Date.now()
                     if (!micEnabled) setMicEnabled(true)
-                    startListening()
+                    startListening(true) // force=true stops Earni speaking
                   }}
                   style={{
                     width: '100%',
