@@ -68,10 +68,8 @@ export default function SessionPage() {
   const [questionsInPhase, setQuestionsInPhase] = useState(0)
 
   const [state, setState] = useState<SessionState>({
-    phase: (typeof window !== 'undefined' && localStorage.getItem('learni_session_mode') === 'practice' ? 'lesson' :
-            typeof window !== 'undefined' && localStorage.getItem('learni_session_mode') === 'challenge' ? 'warmup' :
-            'warmup') as Phase,
-    phaseLabel: PHASE_LABELS[typeof window !== 'undefined' && localStorage.getItem('learni_session_mode') === 'practice' ? 'lesson' : 'warmup'],
+    phase: 'lesson' as Phase,
+    phaseLabel: PHASE_LABELS['lesson'],
     earniSays: '',
     question: null,
     visual: null,
@@ -94,6 +92,10 @@ export default function SessionPage() {
     jarGive: 20,
     elapsedMinutes: 0,
   })
+
+  const [, setWarmupCount] = useState(0) // warmupCount tracked for future use
+  const [lessonCount, setLessonCount] = useState(0)
+  const sessionStartTime = useRef(Date.now())
 
   const historyRef = useRef<Array<{ role: 'user' | 'assistant'; content: string }>>([])
   const phaseStartRef = useRef(Date.now())
@@ -394,7 +396,8 @@ export default function SessionPage() {
   // Start session — only after audio check
   useEffect(() => {
     if (!state.sessionStarted && audioChecked) {
-      fetchQuestion('warmup')
+      fetchQuestion('lesson')
+      sessionStartTime.current = Date.now()
       phaseStartRef.current = Date.now()
       timerRef.current = setInterval(() => {
         setState(s => ({ ...s, elapsedMinutes: Math.floor((Date.now() - phaseStartRef.current) / 60000) }))
@@ -404,31 +407,45 @@ export default function SessionPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [audioChecked])
 
-  // Inactivity detection - pause after 45 seconds of no interaction
+  // Inactivity detection - only fires when child is actively answering, never during loading/audio
   useEffect(() => {
-    // Auto-pause threshold by year level — longer for younger kids who need thinking time
-    const idleThreshold = yearLevel <= 3 ? 90000   // 90s for Year 1-3
-                        : yearLevel <= 6 ? 60000   // 60s for Year 4-6
-                        : yearLevel <= 10 ? 45000  // 45s for Year 7-10
-                        : 30000                    // 30s for Year 11-13
-    const inactivityCheck = setInterval(() => {
-      if (paused) return
+    // Only run idle check when conditions are right for the child to be answering
+    const shouldMonitor =
+      state.sessionStarted &&
+      !paused &&
+      !state.loading &&
+      !speaking &&
+      state.question !== null &&
+      state.selectedAnswer === null &&
+      !state.showJars
+
+    if (!shouldMonitor) return
+
+    const idleThreshold = yearLevel <= 3 ? 90000
+                        : yearLevel <= 6 ? 60000
+                        : yearLevel <= 10 ? 45000
+                        : 30000
+
+    // Reset the activity ref when we start monitoring
+    lastActivityRef.current = Date.now()
+
+    const check = setInterval(() => {
       const idle = Date.now() - lastActivityRef.current
-      if (idle > idleThreshold && !state.loading && state.sessionStarted) {
+      if (idle >= idleThreshold) {
         setPaused(true)
         pausedTimeRef.current = Date.now()
         if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; setSpeaking(false) }
-        if (recognitionRef.current) { try { recognitionRef.current.stop() } catch { /* */ } }
-        // For Year 1-3, speak the pause message aloud
+        if (recognitionRef.current) { try { recognitionRef.current.stop() } catch { /**/ } }
+        // For Year 1-3, speak the pause message
         if (yearLevel <= 3) {
-          const pauseMsg = "No worries — I'm still here. Take your time."
-          fetch('/api/speak', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: pauseMsg }) })
+          fetch('/api/speak', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: "No worries — I'm still here. Take your time." }) })
             .then(r => r.blob()).then(blob => { const a = new Audio(URL.createObjectURL(blob)); a.play().catch(() => {}) }).catch(() => {})
         }
       }
-    }, 5000)
-    return () => clearInterval(inactivityCheck)
-  }, [paused, state.loading, state.sessionStarted, yearLevel])
+    }, 10000) // Check every 10 seconds (not 5)
+
+    return () => clearInterval(check)
+  }, [state.sessionStarted, paused, state.loading, speaking, state.question, state.selectedAnswer, state.showJars, yearLevel])
 
   // 20-minute inactivity — show "Are you still there?" overlay, then auto-logout after 60s
   useEffect(() => {
@@ -493,6 +510,10 @@ export default function SessionPage() {
     // Adjust phase start time by the paused duration so timer doesn't skip ahead
     const pausedDuration = Date.now() - pausedTimeRef.current
     phaseStartRef.current += pausedDuration
+    // On resume: if no question is showing, re-fetch it
+    if (!state.question || !state.earniSays) {
+      fetchQuestion(state.phase)
+    }
     lastActivityRef.current = Date.now()
     setPaused(false)
   }
@@ -505,7 +526,7 @@ export default function SessionPage() {
       const limit = PHASE_TIMES[state.phase]
 
       if (phaseElapsed >= limit && state.phase !== 'reward' && !state.loading) {
-        const fullFlow: Record<Phase, Phase> = { warmup: 'lesson', lesson: 'financial', financial: 'closing', closing: 'reward', reward: 'reward' }
+        const fullFlow: Record<Phase, Phase> = { warmup: 'financial', lesson: 'financial', financial: 'closing', closing: 'reward', reward: 'reward' }
         const shortFlow: Record<Phase, Phase> = { warmup: 'reward', lesson: 'reward', financial: 'reward', closing: 'reward', reward: 'reward' }
         const flow = (sessionMode === 'practice' || sessionMode === 'challenge' || sessionMode === 'learn') ? shortFlow : fullFlow
         const next = flow[state.phase]
@@ -547,6 +568,8 @@ export default function SessionPage() {
     if (state.question) {
       masteryResultsRef.current.push({ topic: subject, correct: isCorrect, question: state.question || '' })
       setQuestionsInPhase(q => q + 1)
+      if (state.phase === 'warmup') setWarmupCount(c => c + 1)
+      if (state.phase === 'lesson') setLessonCount(c => c + 1)
     }
 
     // Sound effect
@@ -583,6 +606,24 @@ export default function SessionPage() {
     // Show result briefly, then advance — don't wait for voice to finish
     const minDelay = (state.phase === 'warmup' || state.phase === 'closing') ? 800 : 1500
     setTimeout(() => {
+      // Session length caps — advance to financial phase if lesson is maxed out
+      if (state.phase === 'lesson') {
+        const maxLessonQuestions = yearLevel <= 3 ? 5
+                                 : yearLevel <= 6 ? 6
+                                 : yearLevel <= 10 ? 7
+                                 : 8
+        const maxSessionMinutes = yearLevel <= 3 ? 12 : 18
+        const sessionAge = (Date.now() - sessionStartTime.current) / 60000
+        // lessonCount is updated async via setState, so compare against newLessonCount directly
+        const newLessonCount = state.phase === 'lesson' && state.question ? lessonCount + 1 : lessonCount
+        if (newLessonCount >= maxLessonQuestions || sessionAge >= maxSessionMinutes) {
+          historyRef.current = []
+          setQuestionsInPhase(0)
+          phaseStartRef.current = Date.now()
+          fetchQuestion('financial')
+          return
+        }
+      }
       fetchQuestion(state.phase, selected, state.question || '', state.answer)
     }, minDelay)
   }
