@@ -33,6 +33,8 @@ export default function DashboardPage() {
   const [parentName, setParentName] = useState('')
   const [referralCode, setReferralCode] = useState<string | null>(null)
   const [referralCopied, setReferralCopied] = useState(false)
+  const [trialDaysLeft, setTrialDaysLeft] = useState<number | null>(null)
+  const [isTrialing, setIsTrialing] = useState(false)
   const [rewardSettings, setRewardSettings] = useState({ starsPerDollar: 20, weeklyStarCap: 200, rewardsPaused: false })
   const [rewardSettingsDraft, setRewardSettingsDraft] = useState({ starsPerDollar: 20, weeklyStarCap: 200, rewardsPaused: false })
   const [rewardSaving, setRewardSaving] = useState(false)
@@ -80,12 +82,18 @@ export default function DashboardPage() {
     }
     setParentName(name)
 
-    // Fetch account status (includes referral code)
+    // Fetch account status (includes referral code and trial info)
     fetch('/api/account/status', {
       headers: { 'Authorization': `Bearer ${localStorage.getItem('learni_parent_token')}` }
     })
       .then(r => r.json())
-      .then(d => { if (d.referralCode) setReferralCode(d.referralCode) })
+      .then(d => {
+        if (d.referralCode) setReferralCode(d.referralCode)
+        if (d.isTrialing) {
+          setIsTrialing(true)
+          setTrialDaysLeft(typeof d.daysLeft === 'number' ? d.daysLeft : null)
+        }
+      })
       .catch(() => {})
 
     // Fetch children
@@ -218,6 +226,21 @@ export default function DashboardPage() {
         <span style={{ fontFamily: "'Nunito', sans-serif", fontSize: '14px', fontWeight: 800, color: 'rgba(255,255,255,0.6)', letterSpacing: '0.08em', textTransform: 'uppercase' as const }}>The Hub</span>
         <a href="/account" style={{ position: 'absolute', right: '20px', top: '50%', transform: 'translateY(-50%)', fontSize: '13px', color: '#5a8a84', textDecoration: 'none', fontWeight: 500 }}>⚙️ Account</a>
       </div>
+
+      {/* Trial badge */}
+      {isTrialing && trialDaysLeft !== null && (
+        <div style={{ background: '#f0faf9', borderBottom: '1px solid rgba(46,196,182,0.15)', padding: '8px 24px', display: 'flex', justifyContent: 'center' }}>
+          <span style={{
+            display: 'inline-flex', alignItems: 'center', gap: '6px',
+            background: 'rgba(46,196,182,0.12)', color: '#1a9e92',
+            border: '1px solid rgba(46,196,182,0.25)', borderRadius: '20px',
+            padding: '4px 14px', fontSize: '13px', fontWeight: 600,
+          }}>
+            <span style={{ width: '6px', height: '6px', background: '#2ec4b6', borderRadius: '50%', display: 'inline-block' }} />
+            Free trial · {trialDaysLeft} day{trialDaysLeft !== 1 ? 's' : ''} remaining
+          </span>
+        </div>
+      )}
 
       <div className="dashboard-main" style={{ maxWidth: '800px', margin: '0 auto', padding: '24px' }}>
         {loading ? (
