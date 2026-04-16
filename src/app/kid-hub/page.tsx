@@ -107,7 +107,7 @@ export default function KidHubPage() {
         paddingBottom: '120px',
       }}>
         <SkeletonStyles />
-        <div style={{ maxWidth: '500px', margin: '0 auto', paddingTop: '20px' }}>
+        <div className="kid-hub-content" style={{ maxWidth: '500px', margin: '0 auto', paddingTop: '20px' }}>
           {/* Avatar skeleton */}
           <div style={{ textAlign: 'center', marginBottom: '32px' }}>
             <Skeleton width={120} height={120} borderRadius='50%' style={{ margin: '0 auto 16px' }} />
@@ -263,7 +263,7 @@ export default function KidHubPage() {
         </button>
       </div>
 
-      <div style={{ maxWidth: '500px', margin: '0 auto', padding: '24px' }}>
+      <div className="kid-hub-content" style={{ maxWidth: '500px', margin: '0 auto', padding: '24px' }}>
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: '32px', paddingTop: '4px' }}>
           {avatarUrl ? (
@@ -551,28 +551,15 @@ export default function KidHubPage() {
                         const inProgress = row && !isMastered && row.correct_count > 0
                         const pct = row ? Math.min(Math.round((row.correct_count / topic.mastery_threshold) * 100), 100) : 0
                         return (
-                        return (
-                          <button
-                            key={topic.id}
-                            onClick={() => {
-                              localStorage.setItem('learni_session_topic', topic.id)
-                              localStorage.setItem('learni_subject', 'Maths')
-                              localStorage.setItem('learni_session_mode', 'practice')
-                              window.location.href = '/session'
-                            }}
-                            style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '8px',
-                              padding: '8px 10px',
-                              background: isMastered ? 'rgba(46,196,182,0.08)' : inProgress ? 'rgba(245,166,35,0.08)' : 'rgba(255,255,255,0.03)',
-                              borderRadius: '8px',
-                              border: isMastered ? '1px solid rgba(46,196,182,0.15)' : inProgress ? '1px solid rgba(245,166,35,0.2)' : '1px solid rgba(255,255,255,0.06)',
-                              cursor: 'pointer',
-                              width: '100%',
-                              textAlign: 'left',
-                            }}
-                          >
+                          <div key={topic.id} style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            padding: '6px 8px',
+                            background: isMastered ? 'rgba(46,196,182,0.08)' : inProgress ? 'rgba(245,166,35,0.06)' : 'rgba(255,255,255,0.02)',
+                            borderRadius: '8px',
+                            border: isMastered ? '1px solid rgba(46,196,182,0.15)' : '1px solid transparent',
+                          }}>
                             <span style={{ fontSize: '14px', flexShrink: 0 }}>
                               {isMastered ? (tier === 3 ? '⭐' : '✅') : inProgress ? '🔶' : '⬜'}
                             </span>
@@ -595,9 +582,7 @@ export default function KidHubPage() {
                                 <div style={{ height: '100%', width: `${pct}%`, background: '#f5a623', borderRadius: '2px' }} />
                               </div>
                             )}
-                            <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.15)', marginLeft: '2px' }}>▶</span>
-                          </button>
-                        )
+                          </div>
                         )
                       })}
                     </div>
@@ -703,6 +688,9 @@ export default function KidHubPage() {
         </button>
       </div>
       <style jsx global>{`
+        @media (min-width: 768px) {
+          .kid-hub-content { max-width: 700px !important; }
+        }
         @media (max-width: 400px) {
           .kid-stats-grid { grid-template-columns: 1fr 1fr !important; }
         }
