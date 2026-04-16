@@ -55,7 +55,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'Learni — The AI Tutor That Pays Your Child to Learn',
-    description: 'Voice tutoring + real money rewards. NZ Curriculum. Year 1–13.',
+    description: 'Voice tutoring + real money rewards. Year 1–13. 7-day free trial.',
     images: ['/og-image.svg'],
   },
   robots: {
