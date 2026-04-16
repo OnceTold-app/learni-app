@@ -60,7 +60,7 @@ export default function SessionPage() {
   const [reviewTopics, setReviewTopics] = useState<string[]>([])
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [childProfile, setChildProfile] = useState<any>({})
-  const masteryResultsRef = useRef<Array<{ topic: string; correct: boolean }>>([])
+  const masteryResultsRef = useRef<Array<{ topic: string; correct: boolean; question?: string }>>([])
   const [audioChecked, setAudioChecked] = useState(false)
   const [audioCheckPlaying, setAudioCheckPlaying] = useState(false)
   const [accessBlocked, setAccessBlocked] = useState(false)
@@ -503,7 +503,7 @@ export default function SessionPage() {
 
     // Track mastery + question count
     if (state.question) {
-      masteryResultsRef.current.push({ topic: subject, correct: isCorrect })
+      masteryResultsRef.current.push({ topic: subject, correct: isCorrect, question: state.question || '' })
       setQuestionsInPhase(q => q + 1)
     }
 
