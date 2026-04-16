@@ -37,6 +37,9 @@ export default function KidHubPage() {
   const [factMastery, setFactMastery] = useState<FactMasteryData[]>([])
   const [masteryExpanded, setMasteryExpanded] = useState(false)
   const [showHeatmap, setShowHeatmap] = useState(false)
+  const [earningsExpanded, setEarningsExpanded] = useState(false)
+  const [ledger, setLedger] = useState<Array<{ id: string; type: string; stars: number; dollar_value: number | null; note: string | null; created_at: string; session_id: string | null }>>([]) 
+  const [lifetimeStats, setLifetimeStats] = useState<{ totalEarned: number; totalPaidOut: number; lastPayout: { dollar_value: number | null; created_at: string } | null }>({ totalEarned: 0, totalPaidOut: 0, lastPayout: null })
 
   useEffect(() => {
     const id = localStorage.getItem('learni_child_id')
@@ -89,6 +92,14 @@ export default function KidHubPage() {
       if (badgeRes.ok) {
         const badgeData = await badgeRes.json()
         setBadges(badgeData.badges || [])
+      }
+
+      // Load earnings ledger
+      const ledgerRes = await fetch(`/api/kid/ledger?childId=${childId}`)
+      if (ledgerRes.ok) {
+        const ledgerData = await ledgerRes.json()
+        setLedger(ledgerData.ledger || [])
+        setLifetimeStats(ledgerData.lifetimeStats || { totalEarned: 0, totalPaidOut: 0, lastPayout: null })
       }
     } catch {
       setStatsError(true)
@@ -666,6 +677,85 @@ export default function KidHubPage() {
           )}
         </div>
         {/* ─── END MASTERY MAP SECTION ──────────────────────────── */}
+
+        {/* ─── EARNINGS HISTORY SECTION ──────────────────────────── */}
+        <div style={{ marginBottom: '24px' }}>
+          <button
+            onClick={() => setEarningsExpanded(x => !x)}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              width: '100%',
+              background: 'rgba(255,255,255,0.04)',
+              border: '1px solid rgba(255,255,255,0.08)',
+              borderRadius: earningsExpanded ? '16px 16px 0 0' : '16px',
+              padding: '14px 18px',
+              cursor: 'pointer',
+              color: 'white',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <span style={{ fontSize: '20px' }}>💰</span>
+              <span style={{ fontFamily: "'Nunito', sans-serif", fontSize: '16px', fontWeight: 900 }}>Earnings History</span>
+            </div>
+            <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)' }}>{earningsExpanded ? '▲' : '▼'}</span>
+          </button>
+
+          {earningsExpanded && (
+            <div style={{
+              background: 'rgba(255,255,255,0.02)',
+              border: '1px solid rgba(255,255,255,0.06)',
+              borderTop: 'none',
+              borderRadius: '0 0 16px 16px',
+              padding: '16px',
+            }}>
+              {/* Lifetime total */}
+              <div style={{ marginBottom: '12px', padding: '12px', background: 'rgba(46,196,182,0.08)', borderRadius: '12px', border: '1px solid rgba(46,196,182,0.15)' }}>
+                <div style={{ fontSize: '15px', fontWeight: 800, color: '#2ec4b6', fontFamily: "'Nunito', sans-serif" }}>
+                  ⭐ {lifetimeStats.totalEarned.toLocaleString()} stars earned = ${(lifetimeStats.totalEarned / 20).toFixed(2)} total
+                </div>
+              </div>
+
+              {/* Last payout */}
+              <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.5)', marginBottom: '14px', fontWeight: 600 }}>
+                {lifetimeStats.lastPayout
+                  ? `Last paid: $${(lifetimeStats.lastPayout.dollar_value || 0).toFixed(2)} on ${new Date(lifetimeStats.lastPayout.created_at).toLocaleDateString('en-NZ', { day: 'numeric', month: 'short', year: 'numeric' })}`
+                  : 'Not paid out yet'}
+              </div>
+
+              {/* Ledger entries */}
+              {ledger.length === 0 ? (
+                <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.3)', textAlign: 'center', padding: '12px 0' }}>No earnings yet. Start a session!</div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  {ledger.map((entry, i) => (
+                    <div key={entry.id || i} style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      padding: '8px 12px',
+                      background: 'rgba(255,255,255,0.03)',
+                      borderRadius: '10px',
+                    }}>
+                      <div>
+                        <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)', marginBottom: '2px' }}>
+                          {new Date(entry.created_at).toLocaleDateString('en-NZ', { day: 'numeric', month: 'short' })}
+                        </div>
+                        <div style={{ fontSize: '13px', fontWeight: 700, color: entry.type === 'payout' ? '#4ade80' : '#2ec4b6' }}>
+                          {entry.type === 'payout'
+                            ? `💰 Paid out: ${entry.stars} ⭐${entry.dollar_value ? ` = $${Number(entry.dollar_value).toFixed(2)}` : ''}`
+                            : `+${entry.stars} ⭐ ${entry.note || 'Session'}`}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+        {/* ─── END EARNINGS HISTORY SECTION ──────────────────────────── */}
 
         {/* Recent sessions */}
         {sessions.length > 0 && (
