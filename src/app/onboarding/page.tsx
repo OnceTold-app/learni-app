@@ -63,6 +63,8 @@ export default function OnboardingPage() {
   const [parentGoals, setParentGoals] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [showSuccess, setShowSuccess] = useState(false)
+  const [successChildName, setSuccessChildName] = useState('')
 
   const totalSteps = 4
 
@@ -97,7 +99,9 @@ export default function OnboardingPage() {
       localStorage.setItem('learni_child_name', data.child.name)
       localStorage.setItem('learni_year_level', String(data.child.year_level))
 
-      window.location.href = '/dashboard'
+      setShowSuccess(true)
+      setSuccessChildName(name)
+      setTimeout(() => { window.location.href = '/dashboard' }, 3000)
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Something went wrong')
     } finally {
@@ -110,6 +114,16 @@ export default function OnboardingPage() {
     borderRadius: '12px', fontSize: '16px', fontFamily: "'Plus Jakarta Sans', sans-serif",
     outline: 'none', boxSizing: 'border-box' as const, background: 'white',
   }
+
+  if (showSuccess) return (
+    <div style={{ minHeight:'100vh', background:'#0d2b28', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', fontFamily:"'Plus Jakarta Sans',sans-serif", padding:'24px', textAlign:'center' }}>
+      <div style={{ fontSize:'72px', marginBottom:'24px' }}>🎉</div>
+      <h1 style={{ fontFamily:"'Nunito',sans-serif", fontSize:'32px', fontWeight:900, color:'white', marginBottom:'12px' }}>{successChildName} is all set!</h1>
+      <p style={{ color:'rgba(255,255,255,0.5)', fontSize:'16px', marginBottom:'40px', maxWidth:'340px' }}>Your Hub is ready — start a session whenever you like.</p>
+      <a href="/dashboard" style={{ display:'inline-block', background:'#2ec4b6', color:'#0d2b28', padding:'16px 40px', borderRadius:'30px', fontFamily:"'Nunito',sans-serif", fontSize:'18px', fontWeight:900, textDecoration:'none', boxShadow:'0 8px 32px rgba(46,196,182,0.3)' }}>Go to my Hub →</a>
+      <p style={{ color:'rgba(255,255,255,0.25)', fontSize:'12px', marginTop:'20px' }}>Taking you there automatically in 3 seconds...</p>
+    </div>
+  )
 
   return (
     <div style={{
