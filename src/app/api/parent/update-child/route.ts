@@ -77,3 +77,6 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json({ success: true })
 }
+
+// PATCH is an alias for POST — same logic, both method names accepted
+export const PATCH = POST
