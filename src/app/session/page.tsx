@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import MathsVisual from '@/components/maths-visual'
+import EarniFAB from '@/components/earni-fab'
 
 type Phase = 'warmup' | 'lesson' | 'financial' | 'closing' | 'reward'
 // Note: 'reward' phase no longer shows jar allocation — vault lives on kid hub
@@ -199,14 +200,15 @@ export default function SessionPage() {
     recognition.start()
   }
 
-  // Auto-listen after Earni finishes speaking — ALWAYS when mic is on
+  // Stop audio immediately when voiceEnabled is toggled off
   useEffect(() => {
-    if (!speaking && micEnabled && !paused && state.sessionStarted) {
-      const timer = setTimeout(() => startListening(), 500)
-      return () => clearTimeout(timer)
+    if (!voiceEnabled && audioRef.current) {
+      audioRef.current.pause()
+      audioRef.current = null
+      setSpeaking(false)
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [speaking, micEnabled, paused, state.sessionStarted, state.earniSays])
+  }, [voiceEnabled])
   const [showHintOffer, setShowHintOffer] = useState(false)
   const hintTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [celebration, setCelebration] = useState<string | null>(null)
@@ -1139,6 +1141,7 @@ export default function SessionPage() {
           <span style={{ fontSize: '14px', fontWeight: 900, fontFamily: "'Nunito', sans-serif" }}>
             {state.phaseLabel}
           </span>
+          <EarniFAB context="in_session" sessionStyle={true} currentQuestion={state.question || undefined} currentTopic={sessionTopic || undefined} />
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           {isRapidFire && state.streakCount > 0 && (
@@ -1156,19 +1159,16 @@ export default function SessionPage() {
             </span>
           )}
           <button
-            onClick={() => {
-              setVoiceEnabled(v => !v)
-              if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; setSpeaking(false) }
-            }}
+            onClick={() => setVoiceEnabled(v => !v)}
             style={{
-              background: 'rgba(255,255,255,0.06)',
-              border: '1px solid rgba(255,255,255,0.1)',
-              borderRadius: '20px',
-              padding: '4px 10px',
-              fontSize: '13px',
-              cursor: 'pointer',
-              color: voiceEnabled ? '#2ec4b6' : 'rgba(255,255,255,0.3)',
+              width: '36px', height: '36px', borderRadius: '50%',
+              background: voiceEnabled ? 'rgba(46,196,182,0.15)' : 'rgba(255,255,255,0.08)',
+              border: `1px solid ${voiceEnabled ? 'rgba(46,196,182,0.3)' : 'rgba(255,255,255,0.15)'}`,
+              color: voiceEnabled ? '#2ec4b6' : 'rgba(255,255,255,0.4)',
+              cursor: 'pointer', fontSize: '16px',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}
+            aria-label={voiceEnabled ? 'Mute Earni' : 'Unmute Earni'}
           >
             {voiceEnabled ? (speaking ? '🗣️' : '🔊') : '🔇'}
           </button>
@@ -1520,8 +1520,12 @@ export default function SessionPage() {
                 <button
                   onClick={() => {
                     lastActivityRef.current = Date.now()
-                    if (!micEnabled) setMicEnabled(true)
-                    startListening(true) // force=true stops Earni speaking
+                    if (listening) {
+                      recognitionRef.current?.stop()
+                    } else {
+                      if (!micEnabled) setMicEnabled(true)
+                      startListening(true)
+                    }
                   }}
                   style={{
                     width: '100%',
@@ -1542,7 +1546,7 @@ export default function SessionPage() {
                   }}
                 >
                   <span style={{ fontSize: '18px' }}>{listening ? '🔴' : '🎤'}</span>
-                  {listening ? 'Listening... speak your answer' : 'Or tap to speak'}
+                  {listening ? 'Listening... tap to stop' : '🎤 Tap to speak'}
                 </button>
               </div>
             ) : (
