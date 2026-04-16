@@ -60,6 +60,9 @@ export default function DashboardPage() {
   const [childWeeklyStats, setChildWeeklyStats] = useState<Record<string, WeeklyStats>>({})
   const [childLastSession, setChildLastSession] = useState<Record<string, string>>({})
   const [applyToAll, setApplyToAll] = useState(false)
+  const [statsPeriod, setStatsPeriod] = useState<'week' | 'month' | 'all'>('week')
+  const [periodStars, setPeriodStars] = useState<number | null>(null)
+  const [periodStreak, setPeriodStreak] = useState<number | null>(null)
   const lastActivityRef = useRef(Date.now())
 
   // Inactivity timeout — log parent out after 10 minutes
@@ -160,8 +163,28 @@ export default function DashboardPage() {
     if (selectedChild) {
       fetchSessions(selectedChild)
       fetchRewardSettings(selectedChild)
+      fetchPeriodStats(selectedChild, statsPeriod)
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedChild])
+
+  useEffect(() => {
+    if (selectedChild) {
+      fetchPeriodStats(selectedChild, statsPeriod)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [statsPeriod])
+
+  async function fetchPeriodStats(childId: string, period: 'week' | 'month' | 'all') {
+    try {
+      const res = await fetch(`/api/kid/stats?childId=${childId}&period=${period}`)
+      if (res.ok) {
+        const data = await res.json()
+        setPeriodStars(data.totalStars ?? 0)
+        setPeriodStreak(data.streak ?? 0)
+      }
+    } catch { /* */ }
+  }
 
   async function fetchRewardSettings(childId: string) {
     try {
@@ -533,6 +556,22 @@ export default function DashboardPage() {
               )}
             </div>
 
+            {/* Stats period toggle */}
+            <div style={{ display: 'flex', gap: '4px', marginBottom: '12px', background: 'rgba(13,43,40,0.04)', borderRadius: '12px', padding: '4px', width: 'fit-content' }}>
+              {(['week', 'month', 'all'] as const).map(p => (
+                <button key={p} onClick={() => setStatsPeriod(p)} style={{
+                  padding: '6px 14px', borderRadius: '8px', border: 'none', cursor: 'pointer',
+                  fontSize: '12px', fontWeight: 700, fontFamily: "'Plus Jakarta Sans', sans-serif",
+                  background: statsPeriod === p ? 'white' : 'transparent',
+                  color: statsPeriod === p ? '#0d2b28' : '#5a8a84',
+                  boxShadow: statsPeriod === p ? '0 1px 4px rgba(0,0,0,0.08)' : 'none',
+                  transition: 'all 0.15s',
+                }}>
+                  {p === 'week' ? 'This week' : p === 'month' ? 'This month' : 'All time'}
+                </button>
+              ))}
+            </div>
+
             {/* Stats cards */}
             <div className="dashboard-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '24px' }}>
               <div style={{
@@ -542,7 +581,7 @@ export default function DashboardPage() {
                 boxShadow: '0 2px 12px rgba(0,0,0,0.04)',
               }}>
                 <div style={{ fontSize: '11px', fontWeight: 600, color: '#5a8a84', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '4px' }}>Stars earned</div>
-                <div style={{ fontSize: '32px', fontWeight: 900, fontFamily: "'Nunito', sans-serif", color: '#f5a623' }}>⭐ {totalStars}</div>
+                <div style={{ fontSize: '32px', fontWeight: 900, fontFamily: "'Nunito', sans-serif", color: '#f5a623' }}>⭐ {periodStars !== null ? periodStars : totalStars}</div>
               </div>
               <div style={{
                 background: 'white',
@@ -560,7 +599,7 @@ export default function DashboardPage() {
                 boxShadow: '0 2px 12px rgba(0,0,0,0.04)',
               }}>
                 <div style={{ fontSize: '11px', fontWeight: 600, color: '#5a8a84', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '4px' }}>Streak</div>
-                <div style={{ fontSize: '32px', fontWeight: 900, fontFamily: "'Nunito', sans-serif", color: '#0d2b28' }}>🔥 {child?.streak_days || 0}</div>
+                <div style={{ fontSize: '32px', fontWeight: 900, fontFamily: "'Nunito', sans-serif", color: '#0d2b28' }}>🔥 {periodStreak !== null ? periodStreak : (child?.streak_days || 0)}</div>
               </div>
             </div>
 
