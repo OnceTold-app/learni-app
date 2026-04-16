@@ -603,8 +603,8 @@ export default function DashboardPage() {
                   <input
                     type="number"
                     min={0}
-                    placeholder="No cap"
-                    value={rewardSettingsDraft.weeklyStarCap || ''}
+                    placeholder={!rewardSettingsDraft.weeklyStarCap || rewardSettingsDraft.weeklyStarCap === 0 ? 'No cap' : ''}
+                    value={rewardSettingsDraft.weeklyStarCap > 0 ? rewardSettingsDraft.weeklyStarCap : ''}
                     onChange={e => setRewardSettingsDraft(prev => ({ ...prev, weeklyStarCap: parseInt(e.target.value) || 0 }))}
                     style={{
                       width: '100%',
