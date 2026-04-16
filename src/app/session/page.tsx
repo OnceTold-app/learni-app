@@ -1002,7 +1002,7 @@ export default function SessionPage() {
   }
 
   return (
-    <div style={{
+    <div className="session-outer" style={{
       minHeight: '100vh',
       background: '#0d2b28',
       color: 'white',
@@ -1011,7 +1011,7 @@ export default function SessionPage() {
       flexDirection: 'column',
     }}>
       {/* Top bar */}
-      <div style={{
+      <div className="session-topbar" style={{
         padding: '12px 20px',
         display: 'flex',
         alignItems: 'center',
@@ -2024,6 +2024,10 @@ export default function SessionPage() {
           max-width: 1000px;
           margin: 0 auto;
           width: 100%;
+        }
+        @media (min-width: 768px) {
+          .session-topbar { max-width: 860px; width: 100%; margin: 0 auto; }
+          .session-content { max-width: 860px; }
         }
         @media (max-width: 480px) {
           .session-content {
