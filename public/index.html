@@ -199,7 +199,10 @@ display: flex; align-items: center; justify-content: space-between;
 .ans { background: rgba(255,255,255,0.05); border: 1.5px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 14px 18px; font-family: 'Nunito', sans-serif; font-size: 17px; font-weight: 900; color: white; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; justify-content: space-between; }
 .ans:hover { border-color: rgba(46,196,182,0.4); background: rgba(46,196,182,0.07); }
 .ans.correct { background: rgba(46,196,182,0.12); border-color: var(--turq); color: rgba(178,240,236,0.9); }
-.ans .tick { opacity:0; font-size:16px; transition:opacity .15s; }
+
+.ans.correct::after { content: ' ✓'; }
+.ans.wrong::after { content: ' ✗'; }
+
 .ans.correct .tick { opacity:1; }
 .star-moment { background: rgba(245,166,35,0.08); border: 1px solid rgba(245,166,35,0.18); border-radius: 12px; padding: 13px 16px; display: flex; align-items: center; gap: 12px; margin-top: 4px; }
 .sm-icon { font-size:22px; }
@@ -360,6 +363,9 @@ footer { background: #070f0e; padding: 32px 24px; }
 /* Accessibility: keyboard focus indicator */
 :focus-visible { outline: 2px solid #0d2b28; outline-offset: 2px; border-radius: 4px; }
 
+#cookie-banner button:focus-visible { outline: 2px solid #0d2b28; outline-offset: 2px; }
+
+
 /* Mobile hamburger menu */
 .nav-hamburger { display:none; flex-direction:column; gap:5px; background:none; border:none; cursor:pointer; padding:4px; }
 .nav-hamburger span { display:block; width:24px; height:2px; background:#0d2b28; border-radius:2px; transition:all 0.2s; }
@@ -395,6 +401,7 @@ footer { background: #070f0e; padding: 32px 24px; }
   "mainEntity": [{"@type":"Question","name":'What subjects does Learni cover?',"acceptedAnswer":{"@type":"Answer","text":'Learni supports primary and secondary school students, broadly ages 5-18. On the first session, Earni runs a quick baseline check to find your child&apos;s exact level — so they&apos;re never doing work that&apos;s too easy or too hard. Content scales from early number recognition right through to advanced algebra and essay writing.'}},{"@type":"Question","name":'What ages and year levels does Learni support?',"acceptedAnswer":{"@type":"Answer","text":'No. Earni speaks - your child taps their answer or types short answers on screen. Earni uses voice + visual maths (dot arrays, fraction pies, number lines) so kids see and hear the concept at once. Works perfectly on any phone, tablet, or computer.'}},{"@type":"Question","name":'Does my child need to speak out loud?',"acceptedAnswer":{"@type":"Answer","text":'Learni tracks stars and converts them to a dollar amount based on the rate you set. We show you what your child has earned - you pay them however you like (cash, bank transfer, anything). The 3-jar system splits earnings into Save, Spend, and Give jars. We never hold or move money. No banking licence involved on our end, and no risk on yours.'}},{"@type":"Question","name":'How does the reward money work exactly?',"acceptedAnswer":{"@type":"Answer","text":'Yes. Each child has their own username and PIN they use to sign in — but everything runs securely under the parent account. Parents have full visibility and control at all times. Data is stored in Australia and never shared with third parties or used to train AI models. No ads, ever.'}},{"@type":"Question","name":"Is my child's data safe?","acceptedAnswer":{"@type":"Answer","text":'Most platforms give your child content to read or watch. Learni is different in two big ways: Earni actually speaks to your child — asking questions, giving encouragement, and adapting in real time. And it&apos;s the only platform that ties learning to a real money reward system you control. That combination gives children a reason to keep showing up that no worksheet or video can match.'}},{"@type":"Question","name":'How is Learni different from other tutoring platforms?',"acceptedAnswer":{"@type":"Answer","text":'Any modern device with a browser: iPhone, Android, iPad, laptop, desktop. No app download required, though you can install it to your home screen as a Progressive Web App (PWA) for a near-native experience. Works best on a phone or tablet where your child taps answers.'}},{"@type":"Question","name":'What devices does Learni work on?',"acceptedAnswer":{"@type":"Answer","text":"Yes. Cancel any time from your Parent Hub in one click. No phone calls, no guilt trip, no forms. If you cancel during a billing period, you keep access until the end of that period. We don't do sneaky auto-renewals - you'll always know what you're paying and when."}},{"@type":"Question","name":'Can I cancel or pause at any time?',"acceptedAnswer":{"@type":"Answer","text":"A full session runs 15-30 minutes and covers a warm-up, a main lesson (voice + visuals), a financial literacy segment, a rapid-fire close, and a reward moment. Kids can also do shorter 10-minute practice sessions or quick challenge rounds. Earni adapts the length to your child's focus."}},{"@type":"Question","name":'How long are sessions?',"acceptedAnswer":{"@type":"Answer","text":'Yes. The base plan is $49/month for one child. Each additional child is +$19/month. So two children = $68, three = $87, four = $106. All children share the parent Hub, have their own avatar, progress, and reward tracking. Much cheaper than one tutoring session for one child.'}}]
 }
 </script>
+<link rel="icon" href="/icons/icon-192.png" type="image/png">
 </head>
 <body>
 <a href="#main-content" class="skip-link">Skip to main content</a>
@@ -428,11 +435,12 @@ footer { background: #070f0e; padding: 32px 24px; }
 <main id="main-content">
 <section class="hero">
 <h1 class="hero-title reveal">Learn it. <br><em>Earn it.</em></h1>
-<p class="hero-body reveal">Earni is your child's AI tutor — and pays them real money for getting it right.</p>
+<p class="hero-body reveal">Earni — your child's AI tutor inside Learni — pays them real money for getting it right.</p>
 <div class="hero-actions reveal">
 <a href="/signup" class="btn-primary">Start free →</a>
 <a href="#demo" class="btn-text">See it in action <span>↓</span></a>
 </div>
+<p class="hero-nz reveal" style="font-size:12px;color:#3a6e69;margin-bottom:8px;">🇳🇿 Built for NZ schools · Year 1–13 · NZD pricing</p>
 <p class="hero-trust reveal" style="font-size:13px;color:rgba(13,43,40,0.8);margin-bottom:20px">7-day free trial &nbsp;·&nbsp; Cancel anytime</p>
 <div class="hero-product reveal" style="position:relative">
 <div class="hero-float hf-left">
@@ -473,7 +481,7 @@ footer { background: #070f0e; padding: 32px 24px; }
 </section>
 
 <section class="price-truth">
-<div class="pt-label">The honest comparison</div>
+
 <div class="pt-comparison reveal">
 <div class="pt-item"><div class="pt-brand old">Tutoring Centre</div><div class="pt-price old">$288</div><div class="pt-detail old">per month · one subject</div></div>
 <div class="pt-divider"></div>
@@ -522,8 +530,8 @@ footer { background: #070f0e; padding: 32px 24px; }
 </div>
 <div class="demo-answer-side">
 <div class="da-label">Tap your answer</div>
-<button type="button" class="ans correct" onclick="pick(this)" aria-label="Answer A: 12 (correct)">A · 12 <span class="tick" aria-hidden="true">✓</span></button>
-<button type="button" class="ans" onclick="pick(this)" aria-label="Answer B: 15">B · 15 <span class="tick" aria-hidden="true">✓</span></button>
+<button type="button" class="ans correct" onclick="pick(this)" aria-label="Answer A: 12 (correct)">A · 12</button>
+<button type="button" class="ans" onclick="pick(this)" aria-label="Answer B: 15">B · 15</button>
 <button type="button" class="ans" onclick="pick(this)" role="button" tabindex="0" aria-label="Answer C: 18">C · 18 <span class="tick">✓</span></div>
 <button type="button" class="ans" onclick="pick(this)" role="button" tabindex="0" aria-label="Answer D: 20">D · 20 <span class="tick">✓</span></div>
 <div class="star-moment">
@@ -545,7 +553,7 @@ footer { background: #070f0e; padding: 32px 24px; }
 <div class="bento-hero">
 <div class="bh-text">
 <div class="bh-kicker">No other tutoring app does this</div>
-<h3 class="bh-title">Stars convert to<br>real money</h3>
+<h3 class="bh-title">Stars convert to <br>real money</h3>
 <p class="bh-body">Every correct answer earns stars. Stars convert to dollars tracked in the Hub. <strong style="color:rgba(255,255,255,0.8);">You set the rate. You pay the reward. Earni just does the tracking.</strong> No bank account needed. No app wallet. Just a tracker that tells you exactly what you owe.</p>
 <p class="bh-body" style="margin-top:12px;">And once they earn it, Earni teaches them what to do with it — save, spend, give. Real money habits start here.</p>
 </div>
@@ -589,8 +597,8 @@ footer { background: #070f0e; padding: 32px 24px; }
 <!-- TESTIMONIALS — replaced with beta invite CTA until we have real quotes -->
 <section class="testimonials" id="early-access">
 <div class="container" style="text-align:center">
-<div class="section-label" id="early-access">Early access</div>
-<h2 class="section-title reveal">Start your free trial today</h2>
+<div class="section-label" id="early-access">Our story</div>
+<h2 class="section-title reveal">Why we built Learni</h2>
 <p class="section-body reveal" style="margin-bottom:32px;max-width:560px;margin-left:auto;margin-right:auto">Try Learni free for 7 days — full access, no credit card needed.</p>
 <div class="reveal" style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin-bottom:32px">
 <div style="background:white;border-radius:16px;padding:24px 28px;text-align:center;box-shadow:0 2px 12px rgba(0,0,0,0.04);max-width:200px">
@@ -647,7 +655,7 @@ footer { background: #070f0e; padding: 32px 24px; }
 <h2 class="section-title reveal">Everything answered</h2>
 <p class="section-body reveal" style="margin-bottom:48px;">Can't find what you need? Email <a href="mailto:hello@learniapp.co" style="color:#1a7a72">hello@learniapp.co</a></p>
 <div class="faq-list">
-<div class="faq-item open"><button type="button" class="faq-q" onclick="faq(this)" aria-expanded="false">What subjects does Learni cover?<div class="faq-icon">+</div></button><div class="faq-a">Learni covers three subjects: Maths (number, operations, geometry, and more), Reading & Writing (comprehension, spelling, and expression), and Money & Life (financial literacy — saving, spending, giving, and real-world money skills). All three are aligned to the NZ curriculum, Year 1–13. More subjects will be added after launch.<span lang="mi">Te Reo Māori</span> (greetings, numbers, colours, conversation). Financial literacy is woven into every Maths session. More subjects coming soon.</div></div>
+<div class="faq-item open"><button type="button" class="faq-q" onclick="faq(this)" aria-expanded="false">What subjects does Learni cover?<div class="faq-icon">+</div></button><div class="faq-a">Learni covers three subjects: Maths (number, operations, geometry, and more), Reading & Writing (comprehension, spelling, and expression), and Money & Life (financial literacy — saving, spending, giving, and real-world money skills). All three are aligned to the NZ curriculum, Year 1–13. <span lang="mi">Te Reo Māori</span> (greetings, numbers, colours, conversation). Financial literacy is woven into every Maths session. .</div></div>
 <div class="faq-item"><button type="button" class="faq-q" onclick="faq(this)" aria-expanded="false">What ages and year levels does Learni support?<div class="faq-icon">+</div></button><div class="faq-a">Learni supports primary and secondary school students, broadly ages 5-18. On the first session, Earni runs a quick baseline check to find your child&apos;s exact level — so they&apos;re never doing work that&apos;s too easy or too hard. Content scales from early number recognition right through to advanced algebra and essay writing.</div></div>
 <div class="faq-item"><button type="button" class="faq-q" onclick="faq(this)" aria-expanded="false">Does my child need to speak out loud?<div class="faq-icon">+</div></button><div class="faq-a">No. Earni speaks - your child taps their answer or types short answers on screen. Earni uses voice + visual maths (dot arrays, fraction pies, number lines) so kids see and hear the concept at once. Works perfectly on any phone, tablet, or computer.</div></div>
 <div class="faq-item"><button type="button" class="faq-q" onclick="faq(this)" aria-expanded="false">How does the reward money work exactly?<div class="faq-icon">+</div></button><div class="faq-a">Learni tracks stars and converts them to a dollar amount based on the rate you set. We show you what your child has earned - you pay them however you like (cash, bank transfer, anything). The 3-jar system splits earnings into Save, Spend, and Give jars. We never hold or move money. No banking licence involved on our end, and no risk on yours.</div></div>
@@ -674,7 +682,7 @@ footer { background: #070f0e; padding: 32px 24px; }
 <span>✓ No credit card</span>
 <span>✓ Cancel anytime</span>
 <span>✓ Full access instantly</span>
-<span>✓ Hosted in Australia</span>
+<span>✓ Hosted in Australia (AWS Sydney — closest secure region to NZ)</span>
 </div>
 </div>
 </section>
@@ -688,10 +696,10 @@ footer { background: #070f0e; padding: 32px 24px; }
 <a href="mailto:hello@learniapp.co">Contact</a>
 </div>
 <div style="display:flex;gap:16px;align-items:center;">
-<a href="https://www.facebook.com/profile.php?id=103056522650809" target="_blank" rel="noopener" aria-label="Learni on Facebook" style="color:rgba(255,255,255,0.4);text-decoration:none;font-size:18px;">
+<a href="https://www.facebook.com/profile.php?id=103056522650809" target="_blank" rel="noopener noreferrer" aria-label="Learni on Facebook" style="color:rgba(255,255,255,0.4);text-decoration:none;font-size:18px;">
 <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
 </a>
-<a href="https://www.instagram.com/learniapp" target="_blank" rel="noopener" aria-label="Learni on Instagram" style="color:rgba(255,255,255,0.4);text-decoration:none;font-size:18px;">
+<a href="https://www.instagram.com/learniapp" target="_blank" rel="noopener noreferrer" aria-label="Learni on Instagram" style="color:rgba(255,255,255,0.4);text-decoration:none;font-size:18px;">
 <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
 </a>
 </div>
