@@ -1278,46 +1278,75 @@ export default function SessionPage() {
             </div>
 
             {state.selectedAnswer === null ? (
-              <form onSubmit={(e) => { e.preventDefault(); handleTypedSubmit() }} style={{ display: 'flex', gap: '10px' }}>
-                <input
-                  type="text"
-                  value={typedAnswer}
-                  onChange={e => setTypedAnswer(e.target.value)}
-                  placeholder="Type your answer..."
-                  autoFocus
-                  style={{
-                    flex: 1,
-                    padding: '14px 18px',
-                    background: 'rgba(255,255,255,0.08)',
-                    border: '1.5px solid rgba(255,255,255,0.15)',
-                    borderRadius: '14px',
-                    fontSize: '20px',
-                    fontWeight: 800,
-                    fontFamily: "'Nunito', sans-serif",
-                    color: 'white',
-                    outline: 'none',
-                    textAlign: 'center',
-                    boxSizing: 'border-box',
-                  }}
-                />
+              <div>
+                <form onSubmit={(e) => { e.preventDefault(); handleTypedSubmit() }} style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
+                  <input
+                    type="text"
+                    value={typedAnswer}
+                    onChange={e => setTypedAnswer(e.target.value)}
+                    placeholder="Type your answer..."
+                    autoFocus
+                    style={{
+                      flex: 1,
+                      padding: '14px 18px',
+                      background: 'rgba(255,255,255,0.08)',
+                      border: '1.5px solid rgba(255,255,255,0.15)',
+                      borderRadius: '14px',
+                      fontSize: '20px',
+                      fontWeight: 800,
+                      fontFamily: "'Nunito', sans-serif",
+                      color: 'white',
+                      outline: 'none',
+                      textAlign: 'center',
+                      boxSizing: 'border-box',
+                    }}
+                  />
+                  <button
+                    type="submit"
+                    disabled={!typedAnswer.trim()}
+                    style={{
+                      padding: '14px 24px',
+                      background: typedAnswer.trim() ? '#2ec4b6' : 'rgba(46,196,182,0.3)',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '14px',
+                      fontFamily: "'Nunito', sans-serif",
+                      fontSize: '16px',
+                      fontWeight: 900,
+                      cursor: typedAnswer.trim() ? 'pointer' : 'not-allowed',
+                    }}
+                  >
+                    Go
+                  </button>
+                </form>
                 <button
-                  type="submit"
-                  disabled={!typedAnswer.trim()}
+                  onClick={() => {
+                    lastActivityRef.current = Date.now()
+                    if (!micEnabled) setMicEnabled(true)
+                    startListening()
+                  }}
                   style={{
-                    padding: '14px 24px',
-                    background: typedAnswer.trim() ? '#2ec4b6' : 'rgba(46,196,182,0.3)',
-                    color: 'white',
-                    border: 'none',
+                    width: '100%',
+                    padding: '12px',
+                    background: listening ? 'rgba(239,68,68,0.12)' : 'rgba(255,255,255,0.04)',
+                    border: `1.5px solid ${listening ? 'rgba(239,68,68,0.35)' : 'rgba(255,255,255,0.1)'}`,
                     borderRadius: '14px',
+                    color: listening ? '#ef4444' : 'rgba(255,255,255,0.45)',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    fontSize: '14px',
+                    fontWeight: 600,
                     fontFamily: "'Nunito', sans-serif",
-                    fontSize: '16px',
-                    fontWeight: 900,
-                    cursor: typedAnswer.trim() ? 'pointer' : 'not-allowed',
+                    transition: 'all 0.2s',
                   }}
                 >
-                  Go
+                  <span style={{ fontSize: '18px' }}>{listening ? '🔴' : '🎤'}</span>
+                  {listening ? 'Listening... speak your answer' : 'Or tap to speak'}
                 </button>
-              </form>
+              </div>
             ) : (
               <div style={{
                 padding: '14px 18px',
