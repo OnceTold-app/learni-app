@@ -406,18 +406,29 @@ export default function SessionPage() {
 
   // Inactivity detection - pause after 45 seconds of no interaction
   useEffect(() => {
+    // Auto-pause threshold by year level — longer for younger kids who need thinking time
+    const idleThreshold = yearLevel <= 3 ? 90000   // 90s for Year 1-3
+                        : yearLevel <= 6 ? 60000   // 60s for Year 4-6
+                        : yearLevel <= 10 ? 45000  // 45s for Year 7-10
+                        : 30000                    // 30s for Year 11-13
     const inactivityCheck = setInterval(() => {
       if (paused) return
       const idle = Date.now() - lastActivityRef.current
-      if (idle > 45000 && !state.loading && state.sessionStarted) {
+      if (idle > idleThreshold && !state.loading && state.sessionStarted) {
         setPaused(true)
         pausedTimeRef.current = Date.now()
         if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; setSpeaking(false) }
         if (recognitionRef.current) { try { recognitionRef.current.stop() } catch { /* */ } }
+        // For Year 1-3, speak the pause message aloud
+        if (yearLevel <= 3) {
+          const pauseMsg = "No worries — I'm still here. Take your time."
+          fetch('/api/speak', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: pauseMsg }) })
+            .then(r => r.blob()).then(blob => { const a = new Audio(URL.createObjectURL(blob)); a.play().catch(() => {}) }).catch(() => {})
+        }
       }
     }, 5000)
     return () => clearInterval(inactivityCheck)
-  }, [paused, state.loading, state.sessionStarted])
+  }, [paused, state.loading, state.sessionStarted, yearLevel])
 
   // 20-minute inactivity — show "Are you still there?" overlay, then auto-logout after 60s
   useEffect(() => {
@@ -522,7 +533,12 @@ export default function SessionPage() {
       return
     }
 
-    const isCorrect = selected.toLowerCase().trim() === state.answer.toLowerCase().trim()
+    const wordToNum: Record<string,string> = {'zero': '0', 'one': '1', 'two': '2', 'three': '3', 'four': '4', 'five': '5', 'six': '6', 'seven': '7', 'eight': '8', 'nine': '9', 'ten': '10', 'eleven': '11', 'twelve': '12', 'thirteen': '13', 'fourteen': '14', 'fifteen': '15', 'sixteen': '16', 'seventeen': '17', 'eighteen': '18', 'nineteen': '19', 'twenty': '20'}
+    const normaliseAnswer = (s: string) => {
+      const lower = s.toLowerCase().trim()
+      return wordToNum[lower] || lower
+    }
+    const isCorrect = normaliseAnswer(selected) === normaliseAnswer(state.answer)
     const newStreak = isCorrect ? state.streakCount + 1 : 0
     const newPB = Math.max(state.personalBest, newStreak)
     const newStars = isCorrect ? state.starsEarned + 4 : state.starsEarned
@@ -1348,6 +1364,35 @@ export default function SessionPage() {
 
             {state.selectedAnswer === null ? (
               <div>
+                {yearLevel <= 4 ? (
+                  /* Number pad for Year 1-4 — large tap targets, no keyboard required */
+                  <div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', marginBottom: '10px' }}>
+                      {['1','2','3','4','5','6','7','8','9','','0','⌫'].map((key) => (
+                        <button key={key} onClick={() => {
+                          if (!key) return
+                          if (key === '⌫') setTypedAnswer(a => a.slice(0,-1))
+                          else setTypedAnswer(a => a + key)
+                        }} style={{
+                          height: '64px', fontSize: '24px', fontWeight: 900,
+                          fontFamily: "'Nunito', sans-serif",
+                          background: key === '⌫' ? 'rgba(255,255,255,0.08)' : key === '' ? 'transparent' : 'rgba(255,255,255,0.1)',
+                          border: '1.5px solid rgba(255,255,255,0.12)',
+                          borderRadius: '14px', color: 'white', cursor: key ? 'pointer' : 'default',
+                          visibility: key === '' ? 'hidden' : 'visible',
+                        }}>
+                          {key}
+                        </button>
+                      ))}
+                    </div>
+                    <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
+                      <div style={{ flex: 1, padding: '14px 18px', background: 'rgba(255,255,255,0.08)', border: '1.5px solid rgba(255,255,255,0.15)', borderRadius: '14px', fontSize: '24px', fontWeight: 800, fontFamily: "'Nunito', sans-serif", color: 'white', textAlign: 'center', minHeight: '54px' }}>
+                        {typedAnswer || <span style={{ opacity: 0.3 }}>?</span>}
+                      </div>
+                      <button onClick={handleTypedSubmit} disabled={!typedAnswer.trim()} style={{ padding: '14px 24px', background: typedAnswer.trim() ? '#2ec4b6' : 'rgba(46,196,182,0.3)', color: typedAnswer.trim() ? '#0d2b28' : 'white', border: 'none', borderRadius: '14px', fontFamily: "'Nunito', sans-serif", fontSize: '16px', fontWeight: 900, cursor: typedAnswer.trim() ? 'pointer' : 'not-allowed' }}>Go</button>
+                    </div>
+                  </div>
+                ) : (
                 <form onSubmit={(e) => { e.preventDefault(); handleTypedSubmit() }} style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
                   <input
                     type="text"
@@ -1388,6 +1433,7 @@ export default function SessionPage() {
                     Go
                   </button>
                 </form>
+                )}
                 <button
                   onClick={() => {
                     lastActivityRef.current = Date.now()
