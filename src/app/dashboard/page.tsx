@@ -178,7 +178,7 @@ export default function DashboardPage() {
         <a href="/account" style={{ position: 'absolute', right: '20px', top: '50%', transform: 'translateY(-50%)', fontSize: '13px', color: '#5a8a84', textDecoration: 'none', fontWeight: 500 }}>⚙️ Account</a>
       </div>
 
-      <div style={{ maxWidth: '800px', margin: '0 auto', padding: '24px' }}>
+      <div className="dashboard-main" style={{ maxWidth: '800px', margin: '0 auto', padding: '24px' }}>
         {loading ? (
           <>
             <SkeletonStyles />
@@ -663,6 +663,9 @@ export default function DashboardPage() {
 
       <style jsx global>{`
         @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap');
+        @media (min-width: 768px) {
+          .dashboard-main { max-width: 900px !important; margin: 0 auto !important; }
+        }
         @media (max-width: 480px) {
           .dashboard-stats-grid { grid-template-columns: 1fr 1fr !important; }
           .dashboard-child-card { padding: 16px !important; }
