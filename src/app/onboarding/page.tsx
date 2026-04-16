@@ -29,6 +29,23 @@ const PERSONALITIES = [
   { value: 'creative', label: '🎨 Creative — loves stories, pictures, different ways of learning' },
 ]
 
+function getYearLevelFromAge(age: number): string {
+  if (age <= 6) return '1'
+  if (age === 7) return '2'
+  if (age === 8) return '3'
+  if (age === 9) return '4'
+  if (age === 10) return '5'
+  if (age === 11) return '6'
+  if (age === 12) return '7'
+  if (age === 13) return '8'
+  if (age === 14) return '9'
+  if (age === 15) return '10'
+  if (age === 16) return '11'
+  if (age === 17) return '12'
+  if (age >= 18) return '13'
+  return ''
+}
+
 export default function OnboardingPage() {
   const [step, setStep] = useState(1)
   const [name, setName] = useState('')
@@ -36,6 +53,7 @@ export default function OnboardingPage() {
   const [usernameSuggested, setUsernameSuggested] = useState(false)
   const [age, setAge] = useState('')
   const [yearLevel, setYearLevel] = useState('')
+  const [yearLevelManuallySet, setYearLevelManuallySet] = useState(false)
   const [pin, setPin] = useState('')
   const [sessionLanguage, setSessionLanguage] = useState('en')
   const [school, setSchool] = useState('')
@@ -150,14 +168,21 @@ export default function OnboardingPage() {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                 <div>
                   <label style={labelStyle}>Age</label>
-                  <input type="number" value={age} onChange={e => setAge(e.target.value)} placeholder="e.g. 9" min="4" max="18" style={inputStyle} />
+                  <input type="number" value={age} onChange={e => {
+                    setAge(e.target.value)
+                    if (!yearLevelManuallySet && e.target.value) {
+                      const suggested = getYearLevelFromAge(parseInt(e.target.value))
+                      if (suggested) setYearLevel(suggested)
+                    }
+                  }} placeholder="e.g. 9" min="4" max="18" style={inputStyle} />
                 </div>
                 <div>
                   <label style={labelStyle}>Year level *</label>
-                  <select value={yearLevel} onChange={e => setYearLevel(e.target.value)} required style={{ ...inputStyle, cursor: 'pointer' }}>
+                  <select value={yearLevel} onChange={e => { setYearLevel(e.target.value); setYearLevelManuallySet(true) }} required style={{ ...inputStyle, cursor: 'pointer' }}>
                     <option value="">Select</option>
                     {YEAR_LEVELS.map(y => <option key={y} value={y}>Year {y}</option>)}
                   </select>
+                  <p style={{ fontSize: '11px', color: '#8abfba', marginTop: '4px', marginBottom: 0 }}>Not sure? Age 5–6 = Yr 1 · Age 7 = Yr 2 · Age 8 = Yr 3 · Age 9 = Yr 4 · Age 10 = Yr 5 · Age 11 = Yr 6 · Age 12 = Yr 7 · Age 13 = Yr 8</p>
                 </div>
               </div>
 
