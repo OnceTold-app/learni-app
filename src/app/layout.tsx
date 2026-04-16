@@ -23,7 +23,7 @@ export const metadata: Metadata = {
     default: 'Learni — AI Tutor That Pays Your Child to Learn | NZ Year 1–13',
     template: '%s | Learni',
   },
-  description: 'Earni is an AI voice tutor that pays your child real money for correct answers. Maths, Reading, Writing, Science & Te Reo Māori. NZ Curriculum aligned, Year 1–13. 14-day free trial.',
+  description: 'Earni is an AI voice tutor that pays your child real money for correct answers. Maths, Reading, Writing, Science & Te Reo Māori. Year 1–13. 7-day free trial, no card needed.',
   keywords: [
     'AI tutor NZ', 'online tutoring New Zealand', 'maths tutor NZ', 'learni', 'earni',
     'NZ curriculum', 'year 1-13 tutor', 'kids learning app', 'educational app NZ',
