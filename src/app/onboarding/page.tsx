@@ -32,6 +32,8 @@ const PERSONALITIES = [
 export default function OnboardingPage() {
   const [step, setStep] = useState(1)
   const [name, setName] = useState('')
+  const [username, setUsername] = useState('')
+  const [usernameSuggested, setUsernameSuggested] = useState(false)
   const [age, setAge] = useState('')
   const [yearLevel, setYearLevel] = useState('')
   const [pin, setPin] = useState('')
@@ -64,7 +66,7 @@ export default function OnboardingPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({
-          name, age: age ? parseInt(age) : null, yearLevel: parseInt(yearLevel),
+          name, username, age: age ? parseInt(age) : null, yearLevel: parseInt(yearLevel),
           pin: pin || '0000', sessionLanguage,
           school, interests: selectedInterests, personality, challenges, parentGoals,
         }),
@@ -130,7 +132,19 @@ export default function OnboardingPage() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <div>
                 <label style={labelStyle}>Child&apos;s first name *</label>
-                <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Lia" required style={inputStyle} />
+                <input type="text" value={name} onChange={e => {
+                  const newName = e.target.value
+                  setName(newName)
+                  if (!usernameSuggested) {
+                    const firstName = newName.split(' ')[0].toLowerCase().replace(/[^a-z0-9]/g, '')
+                    if (firstName) {
+                      const num = String(Math.floor(Math.random() * 90) + 10)
+                      setUsername(firstName + num)
+                    } else {
+                      setUsername('')
+                    }
+                  }
+                }} placeholder="e.g. Lia" required style={inputStyle} />
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
@@ -153,9 +167,16 @@ export default function OnboardingPage() {
               </div>
 
               <div>
+                <label style={labelStyle}>Username</label>
+                <input type="text" value={username} onChange={e => { setUsername(e.target.value); setUsernameSuggested(true) }} placeholder="e.g. alex42" style={inputStyle} />
+                <p style={{ fontSize: '12px', color: '#5a8a84', marginTop: '-10px', marginBottom: '0' }}>{name ? name.split(' ')[0] : 'Your child'} will use this + their PIN to log in at learniapp.co/kid-login</p>
+              </div>
+
+              <div>
                 <label style={labelStyle}>4-digit PIN <span style={{ color: '#8abfba', fontWeight: 400 }}>(for child login)</span></label>
                 <input type="text" value={pin} onChange={e => setPin(e.target.value.replace(/\D/g, '').slice(0, 4))} placeholder="0000" maxLength={4} inputMode="numeric"
                   style={{ ...inputStyle, letterSpacing: '8px', textAlign: 'center', fontSize: '24px', fontFamily: "'Nunito', sans-serif", fontWeight: 900 }} />
+                <p style={{ fontSize: '12px', color: '#5a8a84', marginTop: '-10px', marginBottom: '0' }}>Your child types this to log in — keep it simple, like their birth year</p>
               </div>
             </div>
 
