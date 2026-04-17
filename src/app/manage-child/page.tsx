@@ -37,6 +37,11 @@ export default function ManageChildPage() {
     const res = await fetch('/api/parent/children', {
       headers: { 'Authorization': `Bearer ${token}` }
     })
+    if (res.status === 401) {
+      localStorage.removeItem('learni_parent_token')
+      window.location.href = '/login?reason=expired'
+      return
+    }
     const data = await res.json()
     const child = (data.children || []).find((c: { id: string }) => c.id === id)
     console.log('Child data received:', child)
