@@ -127,6 +127,11 @@ export default function DashboardPage() {
       const res = await fetch('/api/parent/children', {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('learni_parent_token')}` }
       })
+      if (res.status === 401) {
+        localStorage.removeItem('learni_parent_token')
+        window.location.href = '/login?reason=expired'
+        return
+      }
       const data = await res.json()
       const kids: Child[] = data.children || []
       setChildren(kids)
