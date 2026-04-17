@@ -156,7 +156,7 @@ const SUBJECT_GROUPS: SubjectGroup[] = [
         id: 'full',
         emoji: '🚀',
         title: 'Full session',
-        desc: 'Lesson → Money → Recap → Stars',
+        desc: 'Earni teaches a full lesson tailored to your level — questions, explanations, and real-time feedback.',
         action: '/session',
       },
 
