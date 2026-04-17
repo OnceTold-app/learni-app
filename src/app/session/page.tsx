@@ -1458,9 +1458,9 @@ export default function SessionPage() {
                       {['1','2','3','4','5','6','7','8','9','','0','⌫'].map((key) => (
                         <button key={key} onClick={() => {
                           if (!key) return
-                          if (key === '⌫') setTypedAnswer(a => a.slice(0,-1))
-                          else setTypedAnswer(a => a + key)
                           lastActivityRef.current = Date.now()
+                          if (key === '⌫') setTypedAnswer(a => a.slice(0,-1))
+                          else setTypedAnswer(a => (a + key).slice(0, 6))
                         }} style={{
                           height:'64px', fontSize:'22px', fontWeight:900, fontFamily:"'Nunito',sans-serif",
                           background: key === '⌫' ? 'rgba(255,255,255,0.08)' : key === '' ? 'transparent' : 'rgba(255,255,255,0.1)',
