@@ -23,6 +23,7 @@ export default function ManageChildPage() {
   const [error, setError] = useState('')
   const [showRemove, setShowRemove] = useState(false)
   const [isDirty, setIsDirty] = useState(false)
+  const [dataLoaded, setDataLoaded] = useState(false)
 
   useEffect(() => {
     const id = new URLSearchParams(window.location.search).get('id')
@@ -44,6 +45,7 @@ export default function ManageChildPage() {
       setYearLevel(String(child.year_level))
       setSessionLanguage(child.session_language || 'en')
     }
+    setDataLoaded(true)
   }
 
   async function handleSaveAll() {
@@ -114,12 +116,38 @@ export default function ManageChildPage() {
     width: '100%',
   }
 
+  if (!dataLoaded && !error) {
+    return <div style={{ color: '#5a8a84', textAlign: 'center', padding: '60px' }}>Loading...</div>
+  }
+
   return (
     <div style={{
       minHeight: '100vh',
       background: '#f7fafa',
       fontFamily: "'Plus Jakarta Sans', sans-serif",
     }}>
+      {message && (
+        <div style={{
+          position: 'fixed',
+          bottom: '24px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          background: '#1a8f85',
+          color: 'white',
+          padding: '12px 28px',
+          borderRadius: '30px',
+          fontFamily: "'Nunito', sans-serif",
+          fontWeight: 700,
+          fontSize: '15px',
+          zIndex: 9999,
+          boxShadow: '0 4px 20px rgba(26,143,133,0.4)',
+          whiteSpace: 'nowrap',
+          pointerEvents: 'none',
+          animation: 'fadeIn 0.2s ease',
+        }}>
+          {message}
+        </div>
+      )}
       <div style={{ maxWidth: '520px', margin: '0 auto', padding: '24px' }}>
         <a href="/dashboard" style={{ fontSize: '13px', color: '#5a8a84', textDecoration: 'none', display: 'inline-block', marginBottom: '20px' }}>← Back to Hub</a>
 
@@ -130,27 +158,6 @@ export default function ManageChildPage() {
           Change login details, year level, or remove this child.
         </p>
 
-        {message && (
-          <div style={{
-            position: 'fixed',
-            bottom: '32px',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            background: '#1a8f85',
-            color: 'white',
-            padding: '12px 28px',
-            borderRadius: '30px',
-            fontFamily: "'Nunito', sans-serif",
-            fontWeight: 700,
-            fontSize: '15px',
-            zIndex: 9999,
-            boxShadow: '0 4px 20px rgba(26,143,133,0.4)',
-            whiteSpace: 'nowrap',
-            pointerEvents: 'none',
-          }}>
-            {message}
-          </div>
-        )}
         {error && <div style={{ background: '#fff5f5', color: '#e53e3e', padding: '10px 16px', borderRadius: '10px', marginBottom: '16px', fontSize: '14px', fontWeight: 600 }}>{error}</div>}
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -159,6 +166,7 @@ export default function ManageChildPage() {
             <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#5a8a84', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Name</label>
             <input
               value={name}
+              defaultValue={name}
               onChange={e => { setName(e.target.value); setIsDirty(true) }}
               style={inputStyle}
             />
@@ -171,6 +179,7 @@ export default function ManageChildPage() {
               <span style={{ color: '#2ec4b6', fontWeight: 800, fontSize: '16px' }}>@</span>
               <input
                 value={username}
+                defaultValue={username}
                 key={'username-' + (username || 'empty')}
               onChange={e => { setUsername(e.target.value.replace(/[^a-zA-Z0-9_\-]/g, '').slice(0, 20)); setIsDirty(true) }}
                 placeholder="not set yet"
