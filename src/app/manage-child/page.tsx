@@ -52,6 +52,7 @@ export default function ManageChildPage() {
     setError('')
 
     try {
+      console.log('Saving PIN:', pin, 'length:', pin.length)
       const res = await fetch('/api/parent/update-child', {
         method: 'PATCH',
         headers: {
@@ -73,7 +74,7 @@ export default function ManageChildPage() {
       if (!res.ok) throw new Error(data.error)
       setMessage('✓ Saved!')
       setIsDirty(false)
-      setTimeout(() => setMessage(''), 2000)
+      setTimeout(() => setMessage(''), 3000)
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Failed to save')
     } finally {
@@ -129,7 +130,17 @@ export default function ManageChildPage() {
           Change login details, year level, or remove this child.
         </p>
 
-        {message && <div style={{ background: '#e6f9f7', color: '#1a9e92', padding: '10px 16px', borderRadius: '10px', marginBottom: '16px', fontSize: '14px', fontWeight: 600 }}>{message}</div>}
+        {message && (
+          <div style={{
+            position: 'fixed', bottom: '24px', left: '50%', transform: 'translateX(-50%)',
+            background: '#2ec4b6', color: '#0d2b28', padding: '12px 24px',
+            borderRadius: '30px', fontFamily: "'Nunito', sans-serif", fontWeight: 700,
+            fontSize: '14px', zIndex: 1000, boxShadow: '0 4px 20px rgba(46,196,182,0.4)',
+            whiteSpace: 'nowrap',
+          }}>
+            {message}
+          </div>
+        )}
         {error && <div style={{ background: '#fff5f5', color: '#e53e3e', padding: '10px 16px', borderRadius: '10px', marginBottom: '16px', fontSize: '14px', fontWeight: 600 }}>{error}</div>}
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -165,6 +176,7 @@ export default function ManageChildPage() {
               value={pin}
               onChange={e => { setPin(e.target.value.replace(/\D/g, '').slice(0, 4)); setIsDirty(true) }}
               placeholder="Enter new 4-digit PIN"
+              type="text"
               maxLength={4}
               inputMode="numeric"
               style={{ ...inputStyle, letterSpacing: '6px', textAlign: 'center', fontFamily: "'Nunito', sans-serif", fontWeight: 900, fontSize: '20px' }}
