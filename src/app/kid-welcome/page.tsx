@@ -154,7 +154,7 @@ export default function KidWelcomePage() {
             marginTop: '8px',
             boxShadow: username.length >= 2 ? '0 8px 24px rgba(46,196,182,0.35)' : 'none',
           }}>
-            {loading ? 'Saving...' : "That's me — let's learn! 🚀"}
+            {loading ? 'Saving...' : (yearLevel <= 6 ? "That's me — let's learn! 🚀" : "Let's get started")}
           </button>
         </form>
       </div>
