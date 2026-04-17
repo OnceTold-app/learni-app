@@ -72,7 +72,7 @@ export default function ManageChildPage() {
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
-      setMessage('✓ Saved!')
+      setMessage('Changes saved ✓')
       setIsDirty(false)
       setTimeout(() => setMessage(''), 3000)
     } catch (err: unknown) {
@@ -132,11 +132,21 @@ export default function ManageChildPage() {
 
         {message && (
           <div style={{
-            position: 'fixed', bottom: '24px', left: '50%', transform: 'translateX(-50%)',
-            background: '#2ec4b6', color: '#0d2b28', padding: '12px 24px',
-            borderRadius: '30px', fontFamily: "'Nunito', sans-serif", fontWeight: 700,
-            fontSize: '14px', zIndex: 1000, boxShadow: '0 4px 20px rgba(46,196,182,0.4)',
+            position: 'fixed',
+            bottom: '32px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            background: '#1a8f85',
+            color: 'white',
+            padding: '12px 28px',
+            borderRadius: '30px',
+            fontFamily: "'Nunito', sans-serif",
+            fontWeight: 700,
+            fontSize: '15px',
+            zIndex: 9999,
+            boxShadow: '0 4px 20px rgba(26,143,133,0.4)',
             whiteSpace: 'nowrap',
+            pointerEvents: 'none',
           }}>
             {message}
           </div>
