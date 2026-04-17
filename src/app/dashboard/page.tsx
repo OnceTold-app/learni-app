@@ -1075,7 +1075,7 @@ function FocusAreas({ childId, childName }: { childId: string; childName: string
         Focus areas for {childName}
       </h3>
       <p style={{ fontSize: '12px', color: '#5a8a84', marginTop: '4px', marginBottom: '12px' }}>
-        Earni will prioritise these topics in warmup drills and lesson themes — it won&apos;t limit sessions to them
+        Earni will prioritise these topics in your child&apos;s lessons and session content.
       </p>
 
       {/* Current focus areas */}
