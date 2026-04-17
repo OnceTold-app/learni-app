@@ -297,7 +297,7 @@ export default function StartSessionPage() {
   const [yearLevel, setYearLevel] = useState(5)
   const [activeSubject, setActiveSubject] = useState<string>('maths')
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null)
-  const [voiceOn, setVoiceOn] = useState(typeof window !== 'undefined' ? localStorage.getItem('learni_voice_enabled') !== 'false' : true)
+  const [voiceOn, setVoiceOn] = useState(() => { if (typeof window === 'undefined') return true; const yl = parseInt(localStorage.getItem('learni_year_level') || '5'); return yl <= 6; // Year 1-6: sound on by default; Year 7+: sound off })
   const [foundationsExpanded, setFoundationsExpanded] = useState(false)
 
   useEffect(() => {
