@@ -328,6 +328,25 @@ export default function DashboardPage() {
       })()}
 
       <div className="dashboard-main" style={{ maxWidth: '800px', margin: '0 auto', padding: '24px' }}>
+        {subscriptionStatus === 'trialing' && trialEndsAt && (() => {
+          const daysLeft = Math.ceil((new Date(trialEndsAt).getTime() - Date.now()) / 86400000)
+          if (daysLeft <= 0) return (
+            <div style={{ background: '#fee2e2', border: '1px solid #fca5a5', borderRadius: '12px', padding: '12px 20px', marginBottom: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span style={{ fontSize: '14px', color: '#c0392b', fontWeight: 600 }}>Your trial has ended</span>
+              <a href="/account" style={{ fontSize: '13px', color: '#c0392b', fontWeight: 700, textDecoration: 'none' }}>Upgrade to continue →</a>
+            </div>
+          )
+          if (daysLeft <= 2) return (
+            <div style={{ background: 'rgba(245,166,35,0.1)', border: '1px solid rgba(245,166,35,0.3)', borderRadius: '12px', padding: '12px 20px', marginBottom: '16px' }}>
+              <span style={{ fontSize: '14px', color: '#e8930e', fontWeight: 600 }}>Free trial · {daysLeft} day{daysLeft !== 1 ? 's' : ''} remaining — ends soon</span>
+            </div>
+          )
+          return (
+            <div style={{ background: 'rgba(46,196,182,0.06)', border: '1px solid rgba(46,196,182,0.15)', borderRadius: '12px', padding: '10px 20px', marginBottom: '16px' }}>
+              <span style={{ fontSize: '13px', color: '#1a8f85', fontWeight: 600 }}>Free trial · {daysLeft} day{daysLeft !== 1 ? 's' : ''} remaining</span>
+            </div>
+          )
+        })()}
         {loading ? (
           <>
             <SkeletonStyles />
