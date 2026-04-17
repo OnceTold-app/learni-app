@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react'
 export default function KidWelcomePage() {
   const [childName, setChildName] = useState('')
   const [username, setUsername] = useState('')
+  const [yearLevel, setYearLevel] = useState(5)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
@@ -13,6 +14,7 @@ export default function KidWelcomePage() {
     setChildName(name)
     // Suggest a username based on their name
     setUsername(name.toLowerCase().replace(/[^a-z0-9]/g, ''))
+    setYearLevel(parseInt(localStorage.getItem('learni_year_level') || '5'))
   }, [])
 
   async function handleSubmit(e: React.FormEvent) {
@@ -82,7 +84,9 @@ export default function KidWelcomePage() {
           marginBottom: '8px',
           lineHeight: 1.5,
         }}>
-          I&apos;m Earni — your study buddy.
+          {yearLevel <= 6
+            ? "I'm Earni — your study buddy! 👋"
+            : `I'm Earni. I'll help you nail Year ${yearLevel}.`}
         </p>
         <p style={{
           color: 'rgba(255,255,255,0.4)',
