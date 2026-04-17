@@ -101,6 +101,10 @@ export default function SessionPage() {
   const [lessonCount, setLessonCount] = useState(0)
   const sessionStartTime = useRef(Date.now())
 
+  // Session caps (lesson only)
+  const maxLessonQuestions = yearLevel <= 3 ? 6 : yearLevel <= 6 ? 8 : yearLevel <= 10 ? 10 : 12
+  const maxSessionMinutes = yearLevel <= 3 ? 10 : yearLevel <= 6 ? 15 : 20
+
   const historyRef = useRef<Array<{ role: 'user' | 'assistant'; content: string }>>([])
   const phaseStartRef = useRef(Date.now())
   const sessionStartRef = useRef(Date.now())
@@ -509,6 +513,15 @@ export default function SessionPage() {
     }
   }, [paused, state.loading, state.sessionStarted, speaking, showIdleOverlay, state.starsEarned, state.correctCount, state.totalQuestions, subject])
 
+  // Reset activity timer when a new question renders (FIX 5)
+  // Gives the child a fresh timer from when they can actually see the question
+  useEffect(() => {
+    if (!state.loading && state.question && state.sessionStarted && !paused) {
+      lastActivityRef.current = Date.now()
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.question]) // fires when question changes
+
   // Also pause on visibility change (tab switch, screen lock)
   useEffect(() => {
     function handleVisibility() {
@@ -535,26 +548,18 @@ export default function SessionPage() {
     setPaused(false)
   }
 
-  // Phase transition based on time - check every 3 seconds
+  // Backup session-end timer — fires if question cap didn't trigger in time
   useEffect(() => {
-    const phaseCheck = setInterval(() => {
-      if (paused) return
-      const phaseElapsed = (Date.now() - phaseStartRef.current) / 60000
-      const limit = PHASE_TIMES[state.phase]
-
-      if (phaseElapsed >= limit && state.phase !== 'reward' && !state.loading) {
-        const fullFlow: Record<Phase, Phase> = { warmup: 'financial', lesson: 'financial', financial: 'closing', closing: 'reward', reward: 'reward' }
-        const shortFlow: Record<Phase, Phase> = { warmup: 'reward', lesson: 'reward', financial: 'reward', closing: 'reward', reward: 'reward' }
-        const flow = (sessionMode === 'practice' || sessionMode === 'challenge' || sessionMode === 'learn') ? shortFlow : fullFlow
-        const next = flow[state.phase]
-        phaseStartRef.current = Date.now()
-        historyRef.current = []
-        setQuestionsInPhase(0)
-        fetchQuestion(next)
+    const timeCheck = setInterval(() => {
+      if (paused || state.loading || !state.sessionStarted || showFeedback) return
+      const sessionAge = (Date.now() - sessionStartTime.current) / 60000
+      if (sessionAge >= maxSessionMinutes) {
+        setShowFeedback(true)
       }
-    }, 3000)
-    return () => clearInterval(phaseCheck)
-  }, [state.phase, state.loading, fetchQuestion, paused])
+    }, 30000)
+    return () => clearInterval(timeCheck)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [paused, state.loading, state.sessionStarted, showFeedback])
 
   function handleAnswer(selected: string) {
     if (state.loading || state.selectedAnswer) return
@@ -623,23 +628,14 @@ export default function SessionPage() {
     // Show result briefly, then advance — don't wait for voice to finish
     const minDelay = (state.phase === 'warmup' || state.phase === 'closing') ? 800 : 1500
     setTimeout(() => {
-      // Session length caps — advance to financial phase if lesson is maxed out
+      // Session length caps — end session when lesson cap is reached
       if (state.phase === 'lesson') {
-        const maxLessonQuestions = yearLevel <= 3 ? 5
-                                 : yearLevel <= 6 ? 6
-                                 : yearLevel <= 10 ? 7
-                                 : 8
-        const maxSessionMinutes = yearLevel <= 3 ? 12 : 18
         const sessionAge = (Date.now() - sessionStartTime.current) / 60000
         // lessonCount is updated async via setState, so compare against newLessonCount directly
         const newLessonCount = state.phase === 'lesson' && state.question ? lessonCount + 1 : lessonCount
         if (newLessonCount >= maxLessonQuestions || sessionAge >= maxSessionMinutes) {
-          historyRef.current = []
-          setQuestionsInPhase(0)
-          phaseStartRef.current = Date.now()
-          // For practice/challenge sessions use shortFlow (→ reward), full sessions use financial
-          const isPracticeMode = sessionMode === 'practice' || sessionMode === 'challenge' || sessionMode === 'learn'
-          fetchQuestion(isPracticeMode ? 'reward' : 'financial')
+          handleSessionEnd()
+          return
         }
       }
       fetchQuestion(state.phase, selected, state.question || '', state.answer)
@@ -701,6 +697,19 @@ export default function SessionPage() {
     window.location.href = '/kid-hub'
   }
 
+  // Called when lesson question cap or time limit is reached
+  async function handleSessionEnd() {
+    const accuracy = state.totalQuestions > 0 ? state.correctCount / state.totalQuestions : 0
+    const earniMessage = accuracy > 0.8
+      ? "Brilliant work today. You really got this."
+      : accuracy > 0.5
+      ? "Solid session. Every question you try makes you sharper."
+      : "That was tough work — and you stayed with it. That's what counts."
+    setState(s => ({ ...s, earniSays: earniMessage, question: null, loading: false }))
+    setTimeout(() => setShowFeedback(true), 2000)
+    handleSessionComplete()
+  }
+
   // Renamed from handleJarSubmit — saves session and shows feedback (no jars anymore)
   async function handleSessionComplete() {
     // Save session to Supabase
@@ -750,9 +759,8 @@ export default function SessionPage() {
       }
     } catch { /* best effort */ }
 
-    // Show feedback screen instead of immediately redirecting
+    // Session saved — feedback is shown by handleSessionEnd
     if (sessionId) setLastSessionId(sessionId)
-    setShowFeedback(true)
   }
 
   const [typedAnswer, setTypedAnswer] = useState('')
@@ -1139,8 +1147,8 @@ export default function SessionPage() {
           >
             ⏸
           </button>
-          <span style={{ fontSize: '14px', fontWeight: 900, fontFamily: "'Nunito', sans-serif" }}>
-            {state.phaseLabel}
+          <span style={{ fontSize: '13px', fontWeight: 700, fontFamily: "'Nunito', sans-serif", color: 'rgba(255,255,255,0.7)' }}>
+            {subject}{sessionTopic ? ` · ${sessionTopic.replace(/-/g, ' ')}` : ''}
           </span>
 
         </div>
@@ -1220,56 +1228,20 @@ export default function SessionPage() {
         </div>
       </div>
 
-      {/* Session timeline */}
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        padding: '0',
-        background: 'rgba(0,0,0,0.2)',
-      }}>
-        {(['lesson', 'financial', 'closing', 'reward'] as Phase[]).map((p, i) => {
-          const isCurrent = state.phase === p
-          const isPast = ['lesson', 'financial', 'closing', 'reward'].indexOf(state.phase) > i
-          const labels: Record<Phase, string> = { warmup: '⚡ Warm Up', lesson: '📚 Lesson', financial: '💰 Money', closing: '⚡ Recap', reward: '⭐ Stars' }
-          const phaseMins: Record<Phase, number> = { warmup: 3, lesson: 12, financial: 5, closing: 5, reward: 0 }
-          const elapsed = isCurrent ? Math.min((Date.now() - phaseStartRef.current) / 60000 / (phaseMins[p] || 1), 1) : 0
-
-          return (
-            <div key={p} style={{
-              flex: p === 'lesson' ? 3 : p === 'reward' ? 0.5 : 1,
-              position: 'relative',
-              padding: '8px 0',
-            }}>
-              {/* Progress fill */}
-              <div style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                bottom: 0,
-                width: isPast ? '100%' : isCurrent ? `${elapsed * 100}%` : '0%',
-                background: isPast ? 'rgba(46,196,182,0.15)' : isCurrent ? 'rgba(46,196,182,0.1)' : 'transparent',
-                transition: 'width 3s linear',
-              }} />
-              <div style={{
-                position: 'relative',
-                textAlign: 'center',
-                fontSize: '10px',
-                fontWeight: isCurrent ? 800 : 600,
-                color: isPast ? '#2ec4b6' : isCurrent ? 'white' : 'rgba(255,255,255,0.2)',
-                fontFamily: "'Nunito', sans-serif",
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-              }}>
-                {labels[p]}
-                {isCurrent && p !== 'reward' && (
-                  <span style={{ marginLeft: '4px', fontSize: '9px', color: 'rgba(255,255,255,0.3)' }}>
-                    Q{questionsInPhase + 1}
-                  </span>
-                )}
-              </div>
-            </div>
-          )
-        })}
+      {/* Session progress bar — linear, no phase labels */}
+      <div style={{ background: 'rgba(0,0,0,0.2)', padding: '6px 20px 6px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <div style={{ flex: 1, height: '4px', background: 'rgba(255,255,255,0.08)', borderRadius: '2px', overflow: 'hidden' }}>
+          <div style={{
+            height: '100%',
+            background: '#2ec4b6',
+            width: `${Math.min((lessonCount / maxLessonQuestions) * 100, 100)}%`,
+            transition: 'width 0.5s ease',
+            borderRadius: '2px',
+          }} />
+        </div>
+        <span style={{ fontSize: '11px', fontWeight: 700, color: 'rgba(255,255,255,0.35)', fontFamily: "'Nunito', sans-serif", whiteSpace: 'nowrap' }}>
+          Q{lessonCount}/{maxLessonQuestions}
+        </span>
       </div>
 
       {/* Main content — full width layout */}
@@ -1789,7 +1761,7 @@ export default function SessionPage() {
           </button>
         )}
 
-        {/* Feedback screen — full overlay after jars */}
+        {/* Feedback screen — simple post-session card */}
         {showFeedback && (
           <div style={{
             position: 'fixed', inset: 0,
@@ -1797,79 +1769,37 @@ export default function SessionPage() {
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             zIndex: 300, padding: '24px',
           }}>
-            <div style={{ maxWidth: '440px', width: '100%', textAlign: 'center' }}>
-              <div style={{ fontSize: '56px', marginBottom: '12px' }}>🎉</div>
-              <h2 style={{ fontFamily: "'Nunito', sans-serif", fontSize: '24px', fontWeight: 900, color: 'white', marginBottom: '4px' }}>
-                Session done!
-              </h2>
-              <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '14px', marginBottom: '28px' }}>
-                Quick question before you go...
-              </p>
-
-              {/* Session rating */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ fontSize: '14px', fontWeight: 700, color: 'rgba(255,255,255,0.6)', marginBottom: '10px' }}>How was the session?</div>
-                <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
-                  {['😢', '😕', '😐', '😊', '🤩'].map((emoji, i) => (
-                    <button key={i} onClick={() => setFeedbackRating(i + 1)} style={{
-                      fontSize: '28px', padding: '10px', borderRadius: '14px', border: 'none',
-                      background: feedbackRating === i + 1 ? 'rgba(46,196,182,0.2)' : 'rgba(255,255,255,0.05)',
-                      cursor: 'pointer', transition: 'all 0.15s',
-                      outline: feedbackRating === i + 1 ? '2px solid #2ec4b6' : 'none',
-                    }}>{emoji}</button>
+            <div style={{ maxWidth: '440px', width: '100%' }}>
+              <div style={{ textAlign: 'center', padding: '40px 24px' }}>
+                <div style={{ fontSize: '28px', fontWeight: 900, color: 'white', fontFamily: "'Nunito', sans-serif", marginBottom: '24px' }}>
+                  How did that feel?
+                </div>
+                <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', marginBottom: '32px' }}>
+                  {[
+                    { emoji: '😊', label: 'Easy' },
+                    { emoji: '🤔', label: 'Just right' },
+                    { emoji: '😤', label: 'Hard' },
+                  ].map(({ emoji, label }) => (
+                    <button key={label} onClick={() => {
+                      setFeedbackSubmitted(true)
+                      // Auto-return to hub after 3 seconds
+                      setTimeout(() => { window.location.href = '/kid-hub' }, 3000)
+                    }} style={{
+                      padding: '16px 20px', borderRadius: '16px',
+                      background: 'rgba(255,255,255,0.08)', border: '1.5px solid rgba(255,255,255,0.15)',
+                      cursor: 'pointer', color: 'white', textAlign: 'center',
+                    }}>
+                      <div style={{ fontSize: '32px', marginBottom: '8px' }}>{emoji}</div>
+                      <div style={{ fontSize: '13px', fontWeight: 600, fontFamily: "'Nunito', sans-serif" }}>{label}</div>
+                    </button>
                   ))}
                 </div>
+                {feedbackSubmitted && (
+                  <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '14px' }}>
+                    Taking you back in a moment...
+                  </div>
+                )}
               </div>
-
-              {/* Earni rating */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ fontSize: '14px', fontWeight: 700, color: 'rgba(255,255,255,0.6)', marginBottom: '10px' }}>How was Earni as a tutor?</div>
-                <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
-                  {['1', '2', '3', '4', '5'].map((n, i) => (
-                    <button key={i} onClick={() => setFeedbackEarni(i + 1)} style={{
-                      width: '40px', height: '40px', borderRadius: '50%', border: 'none',
-                      background: feedbackEarni === i + 1 ? '#2ec4b6' : 'rgba(255,255,255,0.08)',
-                      color: feedbackEarni === i + 1 ? 'white' : 'rgba(255,255,255,0.5)',
-                      fontFamily: "'Nunito', sans-serif", fontSize: '16px', fontWeight: 900,
-                      cursor: 'pointer',
-                    }}>{n}</button>
-                  ))}
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: 'rgba(255,255,255,0.2)', marginTop: '4px', padding: '0 4px' }}>
-                  <span>Not great</span><span>Amazing!</span>
-                </div>
-              </div>
-
-              {/* Optional text */}
-              <textarea
-                value={feedbackText}
-                onChange={e => setFeedbackText(e.target.value)}
-                placeholder="Anything you want to tell Earni? (optional)"
-                rows={2}
-                style={{
-                  width: '100%', padding: '12px 14px', marginBottom: '16px',
-                  background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)',
-                  borderRadius: '12px', fontSize: '14px', color: 'white',
-                  fontFamily: "'Plus Jakarta Sans', sans-serif", resize: 'none', outline: 'none',
-                  boxSizing: 'border-box',
-                }}
-              />
-
-              <button onClick={() => submitFeedback(false)} style={{
-                width: '100%', padding: '16px', background: 'linear-gradient(135deg, #2ec4b6, #1ab5a8)',
-                color: 'white', border: 'none', borderRadius: '30px',
-                fontFamily: "'Nunito', sans-serif", fontSize: '17px', fontWeight: 900,
-                cursor: 'pointer', marginBottom: '10px',
-                boxShadow: '0 8px 32px rgba(46,196,182,0.3)',
-              }}>
-                Done! Go to my Hub →
-              </button>
-              <button onClick={() => submitFeedback(true)} style={{
-                background: 'none', border: 'none', color: 'rgba(255,255,255,0.25)',
-                fontSize: '13px', cursor: 'pointer',
-              }}>
-                Skip feedback
-              </button>
             </div>
           </div>
         )}
