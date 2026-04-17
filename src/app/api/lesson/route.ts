@@ -241,13 +241,20 @@ export async function POST(req: NextRequest) {
       case 'warmup':
         systemPrompt = rapidFirePrompt(childName, yearLevel, drillTopics.length > 0 ? drillTopics : ['times tables', 'number bonds'])
         break
-      case 'lesson':
-        systemPrompt = tutorPrompt(childName, yearLevel, subject, drillTopics[0] || '')
+      case 'lesson': {
+        // Money & Life sessions use the dedicated financial prompt with NZD currency constraints
+        const isMoneySubject = subject.toLowerCase().includes('money') || subject.toLowerCase().includes('financial') || subject.toLowerCase().includes('life')
+        if (isMoneySubject) {
+          systemPrompt = financialPrompt(childName, yearLevel, false)
+        } else {
+          systemPrompt = tutorPrompt(childName, yearLevel, subject, drillTopics[0] || '')
           + (profileContext ? `\n\n## CHILD PROFILE\n${profileContext}` : '')
           + `\n\n## YEAR LEVEL CEILING\nCRITICAL: Never escalate difficulty more than 1 year above the child's registered year level (Year ${yearLevel}).\n- Max difficulty: Year ${yearLevel + 1} content\n- If child is consistently correct, stay at ceiling \u2014 do NOT keep escalating\n- If child is performing above ceiling for 3+ questions in a row, include a note in earniSays: "You're flying through this! I'll let your parent know you might be ready for harder work."\n- Never teach concepts from 2+ years above their level`
           + `\n\n## CONTENT CALIBRATION \u2014 CRITICAL\nThis child is in Year ${yearLevel}. \n- MINIMUM difficulty: Year ${Math.max(1, yearLevel - 1)} content\n- MAXIMUM difficulty: Year ${yearLevel + 1} content\n- START at exactly Year ${yearLevel} difficulty\n- Do NOT give Year 1 questions to a Year 4 child. Do NOT give Year 9 questions to a Year 4 child.\n- If the topic requested is simpler than Year ${yearLevel}, teach it at Year ${yearLevel} depth and complexity\n- Year ${yearLevel} examples: ${yearLevel <= 3 ? 'counting objects, number bonds, simple addition to 20' : yearLevel <= 6 ? 'times tables, fractions, place value to 1000' : yearLevel <= 9 ? 'algebra basics, decimals, percentages, ratios' : 'quadratics, statistics, trigonometry basics'}`
           + masteryContextStr
+        }
         break
+      }
       case 'financial': {
         const today = new Date()
         const isFriday = today.getDay() === 5
