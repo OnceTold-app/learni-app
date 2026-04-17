@@ -1085,7 +1085,7 @@ function FocusAreas({ childId, childName }: { childId: string; childName: string
 
   if (!loaded || !childId) return null
 
-  const SUGGESTIONS = ['Times tables', 'Fractions', 'Reading comprehension', 'Spelling', 'Division', 'Decimals', 'Word problems', 'Te Reo Māori', 'Descriptive writing', 'Telling time']
+  const SUGGESTIONS = ['Times tables', 'Fractions', 'Reading comprehension', 'Spelling', 'Division', 'Decimals', 'Word problems', 'Te Reo Māori', 'Descriptive writing', 'Telling time', 'Saving', 'Spending', 'Budgeting', 'Giving', 'Goals', 'Needs vs wants']
   const unusedSuggestions = SUGGESTIONS.filter(s => !areas.includes(s))
 
   return (
