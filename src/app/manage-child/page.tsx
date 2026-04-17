@@ -161,7 +161,8 @@ export default function ManageChildPage() {
               <span style={{ color: '#2ec4b6', fontWeight: 800, fontSize: '16px' }}>@</span>
               <input
                 value={username}
-                onChange={e => { setUsername(e.target.value.replace(/[^a-zA-Z0-9_\-]/g, '').slice(0, 20)); setIsDirty(true) }}
+                key={'username-' + (username || 'empty')}
+              onChange={e => { setUsername(e.target.value.replace(/[^a-zA-Z0-9_\-]/g, '').slice(0, 20)); setIsDirty(true) }}
                 placeholder="not set yet"
                 style={inputStyle}
               />
