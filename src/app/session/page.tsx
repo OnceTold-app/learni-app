@@ -1831,10 +1831,9 @@ export default function SessionPage() {
                         else if (pct > 0.5) { msg = `Good session, ${childName}. See you next time.`; emojiIcon = '⭐' }
                         else { msg = "Hard sessions are the ones that stick. Come back tomorrow."; emojiIcon = '💪' }
                       }
-                      setWellDoneMessage(msg)
-                      setWellDoneEmoji(emojiIcon)
-                      setShowFeedback(false)
-                      setShowWellDone(true)
+                      // Navigate to well-done page — state-based approach was unreliable
+                      const params = new URLSearchParams({ msg, emoji: emojiIcon })
+                      window.location.href = '/session/well-done?' + params.toString()
                     }} style={{
                       padding: '16px 20px', borderRadius: '16px',
                       background: 'rgba(255,255,255,0.08)', border: '1.5px solid rgba(255,255,255,0.15)',
