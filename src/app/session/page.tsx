@@ -121,8 +121,8 @@ export default function SessionPage() {
   const [listening, setListening] = useState(false)
   const [micEnabled, setMicEnabled] = useState(false)
   const [readQuestionsAloud, setReadQuestionsAloud] = useState(() => {
-    // Smart default: on for younger kids (Year 1-4), off for older
-    return yearLevel <= 4
+    // Smart default: on for younger kids (Year 1-6), off for older
+    return yearLevel <= 6
   })
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const recognitionRef = useRef<any>(null)
