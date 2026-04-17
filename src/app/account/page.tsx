@@ -154,6 +154,7 @@ export default function AccountPage() {
     outline: 'none',
     boxSizing: 'border-box' as const,
     marginBottom: '14px',
+    textTransform: 'none' as const,
   }
 
   const noteStyle: React.CSSProperties = {
