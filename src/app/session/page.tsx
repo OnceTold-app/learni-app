@@ -530,6 +530,8 @@ export default function SessionPage() {
       fetchQuestion(state.phase)
     }
     lastActivityRef.current = Date.now()
+    // NOTE: questionsInPhase and lessonCount are intentionally NOT reset here.
+    // These counters persist through pause/resume and only reset on phase transitions or session start.
     setPaused(false)
   }
 
