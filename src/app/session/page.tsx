@@ -1103,6 +1103,19 @@ export default function SessionPage() {
     )
   }
 
+  // Well-done screen — shown after feedback tap, before redirect to /kid-hub
+  if (showWellDone) {
+    return (
+      <div style={{ position: 'fixed', inset: 0, minHeight: '100vh', background: '#0d2b28', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 24px', textAlign: 'center', zIndex: 350 }} onClick={() => window.location.href = '/kid-hub'}>
+        <div style={{ fontSize: '72px', marginBottom: '24px' }}>{wellDoneEmoji}</div>
+        <div style={{ fontFamily: "'Nunito', sans-serif", fontSize: '22px', fontWeight: 900, color: 'white', marginBottom: '16px', maxWidth: '300px', lineHeight: 1.4 }}>
+          {wellDoneMessage}
+        </div>
+        <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.3)', marginTop: '24px' }}>Tap anywhere to continue</div>
+      </div>
+    )
+  }
+
   return (
     <div className="session-outer" style={{
       minHeight: '100vh',
@@ -1835,16 +1848,7 @@ export default function SessionPage() {
           </div>
         )}
 
-        {/* Well-done screen */}
-        {showWellDone && (
-          <div style={{ position: 'fixed', inset: 0, minHeight: '100vh', background: '#0d2b28', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 24px', textAlign: 'center', zIndex: 350 }} onClick={() => window.location.href = '/kid-hub'}>
-            <div style={{ fontSize: '72px', marginBottom: '24px' }}>{wellDoneEmoji}</div>
-            <div style={{ fontFamily: "'Nunito', sans-serif", fontSize: '22px', fontWeight: 900, color: 'white', marginBottom: '16px', maxWidth: '300px', lineHeight: 1.4 }}>
-              {wellDoneMessage}
-            </div>
-            <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.3)', marginTop: '24px' }}>Tap anywhere to continue</div>
-          </div>
-        )}
+        {/* Well-done screen moved to early return above main JSX */}
 
         {/* Celebration popup */}
         {celebration && (
