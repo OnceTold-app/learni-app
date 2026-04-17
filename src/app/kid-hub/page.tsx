@@ -484,7 +484,7 @@ export default function KidHubPage() {
             fontWeight: 900,
             color: 'white',
             marginBottom: '4px',
-          }}>Hey {displayName(childName)}! 👋</h1>
+          }}>Hey {displayName(childName)}{yearLevel <= 6 ? '! 👋' : '.'}</h1>
           {/* Rank */}
           {(() => {
             const rank = getCurrentRank(totalStars, topicsMastered)
