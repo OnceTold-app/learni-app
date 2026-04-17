@@ -62,7 +62,7 @@ export default function SessionPage() {
   const sessionTopic = typeof window !== 'undefined' ? localStorage.getItem('learni_session_topic') || '' : ''
   // learnerId for spaced repetition question bank
   const learnerId = typeof window !== 'undefined' ? localStorage.getItem('learni_child_id') || '' : ''
-  const [sessionStarsPerDollar, setSessionStarsPerDollar] = useState(0) // 0 = rate not set
+  const [sessionStarsPerDollar, setSessionStarsPerDollar] = useState(20) // default 20 stars = $1
   const [focusAreas, setFocusAreas] = useState<string[]>([])
   const [weakTopics, setWeakTopics] = useState<string[]>([])
   const [reviewTopics, setReviewTopics] = useState<string[]>([])
