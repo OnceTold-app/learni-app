@@ -76,7 +76,7 @@ export default function KidWelcomePage() {
           fontWeight: 900,
           color: 'white',
           marginBottom: '8px',
-        }}>Hey {childName}! 🎉</h1>
+        }}>Hey {childName}{yearLevel <= 6 ? '! 🎉' : '.'}</h1>
 
         <p style={{
           color: 'rgba(255,255,255,0.5)',
