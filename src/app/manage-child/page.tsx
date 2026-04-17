@@ -60,11 +60,13 @@ export default function ManageChildPage() {
         },
         body: JSON.stringify({
           childId,
-          name,
-          username,
-          ...(pin ? { pin } : {}),
-          yearLevel: parseInt(yearLevel),
-          session_language: sessionLanguage,
+          updates: {
+            name,
+            username,
+            ...(pin ? { pin } : {}),
+            yearLevel: parseInt(yearLevel),
+            sessionLanguage,
+          },
         }),
       })
       const data = await res.json()
