@@ -902,8 +902,8 @@ export default function SessionPage() {
             justifyContent: 'space-between',
           }}>
             <div>
-              <div style={{ fontSize: '14px', fontWeight: 700, color: 'white' }}>🎤 Let Earni listen</div>
-              <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.35)', marginTop: '2px' }}>Answer questions by speaking</div>
+              <div style={{ fontSize: '14px', fontWeight: 700, color: 'white' }}>Enable voice answers</div>
+              <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.35)', marginTop: '2px' }}>Tap the microphone during a session to speak your answer — Earni only listens when you tap</div>
             </div>
             <button
               onClick={() => setMicEnabled(m => !m)}
