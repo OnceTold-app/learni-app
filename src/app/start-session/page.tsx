@@ -294,12 +294,15 @@ const CATEGORIES: Category[] = SUBJECT_GROUPS.flatMap(g => g.categories)
 
 export default function StartSessionPage() {
   const [childName, setChildName] = useState('')
+  const [yearLevel, setYearLevel] = useState(5)
   const [activeSubject, setActiveSubject] = useState<string>('maths')
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null)
   const [voiceOn, setVoiceOn] = useState(typeof window !== 'undefined' ? localStorage.getItem('learni_voice_enabled') !== 'false' : true)
+  const [foundationsExpanded, setFoundationsExpanded] = useState(false)
 
   useEffect(() => {
     setChildName(localStorage.getItem('learni_child_name') || 'Student')
+    setYearLevel(parseInt(localStorage.getItem('learni_year_level') || '5'))
   }, [])
 
   function startSession(topicId: string, mode: string, subjectLabel: string) {
@@ -431,42 +434,150 @@ export default function StartSessionPage() {
             {/* Pill/chip layout for practice categories */}
             {selectedCategory.pillGroups ? (
               <div style={{ paddingBottom: '8px' }}>
-                {selectedCategory.pillGroups.map(group => (
-                  <div key={group.label}>
+                {activeSubject === 'maths' && yearLevel >= 7 ? (
+                  /* Year 7+ special ordering: advanced content first, foundations collapsed */
+                  <>
                     <div style={{
-                      fontSize: '11px',
-                      fontWeight: 800,
-                      color: 'rgba(255,255,255,0.35)',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.08em',
-                      marginBottom: '8px',
-                      marginTop: '16px',
+                      fontSize: '12px', color: 'rgba(255,255,255,0.5)',
+                      background: 'rgba(255,255,255,0.05)', borderRadius: '12px',
+                      padding: '10px 14px', marginBottom: '8px', marginTop: '8px',
+                      fontFamily: "'Nunito', sans-serif",
                     }}>
-                      {group.label}
+                      For algebra, statistics, and geometry — use &lsquo;Learn something new&rsquo;
                     </div>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                      {group.chips.map(chip => (
-                        <button
-                          key={chip.id}
-                          onClick={() => startSession(chip.id, 'practice', `${activeGroup.label} — ${chip.label}`)}
-                          style={{
-                            padding: '8px 14px',
-                            borderRadius: '20px',
-                            fontSize: '13px',
-                            fontWeight: 700,
-                            background: group.elite ? 'rgba(245,166,35,0.1)' : 'rgba(255,255,255,0.06)',
-                            border: group.elite ? '1.5px solid rgba(245,166,35,0.3)' : '1.5px solid rgba(255,255,255,0.12)',
-                            color: group.elite ? '#f5a623' : 'rgba(255,255,255,0.7)',
-                            cursor: 'pointer',
-                            fontFamily: "'Nunito', sans-serif",
-                          }}
-                        >
-                          {chip.label}
-                        </button>
-                      ))}
+                    {selectedCategory.pillGroups
+                      .filter(g => !g.label.includes('COUNTING'))
+                      .map(group => {
+                        // Filter to tier 2 only for ADDITION and SUBTRACTION
+                        const tier2Ids = [
+                          'addition-101-500', 'addition-501-1000',
+                          'subtraction-101-500', 'subtraction-501-1000',
+                        ]
+                        const chips = (group.label === 'ADDITION' || group.label === 'SUBTRACTION')
+                          ? group.chips.filter(c => tier2Ids.includes(c.id))
+                          : group.chips
+                        if (chips.length === 0) return null
+                        return (
+                          <div key={group.label}>
+                            <div style={{
+                              fontSize: '11px', fontWeight: 800,
+                              color: group.elite ? 'rgba(245,166,35,0.6)' : 'rgba(255,255,255,0.35)',
+                              textTransform: 'uppercase', letterSpacing: '0.08em',
+                              marginBottom: '8px', marginTop: '16px',
+                            }}>{group.label}</div>
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                              {chips.map(chip => (
+                                <button key={chip.id}
+                                  onClick={() => startSession(chip.id, 'practice', `${activeGroup.label} — ${chip.label}`)}
+                                  style={{
+                                    padding: '8px 14px', borderRadius: '20px', fontSize: '13px', fontWeight: 700,
+                                    background: group.elite ? 'rgba(245,166,35,0.1)' : 'rgba(255,255,255,0.06)',
+                                    border: group.elite ? '1.5px solid rgba(245,166,35,0.3)' : '1.5px solid rgba(255,255,255,0.12)',
+                                    color: group.elite ? '#f5a623' : 'rgba(255,255,255,0.7)',
+                                    cursor: 'pointer', fontFamily: "'Nunito', sans-serif",
+                                  }}
+                                >{chip.label}</button>
+                              ))}
+                            </div>
+                          </div>
+                        )
+                      })
+                    }
+                    {/* Foundations expandable — tier 1 addition & subtraction */}
+                    <div style={{ marginTop: '20px' }}>
+                      <button
+                        onClick={() => setFoundationsExpanded(f => !f)}
+                        style={{
+                          display: 'flex', alignItems: 'center', gap: '8px',
+                          background: 'rgba(255,255,255,0.04)',
+                          border: '1px solid rgba(255,255,255,0.1)',
+                          borderRadius: '10px', padding: '8px 14px',
+                          fontSize: '12px', fontWeight: 700,
+                          color: 'rgba(255,255,255,0.4)',
+                          cursor: 'pointer', fontFamily: "'Nunito', sans-serif",
+                          textTransform: 'uppercase', letterSpacing: '0.06em',
+                        }}
+                      >
+                        Foundations {foundationsExpanded ? '▲' : '▼'}
+                      </button>
+                      {foundationsExpanded && (
+                        <>
+                          {['ADDITION', 'SUBTRACTION'].map(label => {
+                            const group = selectedCategory.pillGroups!.find(g => g.label === label)
+                            if (!group) return null
+                            const tier1Ids = [
+                              'addition-1-10', 'addition-11-20', 'addition-21-50', 'addition-51-100',
+                              'subtraction-1-10', 'subtraction-11-20', 'subtraction-21-50', 'subtraction-51-100',
+                            ]
+                            const tier1Chips = group.chips.filter(c => tier1Ids.includes(c.id))
+                            return (
+                              <div key={label}>
+                                <div style={{
+                                  fontSize: '11px', fontWeight: 800,
+                                  color: 'rgba(255,255,255,0.25)',
+                                  textTransform: 'uppercase', letterSpacing: '0.08em',
+                                  marginBottom: '8px', marginTop: '12px',
+                                }}>{label}</div>
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                                  {tier1Chips.map(chip => (
+                                    <button key={chip.id}
+                                      onClick={() => startSession(chip.id, 'practice', `${activeGroup.label} — ${chip.label}`)}
+                                      style={{
+                                        padding: '8px 14px', borderRadius: '20px', fontSize: '13px', fontWeight: 700,
+                                        background: 'rgba(255,255,255,0.04)',
+                                        border: '1.5px solid rgba(255,255,255,0.08)',
+                                        color: 'rgba(255,255,255,0.5)',
+                                        cursor: 'pointer', fontFamily: "'Nunito', sans-serif",
+                                      }}
+                                    >{chip.label}</button>
+                                  ))}
+                                </div>
+                              </div>
+                            )
+                          })}
+                        </>
+                      )}
                     </div>
-                  </div>
-                ))}
+                  </>
+                ) : (
+                  /* Standard ordering for Year 1-6 */
+                  selectedCategory.pillGroups.map(group => (
+                    <div key={group.label}>
+                      <div style={{
+                        fontSize: '11px',
+                        fontWeight: 800,
+                        color: 'rgba(255,255,255,0.35)',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.08em',
+                        marginBottom: '8px',
+                        marginTop: '16px',
+                      }}>
+                        {group.label}
+                      </div>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                        {group.chips.map(chip => (
+                          <button
+                            key={chip.id}
+                            onClick={() => startSession(chip.id, 'practice', `${activeGroup.label} — ${chip.label}`)}
+                            style={{
+                              padding: '8px 14px',
+                              borderRadius: '20px',
+                              fontSize: '13px',
+                              fontWeight: 700,
+                              background: group.elite ? 'rgba(245,166,35,0.1)' : 'rgba(255,255,255,0.06)',
+                              border: group.elite ? '1.5px solid rgba(245,166,35,0.3)' : '1.5px solid rgba(255,255,255,0.12)',
+                              color: group.elite ? '#f5a623' : 'rgba(255,255,255,0.7)',
+                              cursor: 'pointer',
+                              fontFamily: "'Nunito', sans-serif",
+                            }}
+                          >
+                            {chip.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
             ) : (
               /* Flat list layout for non-practice categories */
