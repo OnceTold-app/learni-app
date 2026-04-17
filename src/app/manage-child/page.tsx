@@ -29,18 +29,21 @@ export default function ManageChildPage() {
     const id = new URLSearchParams(window.location.search).get('id')
     if (!id) { window.location.href = '/dashboard'; return }
     setChildId(id)
-    fetchChild(id)
+    fetchChild(id) // Pass id directly, don't wait for state update
   }, [])
 
   async function fetchChild(id: string) {
+    console.log('Fetching child:', id)
     const token = localStorage.getItem('learni_parent_token')
     const res = await fetch('/api/parent/children', {
       headers: { 'Authorization': `Bearer ${token}` }
     })
     const data = await res.json()
     const child = (data.children || []).find((c: { id: string }) => c.id === id)
+    console.log('Child data received:', child)
     if (child) {
-      setName(child.name)
+      console.log('Setting name:', child?.name, 'username:', child?.username)
+      setName(child.name || '')
       setUsername(child.username || '')
       setYearLevel(String(child.year_level))
       setSessionLanguage(child.session_language || 'en')
@@ -166,7 +169,6 @@ export default function ManageChildPage() {
             <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#5a8a84', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Name</label>
             <input
               value={name}
-              defaultValue={name}
               onChange={e => { setName(e.target.value); setIsDirty(true) }}
               style={inputStyle}
             />
@@ -179,9 +181,7 @@ export default function ManageChildPage() {
               <span style={{ color: '#2ec4b6', fontWeight: 800, fontSize: '16px' }}>@</span>
               <input
                 value={username}
-                defaultValue={username}
-                key={'username-' + (username || 'empty')}
-              onChange={e => { setUsername(e.target.value.replace(/[^a-zA-Z0-9_\-]/g, '').slice(0, 20)); setIsDirty(true) }}
+                onChange={e => { setUsername(e.target.value.replace(/[^a-zA-Z0-9_\-]/g, '').slice(0, 20)); setIsDirty(true) }}
                 placeholder="not set yet"
                 style={inputStyle}
               />
