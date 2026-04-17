@@ -218,6 +218,8 @@ export default function SessionPage() {
   const [showConfetti, setShowConfetti] = useState(false)
   const [shake, setShake] = useState(false)
   const [showHelp, setShowHelp] = useState(false)
+  const [showWellDone, setShowWellDone] = useState(false)
+  const [wellDoneMessage, setWellDoneMessage] = useState('')
   const [showFeedback, setShowFeedback] = useState(false)
   const [feedbackRating, setFeedbackRating] = useState(0)
   const [feedbackEarni, setFeedbackEarni] = useState(0)
@@ -1794,7 +1796,21 @@ export default function SessionPage() {
                   ].map(({ emoji, label }) => (
                     <button key={label} onClick={() => {
                       setFeedbackSubmitted(true)
-                      // Auto-return to hub after 3 seconds
+                      // Determine message based on accuracy and year level
+                      const pct = state.correctCount / Math.max(state.totalQuestions, 1)
+                      let msg = ''
+                      if (yearLevel <= 6) {
+                        if (pct > 0.8) msg = "Easy? That means you're ready for more. Come back tomorrow and we'll push further!"
+                        else if (pct > 0.5) msg = `Just right — that's exactly where learning happens. Well done, ${childName}!`
+                        else msg = "Hard is good — it means your brain was working. You'll find it easier next time."
+                      } else {
+                        if (pct > 0.8) msg = "Noted — next session we'll step it up."
+                        else if (pct > 0.5) msg = `Good session, ${childName}. See you next time.`
+                        else msg = "Hard sessions are the ones that stick. Come back tomorrow."
+                      }
+                      setWellDoneMessage(msg)
+                      setShowFeedback(false)
+                      setShowWellDone(true)
                       setTimeout(() => { window.location.href = '/kid-hub' }, 3000)
                     }} style={{
                       padding: '16px 20px', borderRadius: '16px',
@@ -1813,6 +1829,17 @@ export default function SessionPage() {
                 )}
               </div>
             </div>
+          </div>
+        )}
+
+        {/* Well-done screen */}
+        {showWellDone && (
+          <div style={{ position: 'fixed', inset: 0, minHeight: '100vh', background: '#0d2b28', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 24px', textAlign: 'center', zIndex: 350 }} onClick={() => window.location.href = '/kid-hub'}>
+            <div style={{ fontSize: '64px', marginBottom: '24px' }}>{state.correctCount / Math.max(state.totalQuestions, 1) > 0.8 ? '🚀' : state.correctCount / Math.max(state.totalQuestions, 1) > 0.5 ? '⭐' : '💪'}</div>
+            <div style={{ fontFamily: "'Nunito', sans-serif", fontSize: '22px', fontWeight: 900, color: 'white', marginBottom: '16px', maxWidth: '300px', lineHeight: 1.4 }}>
+              {wellDoneMessage}
+            </div>
+            <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.3)', marginTop: '24px' }}>Tap anywhere to continue</div>
           </div>
         )}
 
