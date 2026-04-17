@@ -1104,6 +1104,14 @@ export default function SessionPage() {
     )
   }
 
+  // Well-done: when showWellDone becomes true, auto-redirect after 3 seconds
+  // Using useEffect guarantees the component has mounted before redirect fires
+  React.useEffect(() => {
+    if (!showWellDone) return
+    const timer = setTimeout(() => { window.location.href = '/kid-hub' }, 3000)
+    return () => clearTimeout(timer)
+  }, [showWellDone])
+
   // Well-done screen — shown after feedback tap, before redirect to /kid-hub
   if (showWellDone) {
     return (
@@ -1828,7 +1836,6 @@ export default function SessionPage() {
                       setWellDoneEmoji(emojiIcon)
                       setShowFeedback(false)
                       setShowWellDone(true)
-                      setTimeout(() => { window.location.href = '/kid-hub' }, 3000)
                     }} style={{
                       padding: '16px 20px', borderRadius: '16px',
                       background: 'rgba(255,255,255,0.08)', border: '1.5px solid rgba(255,255,255,0.15)',
