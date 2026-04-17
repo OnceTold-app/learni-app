@@ -1106,7 +1106,7 @@ export default function SessionPage() {
 
   // Well-done: when showWellDone becomes true, auto-redirect after 3 seconds
   // Using useEffect guarantees the component has mounted before redirect fires
-  React.useEffect(() => {
+  useEffect(() => {
     if (!showWellDone) return
     const timer = setTimeout(() => { window.location.href = '/kid-hub' }, 3000)
     return () => clearTimeout(timer)
