@@ -698,7 +698,8 @@ export default function SessionPage() {
         })
       } catch { /* best effort */ }
     }
-    window.location.href = '/kid-hub'
+    // Redirect is handled by well-done screen, not here
+    // window.location.href = '/kid-hub' -- removed: well-done screen handles this
   }
 
   // Called when lesson question cap or time limit is reached
