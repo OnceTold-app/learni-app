@@ -546,11 +546,10 @@ export default function KidHubPage() {
             padding: '16px',
             textAlign: 'center',
           }}>
-            <div style={{ fontSize: '28px', fontWeight: 900, fontFamily: "'Nunito', sans-serif", color: '#f5a623' }}>⭐ {totalStars}</div>
-            <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', marginTop: '4px', fontWeight: 600 }}>Stars</div>
-            {rateSet ? (
-              <div style={{ fontSize: '11px', color: '#f5a623', marginTop: '2px', fontWeight: 700 }}>= ${starsToDollars(totalStars)} earned</div>
-            ) : (
+            <div style={{ fontSize: '28px', fontWeight: 900, fontFamily: "'Nunito', sans-serif", color: '#f5a623' }}>
+              {rateSet ? `⭐ ${totalStars} = $${starsToDollars(totalStars)} earned` : `⭐ ${totalStars}`}
+            </div>
+            {!rateSet && (
               <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', marginTop: '2px', fontWeight: 600, lineHeight: 1.3 }}>Ask your parent to set your reward rate!</div>
             )}
           </div>
