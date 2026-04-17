@@ -120,7 +120,7 @@ display: flex; align-items: center; justify-content: space-between;
 .ps-lesson { background:linear-gradient(135deg,#2563eb,#1d4ed8); border-radius:14px; padding:13px; display:flex; gap:10px; align-items:center; }
 .psl-icon { width:40px; height:40px; border-radius:10px; background:rgba(255,255,255,0.15); display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0; }
 .psl-name { font-family:'Nunito',sans-serif; font-size:13px; font-weight:900; color:white; margin-bottom:2px; }
-.psl-meta { font-family:'Nunito',sans-serif; font-size:10px; color:rgba(255,255,255,0.55); margin-bottom:5px; }
+.psl-meta { font-family:'Nunito',sans-serif; font-size:10px; color:rgba(255,255,255,0.95); margin-bottom:5px; }
 .psl-earn { display:inline-flex; align-items:center; gap:3px; background:rgba(245,166,35,0.18); border:1px solid rgba(245,166,35,0.3); border-radius:20px; padding:2px 8px; font-family:'Nunito',sans-serif; font-size:9px; font-weight:800; color:var(--gold); }
 .phone-home-bar { height:32px; background:var(--ink); display:flex; align-items:center; justify-content:center; }
 .phone-home-indicator { width:100px; height:4px; background:rgba(255,255,255,0.18); border-radius:2px; }
@@ -203,6 +203,7 @@ display: flex; align-items: center; justify-content: space-between;
 .ans.correct::after { content: ' ✓'; }
 .ans.wrong::after { content: ' ✗'; }
 
+.ans .tick { opacity:0; }
 .ans.correct .tick { opacity:1; }
 .star-moment { background: rgba(245,166,35,0.08); border: 1px solid rgba(245,166,35,0.18); border-radius: 12px; padding: 13px 16px; display: flex; align-items: center; gap: 12px; margin-top: 4px; }
 .sm-icon { font-size:22px; }
@@ -305,9 +306,9 @@ display: flex; align-items: center; justify-content: space-between;
 .cta-final { background: var(--turq); padding: 112px 24px; text-align: center; position: relative; overflow: hidden; }
 .cta-final::before { content:''; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:600px; height:400px; background:radial-gradient(ellipse, rgba(255,255,255,0.15) 0%, transparent 70%); pointer-events:none; }
 .cf-inner { position:relative; z-index:1; }
-.cf-eyebrow { font-size:12px; font-weight:600; letter-spacing:.18em; text-transform:uppercase; color:rgba(255,255,255,0.55); margin-bottom:18px; }
+.cf-eyebrow { font-size:12px; font-weight:600; letter-spacing:.18em; text-transform:uppercase; color:rgba(255,255,255,0.95); margin-bottom:18px; }
 .cf-title { font-family:'Nunito',sans-serif; font-size: clamp(38px,5vw,60px); font-weight:900; color:white; letter-spacing:-1.5px; line-height:1.08; margin-bottom:16px; }
-.cf-sub { font-size:18px; color:rgba(255,255,255,0.65); margin-bottom:40px; font-weight:400; }
+.cf-sub { font-size:18px; color:rgba(255,255,255,0.95); margin-bottom:40px; font-weight:400; }
 .cf-actions { display:flex; align-items:center; justify-content:center; gap:14px; flex-wrap:wrap; margin-bottom:18px; }
 .btn-white { display:inline-flex; align-items:center; gap:8px; background:white; color:var(--turq-deep); border-radius:30px; padding:16px 34px; font-family:'Nunito',sans-serif; font-size:18px; font-weight:900; cursor:pointer; border:none; box-shadow:0 10px 36px rgba(0,0,0,0.14); transition:all .15s; letter-spacing:-.2px; }
 .btn-white:hover { transform:translateY(-2px); box-shadow:0 16px 48px rgba(0,0,0,0.2); }
@@ -401,7 +402,8 @@ footer { background: #070f0e; padding: 32px 24px; }
   "mainEntity": [{"@type":"Question","name":'What subjects does Learni cover?',"acceptedAnswer":{"@type":"Answer","text":'Learni supports primary and secondary school students, broadly ages 5-18. On the first session, Earni runs a quick baseline check to find your child&apos;s exact level — so they&apos;re never doing work that&apos;s too easy or too hard. Content scales from early number recognition right through to advanced algebra and essay writing.'}},{"@type":"Question","name":'What ages and year levels does Learni support?',"acceptedAnswer":{"@type":"Answer","text":'No. Earni speaks - your child taps their answer or types short answers on screen. Earni uses voice + visual maths (dot arrays, fraction pies, number lines) so kids see and hear the concept at once. Works perfectly on any phone, tablet, or computer.'}},{"@type":"Question","name":'Does my child need to speak out loud?',"acceptedAnswer":{"@type":"Answer","text":'Learni tracks stars and converts them to a dollar amount based on the rate you set. We show you what your child has earned - you pay them however you like (cash, bank transfer, anything). The 3-jar system splits earnings into Save, Spend, and Give jars. We never hold or move money. No banking licence involved on our end, and no risk on yours.'}},{"@type":"Question","name":'How does the reward money work exactly?',"acceptedAnswer":{"@type":"Answer","text":'Yes. Each child has their own username and PIN they use to sign in — but everything runs securely under the parent account. Parents have full visibility and control at all times. Data is stored in Australia and never shared with third parties or used to train AI models. No ads, ever. Earni never listens passively. Voice input only activates when your child taps the microphone button — nothing is recorded otherwise.'}},{"@type":"Question","name":"Is my child's data safe?","acceptedAnswer":{"@type":"Answer","text":'Most platforms give your child content to read or watch. Learni is different in two big ways: Earni actually speaks to your child — asking questions, giving encouragement, and adapting in real time. And it&apos;s the only platform that ties learning to a real money reward system you control. That combination gives children a reason to keep showing up that no worksheet or video can match.'}},{"@type":"Question","name":'How is Learni different from other tutoring platforms?',"acceptedAnswer":{"@type":"Answer","text":'Any modern device with a browser: iPhone, Android, iPad, laptop, desktop. No app download required, though you can install it to your home screen as a Progressive Web App (PWA) for a near-native experience. Works best on a phone or tablet where your child taps answers.'}},{"@type":"Question","name":'What devices does Learni work on?',"acceptedAnswer":{"@type":"Answer","text":"Yes. Cancel any time from your Parent Hub in one click. No phone calls, no guilt trip, no forms. If you cancel during a billing period, you keep access until the end of that period. We don't do sneaky auto-renewals - you'll always know what you're paying and when."}},{"@type":"Question","name":'Can I cancel or pause at any time?',"acceptedAnswer":{"@type":"Answer","text":"A full session runs 15-30 minutes and covers a warm-up, a main lesson (voice + visuals), a financial literacy segment, a rapid-fire close, and a reward moment. Kids can also do shorter 10-minute practice sessions or quick challenge rounds. Earni adapts the length to your child's focus."}},{"@type":"Question","name":'How long are sessions?',"acceptedAnswer":{"@type":"Answer","text":'Yes. The base plan is $49/month for one child. Each additional child is +$19/month. So two children = $68, three = $87, four = $106. All children share the parent Hub, have their own avatar, progress, and reward tracking. Much cheaper than one tutoring session for one child.'}}]
 }
 </script>
-<link rel="icon" href="/icons/icon-192.png" type="image/png">
+<link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-192.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/icons/icon-192.png">
 </head>
 <body>
 <a href="#main-content" class="skip-link">Skip to main content</a>
@@ -529,10 +531,12 @@ footer { background: #070f0e; padding: 32px 24px; }
 </div>
 <div class="demo-answer-side">
 <div class="da-label">Tap your answer</div>
+<div class="ans-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;max-width:480px;">
 <button type="button" class="ans correct" onclick="pick(this)" aria-label="Answer A: 12 (correct)">A · 12</button>
 <button type="button" class="ans" onclick="pick(this)" aria-label="Answer B: 15">B · 15</button>
 <button type="button" class="ans" onclick="pick(this)" role="button" tabindex="0" aria-label="Answer C: 18">C · 18 <span class="tick">✓</span></div>
 <button type="button" class="ans" onclick="pick(this)" role="button" tabindex="0" aria-label="Answer D: 20">D · 20 <span class="tick">✓</span></div>
+</div>
 <div class="star-moment">
 <div class="sm-icon"><span aria-hidden="true">⭐</span></div>
 <div><div class="sm-earn">+4 stars earned!</div><div class="sm-note">Visual maths + voice teaching in one session</div></div>
@@ -566,7 +570,7 @@ footer { background: #070f0e; padding: 32px 24px; }
 <div class="bento-card"><div class="bc-icon-wrap">🗣️</div><h3 class="bc-title">AI voice tutor</h3><p class="bc-body">Earni speaks to your child like a patient older sibling - never frustrated, never rushing. Always ready to explain it a different way.</p></div>
 <div class="bento-card turq"><div class="bc-icon-wrap">👁️</div><h3 class="bc-title">Visual maths</h3><p class="bc-body">Dot arrays, fraction pies, number lines, place value blocks - Earni shows the maths on screen, not just talks about it. Kids see it, then get it.</p></div>
 <div class="bento-card white"><div class="bc-icon-wrap"><span aria-hidden="true">🏅</span></div><h3 class="bc-title">Achievement badges</h3><p class="bc-body">Streak badges, subject mastery, session milestones. Kids collect real achievements that show on their profile. Because progress should feel like something.</p></div>
-<div class="bento-card" style="background:linear-gradient(135deg,#0d2b28,#1a4a44);grid-column:span 3;"><div style="display:flex;align-items:flex-start;gap:20px;flex-wrap:wrap;"><div class="bc-icon-wrap" style="background:rgba(255,255,255,0.12);font-size:28px;min-width:52px;"><span aria-hidden="true">💰</span></div><div><h3 class="bc-title" style="color:white;font-size:22px;">Financial literacy — built in, not bolted on</h3><p class="bc-body" style="color:rgba(255,255,255,0.65);font-size:15px;max-width:680px;line-height:1.7;">Earning is just the start. Earni teaches kids to split their money into three jars — Save, Spend, Give — building real money habits alongside every lesson. They learn what to do with what they earn, not just how to earn it. <strong style="color:#1a7a72;">Real money skills. Real life prep.</strong></p></div></div></div>
+<div class="bento-card" style="background:linear-gradient(135deg,#0d2b28,#1a4a44);grid-column:span 3;"><div style="display:flex;align-items:flex-start;gap:20px;flex-wrap:wrap;"><div class="bc-icon-wrap" style="background:rgba(255,255,255,0.12);font-size:28px;min-width:52px;"><span aria-hidden="true">💰</span></div><div><h3 class="bc-title" style="color:white;font-size:22px;">Financial literacy — built in, not bolted on</h3><p class="bc-body" style="color:rgba(255,255,255,0.95);font-size:15px;max-width:680px;line-height:1.7;">Earning is just the start. Earni teaches kids to split their money into three jars — Save, Spend, Give — building real money habits alongside every lesson. They learn what to do with what they earn, not just how to earn it. <strong style="color:#1a7a72;">Real money skills. Real life prep.</strong></p></div></div></div>
 <div class="bento-wide reveal">
 <div class="bw-item"><div class="bw-num">3</div><div class="bw-label">Subjects</div><div class="bw-desc">Maths · Reading &amp; Writing · Money &amp; Life</div></div>
 <div class="bw-item"><div class="bw-num">Y1-13</div><div class="bw-label">All year levels</div><div class="bw-desc">Adapts automatically to your child's year level — primary through secondary. NCEA prep included.</div></div>
@@ -722,10 +726,19 @@ if (!open) item.classList.add('open');
 }
 
 function pick(el) {
-document.querySelectorAll('.ans').forEach(a => { a.classList.remove('correct'); a.querySelector('.tick').style.opacity = '0'; });
-el.classList.add('correct');
-
-el.querySelector('.tick').style.opacity = '1';
+  // Reset all buttons
+  document.querySelectorAll('.ans').forEach(function(a) {
+    a.classList.remove('correct', 'wrong');
+    var tick = a.querySelector('.tick');
+    if (tick) tick.style.opacity = '0';
+  });
+  // Mark selected as correct
+  el.classList.add('correct');
+  var tick = el.querySelector('.tick');
+  if (tick) tick.style.opacity = '1';
+  // Show star moment
+  var star = document.querySelector('.star-moment');
+  if (star) star.style.opacity = '1';
 }
 
 window.addEventListener('scroll', () => {
