@@ -422,6 +422,7 @@ export default function SessionPage() {
   // Start session — only after audio check
   useEffect(() => {
     if (!state.sessionStarted && audioChecked) {
+      localStorage.removeItem('learni_session_topic') // clear stale topic from previous session
       fetchQuestion('lesson')
       sessionStartTime.current = Date.now()
       phaseStartRef.current = Date.now()
