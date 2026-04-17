@@ -433,6 +433,13 @@ export default function SessionPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [audioChecked])
 
+  // Well-done redirect — in useEffect so it fires AFTER component renders (not in onClick)
+  useEffect(() => {
+    if (!showWellDone) return
+    const timer = setTimeout(() => { window.location.href = '/kid-hub' }, 3000)
+    return () => clearTimeout(timer)
+  }, [showWellDone])
+
   // Inactivity detection - only fires when child is actively answering, never during loading/audio
   useEffect(() => {
     // Only run idle check when conditions are right for the child to be answering
@@ -1103,14 +1110,6 @@ export default function SessionPage() {
       </div>
     )
   }
-
-  // Well-done: when showWellDone becomes true, auto-redirect after 3 seconds
-  // Using useEffect guarantees the component has mounted before redirect fires
-  useEffect(() => {
-    if (!showWellDone) return
-    const timer = setTimeout(() => { window.location.href = '/kid-hub' }, 3000)
-    return () => clearTimeout(timer)
-  }, [showWellDone])
 
   // Well-done screen — shown after feedback tap, before redirect to /kid-hub
   if (showWellDone) {
