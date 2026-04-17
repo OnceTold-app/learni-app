@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import MathsVisual from '@/components/maths-visual'
-import EarniFAB from '@/components/earni-fab'
 
 type Phase = 'warmup' | 'lesson' | 'financial' | 'closing' | 'reward'
 // Note: 'reward' phase no longer shows jar allocation — vault lives on kid hub
@@ -1141,7 +1140,7 @@ export default function SessionPage() {
           <span style={{ fontSize: '14px', fontWeight: 900, fontFamily: "'Nunito', sans-serif" }}>
             {state.phaseLabel}
           </span>
-          <EarniFAB context="in_session" sessionStyle={true} currentQuestion={state.question || undefined} currentTopic={sessionTopic || undefined} />
+
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           {isRapidFire && state.streakCount > 0 && (
