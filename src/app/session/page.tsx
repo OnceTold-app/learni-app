@@ -217,6 +217,7 @@ export default function SessionPage() {
   const [celebration, setCelebration] = useState<string | null>(null)
   const [showConfetti, setShowConfetti] = useState(false)
   const [shake, setShake] = useState(false)
+  const [showHelp, setShowHelp] = useState(false)
   const [showFeedback, setShowFeedback] = useState(false)
   const [feedbackRating, setFeedbackRating] = useState(0)
   const [feedbackEarni, setFeedbackEarni] = useState(0)
@@ -1211,6 +1212,17 @@ export default function SessionPage() {
               {voiceSpeed}x
             </button>
           )}
+          <button
+            onClick={() => setShowHelp(v => !v)}
+            style={{
+              width: '32px', height: '32px', borderRadius: '50%',
+              background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)',
+              color: 'white', fontSize: '14px', fontWeight: 900, cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontFamily: "'Nunito', sans-serif",
+            }}
+            aria-label="Get help"
+          >?</button>
           <span style={{
             background: celebration ? 'rgba(245,166,35,0.2)' : 'rgba(46,196,182,0.12)',
             border: `1px solid ${celebration ? 'rgba(245,166,35,0.4)' : 'rgba(46,196,182,0.2)'}`,
@@ -1960,6 +1972,32 @@ export default function SessionPage() {
               >
                 Yes, I&apos;m here! 🙋
               </button>
+            </div>
+          </div>
+        )}
+
+        {/* Help overlay */}
+        {showHelp && (
+          <div style={{
+            position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 900,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px'
+          }} onClick={() => setShowHelp(false)}>
+            <div style={{
+              background: '#0d2b28', borderRadius: '20px', padding: '32px',
+              maxWidth: '340px', width: '100%', border: '1px solid rgba(46,196,182,0.2)'
+            }} onClick={e => e.stopPropagation()}>
+              <div style={{ fontFamily: "'Nunito', sans-serif", fontSize: '20px', fontWeight: 900, color: 'white', marginBottom: '16px' }}>Need help?</div>
+              <div style={{ fontSize: '14px', color: 'rgba(255,255,255,0.6)', lineHeight: 1.7, marginBottom: '24px' }}>
+                <p>• Tap the microphone to speak your answer</p>
+                <p>• Tap 🔊 to turn Earni&apos;s voice on or off</p>
+                <p>• Tap ⏸️ to pause the session</p>
+                <p>• Tap ← to leave and return to your hub</p>
+              </div>
+              <button onClick={() => setShowHelp(false)} style={{
+                width: '100%', padding: '12px', background: '#2ec4b6', border: 'none',
+                borderRadius: '12px', color: '#0d2b28', fontFamily: "'Nunito', sans-serif",
+                fontSize: '16px', fontWeight: 900, cursor: 'pointer',
+              }}>Got it</button>
             </div>
           </div>
         )}
