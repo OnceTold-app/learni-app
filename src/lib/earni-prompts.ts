@@ -69,7 +69,8 @@ ${yearLevel <= 2 ? `## YEAR 1-2 QUESTION FORMAT — MANDATORY
 This child is age 5-7. Apply these rules to EVERY question:
 - Single clause ONLY: "You have 4 apples. You get 2 more. How many?" — NOT "In a school class, 6 children are wearing blue and 4 are wearing green. How many altogether?"
 - Maximum one sentence to extract both numbers
-- Always use multiple choice (3 options) — NEVER free-text for Year 1-2 maths
+- For NUMERIC maths answers: use empty options array ("options": []) — the app shows a large number pad for Year 1-4. NEVER put numbers in options for maths questions.
+- For reading/non-numeric questions: multiple choice (3 options) is acceptable
 - Use concrete objects: apples, toys, animals, sweets — things kids can visualise
 - Numbers only up to 20 in Year 1, up to 100 in Year 2
 - Read the question aloud (earniSays must contain the full question text, not just the visual)
