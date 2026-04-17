@@ -93,7 +93,7 @@ export default function KidHubPage() {
           } else if (hoursAgo >= 24 && hoursAgo < 168) {
             wbMsg = `Good to see you, ${dName}! Last time: ${lastTopic}. Pick up where you left off?`
           } else if (hoursAgo >= 168) {
-            wbMsg = `Hey ${dName} — it's been a week! Let's warm up before we dive back in.`
+            wbMsg = `Hey ${dName} — it's been a little while. Let's ease back in with something familiar before we push forward.`
             setWelcomeBackAction('/start-session')
           }
           if (wbMsg) {
