@@ -220,6 +220,7 @@ export default function SessionPage() {
   const [showHelp, setShowHelp] = useState(false)
   const [showWellDone, setShowWellDone] = useState(false)
   const [wellDoneMessage, setWellDoneMessage] = useState('')
+  const [wellDoneEmoji, setWellDoneEmoji] = useState('⭐')
   const [showFeedback, setShowFeedback] = useState(false)
   const [feedbackRating, setFeedbackRating] = useState(0)
   const [feedbackEarni, setFeedbackEarni] = useState(0)
@@ -1437,30 +1438,33 @@ export default function SessionPage() {
                 {yearLevel <= 4 ? (
                   /* Number pad for Year 1-4 — large tap targets, no keyboard required */
                   <div>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', marginBottom: '10px' }}>
+                    <div style={{ display:'flex', alignItems:'center', gap:'8px', marginBottom:'10px', padding:'12px 16px', background:'rgba(255,255,255,0.08)', border:'1.5px solid rgba(255,255,255,0.15)', borderRadius:'14px', minHeight:'54px', justifyContent:'center' }}>
+                      <span style={{ fontSize:'24px', fontWeight:800, fontFamily:"'Nunito',sans-serif", color:'white' }}>{typedAnswer || <span style={{opacity:0.3}}>?</span>}</span>
+                    </div>
+                    <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:'8px', marginBottom:'10px' }}>
                       {['1','2','3','4','5','6','7','8','9','','0','⌫'].map((key) => (
                         <button key={key} onClick={() => {
                           if (!key) return
                           if (key === '⌫') setTypedAnswer(a => a.slice(0,-1))
                           else setTypedAnswer(a => a + key)
+                          lastActivityRef.current = Date.now()
                         }} style={{
-                          height: '64px', fontSize: '24px', fontWeight: 900,
-                          fontFamily: "'Nunito', sans-serif",
+                          height:'64px', fontSize:'22px', fontWeight:900, fontFamily:"'Nunito',sans-serif",
                           background: key === '⌫' ? 'rgba(255,255,255,0.08)' : key === '' ? 'transparent' : 'rgba(255,255,255,0.1)',
-                          border: '1.5px solid rgba(255,255,255,0.12)',
-                          borderRadius: '14px', color: 'white', cursor: key ? 'pointer' : 'default',
+                          border:'1.5px solid rgba(255,255,255,0.12)',
+                          borderRadius:'14px', color:'white', cursor: key ? 'pointer' : 'default',
                           visibility: key === '' ? 'hidden' : 'visible',
                         }}>
                           {key}
                         </button>
                       ))}
                     </div>
-                    <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
-                      <div style={{ flex: 1, padding: '14px 18px', background: 'rgba(255,255,255,0.08)', border: '1.5px solid rgba(255,255,255,0.15)', borderRadius: '14px', fontSize: '24px', fontWeight: 800, fontFamily: "'Nunito', sans-serif", color: 'white', textAlign: 'center', minHeight: '54px' }}>
-                        {typedAnswer || <span style={{ opacity: 0.3 }}>?</span>}
-                      </div>
-                      <button onClick={handleTypedSubmit} disabled={!typedAnswer.trim()} style={{ padding: '14px 24px', background: typedAnswer.trim() ? '#2ec4b6' : 'rgba(46,196,182,0.3)', color: typedAnswer.trim() ? '#0d2b28' : 'white', border: 'none', borderRadius: '14px', fontFamily: "'Nunito', sans-serif", fontSize: '16px', fontWeight: 900, cursor: typedAnswer.trim() ? 'pointer' : 'not-allowed' }}>Go</button>
-                    </div>
+                    <button onClick={handleTypedSubmit} disabled={!typedAnswer.trim()} style={{
+                      width:'100%', padding:'14px', background: typedAnswer.trim() ? '#1a8f85' : 'rgba(26,143,133,0.3)',
+                      color:'white', border:'none', borderRadius:'14px',
+                      fontFamily:"'Nunito',sans-serif", fontSize:'16px', fontWeight:900,
+                      cursor: typedAnswer.trim() ? 'pointer' : 'not-allowed',
+                    }}>Go</button>
                   </div>
                 ) : (
                 <form onSubmit={(e) => { e.preventDefault(); handleTypedSubmit() }} style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
@@ -1795,20 +1799,19 @@ export default function SessionPage() {
                     { emoji: '😤', label: 'Hard' },
                   ].map(({ emoji, label }) => (
                     <button key={label} onClick={() => {
-                      setFeedbackSubmitted(true)
-                      // Determine message based on accuracy and year level
                       const pct = state.correctCount / Math.max(state.totalQuestions, 1)
-                      let msg = ''
+                      let msg = ''; let emojiIcon = '⭐';
                       if (yearLevel <= 6) {
-                        if (pct > 0.8) msg = "Easy? That means you're ready for more. Come back tomorrow and we'll push further!"
-                        else if (pct > 0.5) msg = `Just right — that's exactly where learning happens. Well done, ${childName}!`
-                        else msg = "Hard is good — it means your brain was working. You'll find it easier next time."
+                        if (pct > 0.8) { msg = "Easy? That means you're ready for more. Come back tomorrow and we'll push further!"; emojiIcon = '🚀' }
+                        else if (pct > 0.5) { msg = `Just right — that's exactly where learning happens. Well done, ${childName}!`; emojiIcon = '⭐' }
+                        else { msg = "Hard is good — it means your brain was working. You'll find it easier next time."; emojiIcon = '💪' }
                       } else {
-                        if (pct > 0.8) msg = "Noted — next session we'll step it up."
-                        else if (pct > 0.5) msg = `Good session, ${childName}. See you next time.`
-                        else msg = "Hard sessions are the ones that stick. Come back tomorrow."
+                        if (pct > 0.8) { msg = "Noted — next session we'll step it up."; emojiIcon = '🚀' }
+                        else if (pct > 0.5) { msg = `Good session, ${childName}. See you next time.`; emojiIcon = '⭐' }
+                        else { msg = "Hard sessions are the ones that stick. Come back tomorrow."; emojiIcon = '💪' }
                       }
                       setWellDoneMessage(msg)
+                      setWellDoneEmoji(emojiIcon)
                       setShowFeedback(false)
                       setShowWellDone(true)
                       setTimeout(() => { window.location.href = '/kid-hub' }, 3000)
@@ -1835,7 +1838,7 @@ export default function SessionPage() {
         {/* Well-done screen */}
         {showWellDone && (
           <div style={{ position: 'fixed', inset: 0, minHeight: '100vh', background: '#0d2b28', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 24px', textAlign: 'center', zIndex: 350 }} onClick={() => window.location.href = '/kid-hub'}>
-            <div style={{ fontSize: '64px', marginBottom: '24px' }}>{state.correctCount / Math.max(state.totalQuestions, 1) > 0.8 ? '🚀' : state.correctCount / Math.max(state.totalQuestions, 1) > 0.5 ? '⭐' : '💪'}</div>
+            <div style={{ fontSize: '72px', marginBottom: '24px' }}>{wellDoneEmoji}</div>
             <div style={{ fontFamily: "'Nunito', sans-serif", fontSize: '22px', fontWeight: 900, color: 'white', marginBottom: '16px', maxWidth: '300px', lineHeight: 1.4 }}>
               {wellDoneMessage}
             </div>
