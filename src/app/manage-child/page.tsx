@@ -19,7 +19,6 @@ export default function ManageChildPage() {
   const [yearLevel, setYearLevel] = useState('')
   const [sessionLanguage, setSessionLanguage] = useState('en')
   const [loading, setLoading] = useState(false)
-  const [message, setMessage] = useState('')
   const [error, setError] = useState('')
   const [showRemove, setShowRemove] = useState(false)
   const [isDirty, setIsDirty] = useState(false)
@@ -51,9 +50,44 @@ export default function ManageChildPage() {
     setDataLoaded(true)
   }
 
+  function showSaveToast() {
+    // Remove any existing toast
+    const existing = document.getElementById('save-toast')
+    if (existing) existing.remove()
+
+    // Create new toast
+    const toast = document.createElement('div')
+    toast.id = 'save-toast'
+    toast.textContent = 'Changes saved ✓'
+    toast.style.cssText = `
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #1a8f85;
+      color: white;
+      padding: 12px 28px;
+      border-radius: 30px;
+      font-family: 'Nunito', sans-serif;
+      font-weight: 700;
+      font-size: 15px;
+      z-index: 99999;
+      box-shadow: 0 4px 20px rgba(26,143,133,0.4);
+      white-space: nowrap;
+      pointer-events: none;
+    `
+    document.body.appendChild(toast)
+
+    // Auto-remove after 3 seconds
+    setTimeout(() => {
+      toast.style.opacity = '0'
+      toast.style.transition = 'opacity 0.3s'
+      setTimeout(() => toast.remove(), 300)
+    }, 3000)
+  }
+
   async function handleSaveAll() {
     setLoading(true)
-    setMessage('')
     setError('')
 
     try {
@@ -77,9 +111,9 @@ export default function ManageChildPage() {
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
-      setMessage('Changes saved ✓')
+      console.log('Save successful, showing toast')
+      showSaveToast()
       setIsDirty(false)
-      setTimeout(() => setMessage(''), 3000)
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Failed to save')
     } finally {
@@ -129,28 +163,6 @@ export default function ManageChildPage() {
       background: '#f7fafa',
       fontFamily: "'Plus Jakarta Sans', sans-serif",
     }}>
-      {message && (
-        <div style={{
-          position: 'fixed',
-          bottom: '24px',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          background: '#1a8f85',
-          color: 'white',
-          padding: '12px 28px',
-          borderRadius: '30px',
-          fontFamily: "'Nunito', sans-serif",
-          fontWeight: 700,
-          fontSize: '15px',
-          zIndex: 9999,
-          boxShadow: '0 4px 20px rgba(26,143,133,0.4)',
-          whiteSpace: 'nowrap',
-          pointerEvents: 'none',
-          animation: 'fadeIn 0.2s ease',
-        }}>
-          {message}
-        </div>
-      )}
       <div style={{ maxWidth: '520px', margin: '0 auto', padding: '24px' }}>
         <a href="/dashboard" style={{ fontSize: '13px', color: '#5a8a84', textDecoration: 'none', display: 'inline-block', marginBottom: '20px' }}>← Back to Hub</a>
 
