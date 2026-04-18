@@ -93,7 +93,7 @@ export default function KidAvatarPage() {
   const [saving, setSaving] = useState(false)
   const [activeTab, setActiveTab] = useState('skin')
   const [styleSelected, setStyleSelected] = useState(false)
-  const [avatarStyle, setAvatarStyle] = useState<'feminine' | 'masculine' | 'own' | null>(null)
+  const [avatarStyle, setAvatarStyle] = useState<'own' | null>(null)
 
   useEffect(() => {
     setChildName(localStorage.getItem('learni_child_name') || '')
@@ -103,17 +103,23 @@ export default function KidAvatarPage() {
     setOpts(o => ({ ...o, [key]: val }))
   }
 
-  function applyStylePreset(style: 'feminine' | 'masculine' | 'own') {
+  function applyStylePreset(style: 'own') {
     setAvatarStyle(style)
     setStyleSelected(true)
-    if (style === 'feminine') {
-      setOpts(o => ({ ...o, topType: 'LongHairStraight', hairColor: 'Auburn', facialHairType: 'Blank', clotheType: 'BlazerShirt', skinColor: 'Light' }))
-    } else if (style === 'masculine') {
-      setOpts(o => ({ ...o, topType: 'ShortHairShortFlat', hairColor: 'BrownDark', facialHairType: 'Blank', clotheType: 'ShirtCrewNeck', skinColor: 'Light' }))
-    } else {
-      // My own style — keep defaults, just proceed
-      setOpts(o => ({ ...o }))
-    }
+    // Start with a fully neutral default — no gendered choices
+    setOpts({
+      skinColor: SKIN_TONES[0],
+      top: 'shortFlat',
+      hairColor: HAIR_COLORS[0],
+      eyes: 'default',
+      eyebrows: 'defaultNatural',
+      mouth: 'smile',
+      clothing: 'hoodie',
+      clothesColor: CLOTHES_COLORS[0],
+      clothingGraphic: 'bear',
+      accessories: 'none',
+      accessoriesColor: ACCESSORY_COLORS[0],
+    })
   }
 
   async function handleSave() {
@@ -146,42 +152,28 @@ export default function KidAvatarPage() {
     return (
       <div style={{ minHeight: '100vh', background: 'linear-gradient(180deg, #0d2b28, #143330)', fontFamily: "'Plus Jakarta Sans', sans-serif", display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
         <h2 style={{ fontFamily: "'Nunito', sans-serif", fontSize: '24px', fontWeight: 900, color: 'white', marginBottom: '8px', textAlign: 'center' }}>
-          Pick a starting style
+          Before we start...
         </h2>
         <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '14px', marginBottom: '40px', textAlign: 'center' }}>
-          You can change everything after — this is just your starting point.
+          Let&apos;s build your avatar. You can change everything!
         </p>
-        <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', justifyContent: 'center', maxWidth: '420px' }}>
-          {[
-            { id: 'feminine' as const, emoji: '👧', label: 'Feminine' },
-            { id: 'masculine' as const, emoji: '👦', label: 'Masculine' },
-            { id: 'own' as const, emoji: '🌟', label: 'My own style' },
-          ].map(({ id, emoji, label }) => (
-            <button
-              key={id}
-              onClick={() => applyStylePreset(id)}
-              style={{
-                width: '120px',
-                padding: '24px 16px',
-                background: 'rgba(255,255,255,0.06)',
-                border: '2px solid rgba(255,255,255,0.12)',
-                borderRadius: '20px',
-                cursor: 'pointer',
-                color: 'white',
-                textAlign: 'center',
-                transition: 'all 0.15s',
-              }}
-            >
-              <div style={{ fontSize: '48px', marginBottom: '12px' }}>{emoji}</div>
-              <div style={{ fontFamily: "'Nunito', sans-serif", fontWeight: 700, fontSize: '14px' }}>{label}</div>
-            </button>
-          ))}
-        </div>
         <button
           onClick={() => applyStylePreset('own')}
-          style={{ marginTop: '32px', background: 'none', border: 'none', color: 'rgba(255,255,255,0.3)', fontSize: '13px', cursor: 'pointer' }}
+          style={{
+            width: '100%',
+            maxWidth: '320px',
+            padding: '28px 32px',
+            background: 'rgba(46,196,182,0.08)',
+            border: '2px solid rgba(46,196,182,0.3)',
+            borderRadius: '24px',
+            cursor: 'pointer',
+            color: 'white',
+            textAlign: 'center',
+          }}
         >
-          Skip →
+          <div style={{ fontSize: '48px', marginBottom: '16px' }}>🎨</div>
+          <div style={{ fontFamily: "'Nunito', sans-serif", fontWeight: 900, fontSize: '20px', marginBottom: '8px' }}>Make it yours →</div>
+          <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.5)' }}>Build your look from scratch</div>
         </button>
       </div>
     )
