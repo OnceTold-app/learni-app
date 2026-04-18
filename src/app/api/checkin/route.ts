@@ -47,17 +47,42 @@ If nudge is provided in context, after acknowledging what child said, add ONE se
 "By the way — you're really close to mastering [nudge]. Want to go for that today?"
 Then wait for response. If yes → start_session with that topic. If no → start what they said.`
 
+const HOMEWORK_VISION_ADDITION = `
+## HOMEWORK IMAGE MODE
+An image of the child's homework has been provided. Identify:
+1. What subject is shown (Maths, Reading & Writing, etc.)
+2. What specific topic/skill is being practised
+3. Map to the closest topicId from the list above
+
+Respond warmly: acknowledge what you see, confirm the subject, and set action to "start_session" with the correct topicId and subject.`
+
+const CALIBRATION_PROMPT = `
+## FIRST-TIME CALIBRATION MODE
+This is the child's first session. Your job is to calibrate their level conversationally.
+Ask 4-5 questions spanning difficulty: start easy (Year 1-2), work up to Year 5-6.
+Examples:
+- "What's 3 + 4?" (Year 1)
+- "What's 7 × 8?" (Year 3-4)
+- "What's 25% of 80?" (Year 5-6)
+- "What's the area of a rectangle 6cm × 4cm?" (Year 6)
+Interpret their responses to determine their starting level.
+When you have enough data (3+ responses), set action to "start_session" and include:
+- "baselineLevel": 1-13 (estimated year level)
+- "baselineName": "Year X content"
+in the response JSON.
+Keep it conversational and encouraging. Child must never feel like they're being tested.`
+
 export async function POST(req: NextRequest) {
   try {
-    const { childId, childName, yearLevel, message, history, phase, nudge } = await req.json()
-    
+    const { childId, childName, yearLevel, message, history, phase, nudge, mode, imageBase64, isFirstTime } = await req.json()
+
     const messages = history
       .filter((m: any) => m.role !== 'system')
       .map((m: any) => ({
         role: m.role === 'child' ? 'user' : 'assistant',
         content: m.role === 'earni' ? m.content : `${childName} says: "${m.content}"`
       }))
-    
+
     // Add current message if not already in history
     if (messages.length === 0 || messages[messages.length-1].role !== 'user') {
       messages.push({ role: 'user', content: `${childName} says: "${message}"` })
@@ -69,15 +94,47 @@ export async function POST(req: NextRequest) {
       `Current phase: ${phase}`,
     ].filter(Boolean).join('\n')
 
+    let systemPrompt = CHECKIN_PROMPT
+    if (isFirstTime) {
+      systemPrompt += CALIBRATION_PROMPT
+    }
+    if (imageBase64) {
+      systemPrompt += HOMEWORK_VISION_ADDITION
+    }
+
+    // If image provided, use vision-capable API call
+    if (imageBase64) {
+      // Replace last user message with vision content
+      const lastUserIdx = messages.length - 1
+      const lastMsg = messages[lastUserIdx]
+      messages[lastUserIdx] = {
+        role: 'user' as const,
+        content: [
+          {
+            type: 'image' as const,
+            source: {
+              type: 'base64' as const,
+              media_type: 'image/jpeg' as const,
+              data: imageBase64,
+            },
+          },
+          {
+            type: 'text' as const,
+            text: typeof lastMsg.content === 'string' ? lastMsg.content : `${childName} sent a photo of their homework.`,
+          },
+        ],
+      }
+    }
+
     const response = await client.messages.create({
       model: CLAUDE_MODEL,
-      max_tokens: 300,
-      system: CHECKIN_PROMPT + `\n\nCONTEXT:\n${contextNote}`,
+      max_tokens: 400,
+      system: systemPrompt + `\n\nCONTEXT:\n${contextNote}`,
       messages,
     })
 
     const text = response.content[0].type === 'text' ? response.content[0].text : '{}'
-    
+
     try {
       const parsed = JSON.parse(text)
       return NextResponse.json(parsed)
