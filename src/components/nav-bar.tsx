@@ -22,7 +22,9 @@ export default function NavBar() {
       setParentEmail(email)
       setIsParent(true)
     }
-    if (cName) {
+    // Only show kid name in nav if this is a child-only session (no parent logged in)
+    const pToken = localStorage.getItem("learni_parent_token")
+    if (cName && !pToken) {
       setKidName(cUsername || cName)
       setIsKid(true)
     }
