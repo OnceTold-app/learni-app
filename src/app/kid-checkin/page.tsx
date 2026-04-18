@@ -9,6 +9,11 @@ export default function KidCheckinPage() {
   const [loading, setLoading] = useState(false)
   const [listening, setListening] = useState(false)
   const [phase, setPhase] = useState<'greeting' | 'topic' | 'nudge' | 'starting'>('greeting')
+  // Homework mode
+  const [homeworkMode, setHomeworkMode] = useState(false)
+  const [homeworkSubMode, setHomeworkSubMode] = useState<'choose' | 'photo' | 'type' | null>(null)
+  const [homeworkText, setHomeworkText] = useState('')
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const recognitionRef = useRef<any>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -17,15 +22,28 @@ export default function KidCheckinPage() {
     const yl = parseInt(localStorage.getItem('learni_year_level') || '5')
     setChildName(name.charAt(0).toUpperCase() + name.slice(1).toLowerCase())
     setYearLevel(yl)
-    
-    // Start with Earni greeting
-    startCheckin(name, yl)
+
+    // Check start mode
+    const startMode = localStorage.getItem('learni_start_mode')
+    localStorage.removeItem('learni_start_mode')
+
+    if (startMode === 'homework') {
+      setHomeworkMode(true)
+      setHomeworkSubMode('choose')
+      // Show homework greeting
+      const cleanName = (name || 'there').charAt(0).toUpperCase() + (name || 'there').slice(1).toLowerCase()
+      const greeting = `Show me what you're working on — take a photo or tell me what it says.`
+      setMessages([{ role: 'earni', content: greeting }])
+      if (yl <= 6) speakText(greeting)
+    } else {
+      startCheckin(name, yl)
+    }
   }, [])
 
   async function startCheckin(name: string, yl: number) {
     setLoading(true)
     const childId = localStorage.getItem('learni_child_id')
-    
+
     // Get last session info for context
     let lastTopic = ''
     if (childId) {
@@ -56,7 +74,7 @@ export default function KidCheckinPage() {
         }
       } catch {}
     }
-    
+
     // Build greeting
     const cleanName = (name || 'there').charAt(0).toUpperCase() + (name || 'there').slice(1).toLowerCase()
     let greeting = ''
@@ -70,10 +88,10 @@ export default function KidCheckinPage() {
     setMessages([earniMsg])
     setLoading(false)
     setPhase('topic')
-    
+
     // Speak greeting for Year 1-6
     if (yl <= 6) speakText(greeting)
-    
+
     // Store nudge for later
     if (nudgeText) localStorage.setItem('learni_checkin_nudge', nudgeText)
   }
@@ -115,11 +133,75 @@ export default function KidCheckinPage() {
     recognition.start()
   }
 
+  async function handlePhotoSelected(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setHomeworkSubMode(null)
+    setLoading(true)
+
+    // Convert to base64
+    const reader = new FileReader()
+    reader.onload = async () => {
+      const base64 = (reader.result as string).split(',')[1]
+      const userMsg = { role: 'child', content: '📷 [Photo sent]' }
+      const newMessages = [...messages, userMsg]
+      setMessages(newMessages)
+
+      try {
+        const r = await fetch('/api/checkin', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            childId: localStorage.getItem('learni_child_id'),
+            childName,
+            yearLevel,
+            message: 'I have a photo of my homework',
+            history: newMessages,
+            phase: 'topic',
+            nudge: localStorage.getItem('learni_checkin_nudge') || '',
+            mode: 'homework',
+            imageBase64: base64,
+          })
+        })
+        const d = await r.json()
+        const earniResponse = { role: 'earni', content: d.earniSays }
+        setMessages(prev => [...prev, earniResponse])
+        if (yearLevel <= 6) speakText(d.earniSays)
+
+        if (d.action === 'start_session') {
+          setPhase('starting')
+          if (d.topicId) localStorage.setItem('learni_session_topic', d.topicId)
+          if (d.subject) localStorage.setItem('learni_subject', d.subject)
+          localStorage.setItem('learni_session_mode', 'full')
+          setTimeout(() => { window.location.href = '/session' }, 1500)
+        } else {
+          setPhase('topic')
+          setHomeworkMode(false)
+        }
+      } catch {
+        setMessages(prev => [...prev, { role: 'earni', content: "Hmm, I couldn't read that photo. Can you tell me what the homework says?" }])
+        setHomeworkSubMode('type')
+      }
+      setLoading(false)
+    }
+    reader.readAsDataURL(file)
+  }
+
+  async function sendHomeworkText() {
+    const msg = homeworkText.trim()
+    if (!msg || loading) return
+    setHomeworkText('')
+    setHomeworkSubMode(null)
+    setHomeworkMode(false)
+    await sendMessage(msg)
+  }
+
   async function sendMessage(text?: string) {
     const msg = text || message.trim()
     if (!msg || loading) return
     setMessage('')
-    
+
     const userMsg = { role: 'child', content: msg }
     const newMessages = [...messages, userMsg]
     setMessages(newMessages)
@@ -141,12 +223,12 @@ export default function KidCheckinPage() {
         })
       })
       const d = await r.json()
-      
+
       const earniResponse = { role: 'earni', content: d.earniSays }
       setMessages(prev => [...prev, earniResponse])
-      
+
       if (yearLevel <= 6) speakText(d.earniSays)
-      
+
       if (d.action === 'start_session') {
         // Earni has decided what to teach — start the session
         setPhase('starting')
@@ -167,7 +249,7 @@ export default function KidCheckinPage() {
 
   return (
     <div style={{ minHeight: '100vh', background: '#0d2b28', display: 'flex', flexDirection: 'column', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-      
+
       {/* Header */}
       <div style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', gap: '12px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
         <a href="/kid-home" style={{ color: 'rgba(255,255,255,0.4)', textDecoration: 'none', fontSize: '14px' }}>← Back</a>
@@ -211,8 +293,94 @@ export default function KidCheckinPage() {
         )}
       </div>
 
-      {/* Input area */}
-      {phase !== 'starting' && (
+      {/* Homework mode — choose photo or type */}
+      {homeworkMode && homeworkSubMode === 'choose' && phase !== 'starting' && (
+        <div style={{ padding: '16px 20px', borderTop: '1px solid rgba(255,255,255,0.08)', display: 'flex', gap: '12px', background: '#0d2b28' }}>
+          <label style={{
+            flex: 1,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '8px',
+            padding: '14px',
+            background: 'rgba(46,196,182,0.12)',
+            border: '1.5px solid rgba(46,196,182,0.3)',
+            borderRadius: '16px',
+            cursor: 'pointer',
+            fontFamily: "'Nunito', sans-serif",
+            fontSize: '15px',
+            fontWeight: 800,
+            color: '#2ec4b6',
+          }}>
+            📷 Take a photo
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              onChange={handlePhotoSelected}
+              style={{ display: 'none' }}
+            />
+          </label>
+          <button
+            onClick={() => setHomeworkSubMode('type')}
+            style={{
+              flex: 1,
+              padding: '14px',
+              background: 'rgba(255,255,255,0.06)',
+              border: '1.5px solid rgba(255,255,255,0.12)',
+              borderRadius: '16px',
+              cursor: 'pointer',
+              fontFamily: "'Nunito', sans-serif",
+              fontSize: '15px',
+              fontWeight: 800,
+              color: 'white',
+            }}
+          >
+            ✏️ Type it
+          </button>
+        </div>
+      )}
+
+      {/* Homework mode — type description */}
+      {homeworkMode && homeworkSubMode === 'type' && phase !== 'starting' && (
+        <div style={{ padding: '16px 20px', borderTop: '1px solid rgba(255,255,255,0.08)', background: '#0d2b28' }}>
+          <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.4)', marginBottom: '10px', fontWeight: 600 }}>
+            What does your homework say or ask?
+          </div>
+          <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+            <input
+              value={homeworkText}
+              onChange={e => setHomeworkText(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && sendHomeworkText()}
+              placeholder="Describe your homework..."
+              autoFocus
+              style={{
+                flex: 1, padding: '12px 16px',
+                background: 'rgba(255,255,255,0.08)',
+                border: '1.5px solid rgba(255,255,255,0.12)',
+                borderRadius: '24px', fontSize: '15px',
+                color: 'white', outline: 'none',
+                fontFamily: "'Plus Jakarta Sans', sans-serif",
+              }}
+            />
+            <button
+              onClick={sendHomeworkText}
+              disabled={!homeworkText.trim() || loading}
+              style={{
+                width: '44px', height: '44px', borderRadius: '50%',
+                background: homeworkText.trim() ? '#2ec4b6' : 'rgba(46,196,182,0.2)',
+                border: 'none', cursor: homeworkText.trim() ? 'pointer' : 'not-allowed',
+                color: 'white', fontSize: '18px', flexShrink: 0,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}
+            >→</button>
+          </div>
+        </div>
+      )}
+
+      {/* Normal input area */}
+      {!homeworkMode && phase !== 'starting' && (
         <div style={{ padding: '16px 20px', borderTop: '1px solid rgba(255,255,255,0.08)', display: 'flex', gap: '10px', alignItems: 'center', background: '#0d2b28' }}>
           <input
             ref={inputRef}
