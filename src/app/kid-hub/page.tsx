@@ -1109,8 +1109,8 @@ export default function KidHubPage() {
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <span style={{ fontSize: '20px' }}>🏆</span>
-              <span style={{ fontFamily: "'Nunito', sans-serif", fontSize: '16px', fontWeight: 900 }}>My Mastery Map</span>
+              <span style={{ fontSize: '20px' }}>⭐</span>
+              <span style={{ fontFamily: "'Nunito', sans-serif", fontSize: '16px', fontWeight: 900 }}>My Skills</span>
             </div>
             <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)' }}>{masteryExpanded ? '▲' : '▼'}</span>
           </button>
@@ -1200,26 +1200,26 @@ export default function KidHubPage() {
                   if (isMastered && isElite) {
                     chipStyle = {
                       background: 'rgba(245,166,35,0.2)',
-                      border: '1px solid rgba(245,166,35,0.6)',
+                      border: '1.5px solid rgba(245,166,35,0.6)',
                       color: '#f5a623',
                     }
                   } else if (isMastered) {
                     chipStyle = {
                       background: 'rgba(46,196,182,0.15)',
-                      border: '1px solid rgba(46,196,182,0.5)',
+                      border: '1.5px solid #2ec4b6',
                       color: '#2ec4b6',
                     }
                   } else if (inProgress) {
                     chipStyle = {
                       background: 'rgba(245,166,35,0.12)',
-                      border: '1px solid rgba(245,166,35,0.4)',
+                      border: '1.5px solid rgba(245,166,35,0.3)',
                       color: '#f5a623',
                     }
                   } else {
                     chipStyle = {
                       background: 'rgba(255,255,255,0.04)',
-                      border: '1px solid rgba(255,255,255,0.1)',
-                      color: 'rgba(255,255,255,0.4)',
+                      border: '1.5px solid rgba(255,255,255,0.08)',
+                      color: 'rgba(255,255,255,0.35)',
                     }
                   }
 
@@ -1246,7 +1246,7 @@ export default function KidHubPage() {
                         whiteSpace: 'nowrap',
                       }}
                     >
-                      {topic.sub_level}
+                      {topic.sub_level}{isMastered ? ' ✓' : ''}
                       {inProgress && (
                         <span style={{ fontSize: '10px' }}>{row!.correct_count}/{topic.mastery_threshold}</span>
                       )}
