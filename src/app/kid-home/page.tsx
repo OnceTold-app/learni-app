@@ -135,7 +135,7 @@ export default function KidHomePage() {
           { id: 'home', emoji: '🏠', label: 'Home', href: '/kid-home' },
           { id: 'skills', emoji: '⭐', label: 'Skills', href: '/kid-hub' },
           { id: 'money', emoji: '💰', label: 'Money', href: '/kid-hub' },
-          { id: 'more', emoji: '•••', label: 'More', href: '/kid-hub' },
+          { id: 'more', emoji: '•••', label: 'More', href: '/kid-more' },
         ].map(tab => (
           <a key={tab.id} href={tab.href} style={{
             flex: 1,
