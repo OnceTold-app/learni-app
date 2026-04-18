@@ -61,7 +61,7 @@ export async function POST(req: NextRequest) {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'gpt-4o-mini-tts',
+          model: 'tts-1',
           input: cleanText,
           voice: 'nova',
           instructions:
