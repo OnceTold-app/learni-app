@@ -86,7 +86,8 @@ export default function KidHomePage() {
         {/* Secondary actions — 2 tiles */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '32px' }}>
           <a
-            href="/kid-hub"
+            href="/kid-checkin"
+            onClick={() => { localStorage.setItem('learni_start_mode', 'homework') }}
             style={{
               background: 'rgba(255,255,255,0.06)',
               border: '1px solid rgba(255,255,255,0.1)',
