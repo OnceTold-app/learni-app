@@ -98,6 +98,27 @@ export default function DashboardPage() {
   }, [])
 
   useEffect(() => {
+    // Clear any stale child session data to prevent it leaking into parent nav
+    const childKeys = [
+      'learni_child_id',
+      'learni_child_name',
+      'learni_child_pin',
+      'learni_child_username',
+      'learni_year_level',
+      'learni_session_language',
+      'learni_session_topic',
+      'learni_session_mode',
+      'learni_subject',
+      'learni_baseline_level',
+      'learni_baseline_level_name',
+      'learni_baseline_strengths',
+      'learni_baseline_gaps',
+      'learni_cached_stars',
+      'learni_last_subject',
+      'learni_voice_enabled',
+    ]
+    childKeys.forEach(k => localStorage.removeItem(k))
+
     // Check auth
     const name = localStorage.getItem('learni_parent_name')
     if (!name) {
