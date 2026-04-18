@@ -45,13 +45,7 @@ const SUBJECT_GROUPS: SubjectGroup[] = [
         desc: 'Take a photo — Earni helps you understand',
         action: '/homework',
       },
-      {
-        id: 'baseline',
-        emoji: '🎯',
-        title: 'Find my level',
-        desc: 'Quick test to see where you\'re at',
-        action: '/baseline',
-      },
+
       {
         id: 'practice',
         emoji: '💪',
@@ -137,27 +131,13 @@ const SUBJECT_GROUPS: SubjectGroup[] = [
           },
         ],
       },
-      {
-        id: 'learn',
-        emoji: '📚',
-        title: 'Learn something new',
-        desc: 'Earni teaches a new concept step by step',
-        options: [
-          { id: 'learn-addition', label: 'Addition', desc: 'How to add numbers' },
-          { id: 'learn-subtraction', label: 'Subtraction', desc: 'How to take away' },
-          { id: 'learn-multiplication', label: 'Multiplication', desc: 'What times tables really mean' },
-          { id: 'learn-division', label: 'Division', desc: 'Sharing and grouping' },
-          { id: 'learn-fractions', label: 'Fractions', desc: 'Parts of a whole' },
-          { id: 'learn-decimals', label: 'Decimals', desc: 'Numbers between numbers' },
-          { id: 'learn-percentages', label: 'Percentages', desc: 'Out of 100' },
-        ],
-      },
+
       {
         id: 'full',
         emoji: '🚀',
-        title: 'Full session',
-        desc: 'Earni teaches a full lesson tailored to your level — questions, explanations, and real-time feedback.',
-        action: '/session',
+        title: 'Start with Earni',
+        desc: 'Earni picks what to work on with you — questions, explanations, and real-time feedback.',
+        action: '/kid-checkin',
       },
 
     ],
@@ -443,7 +423,7 @@ export default function StartSessionPage() {
                       padding: '10px 14px', marginBottom: '8px', marginTop: '8px',
                       fontFamily: "'Nunito', sans-serif",
                     }}>
-                      For algebra, statistics, and geometry — use &lsquo;Learn something new&rsquo;
+                      For algebra, statistics, and geometry — use &lsquo;Start with Earni&rsquo;
                     </div>
                     {selectedCategory.pillGroups
                       .filter(g => !g.label.includes('COUNTING'))
