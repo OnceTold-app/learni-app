@@ -9,6 +9,7 @@ export default function KidCheckinPage() {
   const [loading, setLoading] = useState(false)
   const [listening, setListening] = useState(false)
   const [phase, setPhase] = useState<'greeting' | 'topic' | 'nudge' | 'starting'>('greeting')
+  const [isFirstTime, setIsFirstTime] = useState(false)
   // Homework mode
   const [homeworkMode, setHomeworkMode] = useState(false)
   const [homeworkSubMode, setHomeworkSubMode] = useState<'choose' | 'photo' | 'type' | null>(null)
@@ -30,8 +31,6 @@ export default function KidCheckinPage() {
     if (startMode === 'homework') {
       setHomeworkMode(true)
       setHomeworkSubMode('choose')
-      // Show homework greeting
-      const cleanName = (name || 'there').charAt(0).toUpperCase() + (name || 'there').slice(1).toLowerCase()
       const greeting = `Show me what you're working on — take a photo or tell me what it says.`
       setMessages([{ role: 'earni', content: greeting }])
       if (yl <= 6) speakText(greeting)
@@ -44,25 +43,41 @@ export default function KidCheckinPage() {
     setLoading(true)
     const childId = localStorage.getItem('learni_child_id')
 
-    // Get last session info for context
+    // Check if first time
+    const hasBaseline = !!localStorage.getItem('learni_baseline_level')
+    let sessionsCount = 0
     let lastTopic = ''
+    let nudgeText = ''
+
     if (childId) {
       try {
         const r = await fetch(`/api/kid/stats?childId=${childId}`)
         const d = await r.json()
+        sessionsCount = (d.sessions || []).length
         if (d.sessions && d.sessions.length > 0) {
           lastTopic = d.sessions[0].subject || ''
         }
       } catch {}
     }
 
+    const firstTime = sessionsCount === 0 && !hasBaseline
+    setIsFirstTime(firstTime)
+
+    if (firstTime) {
+      const cleanName = (name || 'there').charAt(0).toUpperCase() + (name || 'there').slice(1).toLowerCase()
+      const greeting = `Hey ${cleanName}! Before we start — let me ask you a few quick questions so I know exactly where to begin. Ready?`
+      setMessages([{ role: 'earni', content: greeting }])
+      setLoading(false)
+      setPhase('topic')
+      if (yl <= 6) speakText(greeting)
+      return
+    }
+
     // Get achievement nudge
-    let nudgeText = ''
     if (childId) {
       try {
         const r = await fetch(`/api/kid/mastery?childId=${childId}`)
         const d = await r.json()
-        // Find topic closest to mastery (highest correct_count but not mastered)
         if (d.topicMastery) {
           const inProgress = d.topicMastery
             .filter((t: any) => !t.is_mastered && t.correct_count > 0)
@@ -89,10 +104,7 @@ export default function KidCheckinPage() {
     setLoading(false)
     setPhase('topic')
 
-    // Speak greeting for Year 1-6
     if (yl <= 6) speakText(greeting)
-
-    // Store nudge for later
     if (nudgeText) localStorage.setItem('learni_checkin_nudge', nudgeText)
   }
 
@@ -140,7 +152,6 @@ export default function KidCheckinPage() {
     setHomeworkSubMode(null)
     setLoading(true)
 
-    // Convert to base64
     const reader = new FileReader()
     reader.onload = async () => {
       const base64 = (reader.result as string).split(',')[1]
@@ -207,7 +218,6 @@ export default function KidCheckinPage() {
     setMessages(newMessages)
     setLoading(true)
 
-    // Call checkin API to interpret the child's response
     try {
       const r = await fetch('/api/checkin', {
         method: 'POST',
@@ -220,6 +230,7 @@ export default function KidCheckinPage() {
           history: newMessages,
           phase,
           nudge: localStorage.getItem('learni_checkin_nudge') || '',
+          isFirstTime,
         })
       })
       const d = await r.json()
@@ -229,8 +240,16 @@ export default function KidCheckinPage() {
 
       if (yearLevel <= 6) speakText(d.earniSays)
 
+      // Store baseline level if calibration returned one
+      if (d.baselineLevel) {
+        localStorage.setItem('learni_baseline_level', String(d.baselineLevel))
+        if (d.baselineName) {
+          localStorage.setItem('learni_baseline_level_name', d.baselineName)
+        }
+        setIsFirstTime(false)
+      }
+
       if (d.action === 'start_session') {
-        // Earni has decided what to teach — start the session
         setPhase('starting')
         if (d.topicId) localStorage.setItem('learni_session_topic', d.topicId)
         if (d.subject) localStorage.setItem('learni_subject', d.subject)
