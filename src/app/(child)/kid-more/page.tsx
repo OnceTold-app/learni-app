@@ -304,7 +304,7 @@ export default function KidMorePage() {
         zIndex: 100,
       }}>
         {[
-          { id: 'home', emoji: '🏠', label: 'Home', href: '/kid-home' },
+          { id: 'home', emoji: '🏠', label: 'Home', href: '/kid-hub' },
           { id: 'skills', emoji: '⭐', label: 'Skills', href: '/kid-hub' },
           { id: 'money', emoji: '💰', label: 'Money', href: '/kid-hub' },
           { id: 'more', emoji: '•••', label: 'More', href: '/kid-more' },
