@@ -33,26 +33,32 @@ export default function ManageChildPage() {
 
   async function fetchChild(id: string) {
     console.log('Fetching child:', id)
-    const token = localStorage.getItem('learni_parent_token')
-    const res = await fetch('/api/parent/children', {
-      headers: { 'Authorization': `Bearer ${token}` }
-    })
-    if (res.status === 401) {
-      localStorage.removeItem('learni_parent_token')
-      window.location.href = '/login?reason=expired'
-      return
+    try {
+      const token = localStorage.getItem('learni_parent_token')
+      const res = await fetch('/api/parent/children', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      if (res.status === 401) {
+        localStorage.removeItem('learni_parent_token')
+        window.location.href = '/login?reason=expired'
+        return
+      }
+      const data = await res.json()
+      const child = (data.children || []).find((c: { id: string }) => c.id === id)
+      console.log('Child data received:', child)
+      if (child) {
+        console.log('Setting name:', child?.name, 'username:', child?.username)
+        setName(child.name || '')
+        setUsername(child.username || '')
+        setYearLevel(String(child.year_level))
+        setSessionLanguage(child.session_language || 'en')
+      }
+    } catch (err) {
+      console.error('fetchChild error:', err)
+      setError('Failed to load child data')
+    } finally {
+      setDataLoaded(true)
     }
-    const data = await res.json()
-    const child = (data.children || []).find((c: { id: string }) => c.id === id)
-    console.log('Child data received:', child)
-    if (child) {
-      console.log('Setting name:', child?.name, 'username:', child?.username)
-      setName(child.name || '')
-      setUsername(child.username || '')
-      setYearLevel(String(child.year_level))
-      setSessionLanguage(child.session_language || 'en')
-    }
-    setDataLoaded(true)
   }
 
   function showSaveToast() {
