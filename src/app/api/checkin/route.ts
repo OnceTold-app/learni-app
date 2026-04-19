@@ -127,12 +127,13 @@ export async function POST(req: NextRequest) {
     }
 
     const response = await client.messages.create({
+    const response = await client.messages.create({
       model: CLAUDE_MODEL,
       max_tokens: 400,
-      system: systemPrompt + `\n\nCONTEXT:\n${contextNote}`,
+      system: [{ type: 'text', text: systemPrompt, cache_control: { type: 'ephemeral' } }, { type: 'text', text: 'CONTEXT:
+' + contextNote }],
       messages,
     })
-
     const text = response.content[0].type === 'text' ? response.content[0].text : '{}'
 
     try {
