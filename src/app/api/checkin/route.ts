@@ -151,7 +151,7 @@ export async function POST(req: NextRequest) {
     const fullSystem = systemPrompt + `\n\nCONTEXT:\n` + contextNote
     const response = await client.messages.create({
       model: 'claude-haiku-4-5-20251001',
-      max_tokens: 250,
+      max_tokens: 400,
       // Prompt caching — base system prompt cached (contextNote varies so appended separately)
       system: [{ type: 'text' as const, text: fullSystem, cache_control: { type: 'ephemeral' as const } }],
       messages,
