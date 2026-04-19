@@ -3,6 +3,149 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import MathsVisual from '@/components/maths-visual'
 
+// ──────────────────────────────────────────────────
+// TEACHING INTERACTION BUTTONS
+// Rich response options during Earni's teaching phase.
+// Gives the child agency: confirm understanding, ask for more,
+// explain back in their own words, or ask a specific question.
+// ──────────────────────────────────────────────────
+
+function TeachingButtons({
+  childName,
+  onRespond,
+  checkIn,
+  phase,
+}: {
+  childName: string
+  onRespond: (msg: string) => void
+  checkIn: string[]
+  phase: string
+}) {
+  const [showExplainBox, setShowExplainBox] = useState(false)
+  const [explainText, setExplainText] = useState('')
+
+  const btnBase: React.CSSProperties = {
+    borderRadius: '30px',
+    padding: '11px 20px',
+    fontSize: '13px',
+    fontWeight: 700,
+    fontFamily: "'Nunito', sans-serif",
+    cursor: 'pointer',
+    border: '1.5px solid',
+    transition: 'opacity 0.15s',
+  }
+
+  const primaryBtn: React.CSSProperties = {
+    ...btnBase,
+    background: 'rgba(46,196,182,0.15)',
+    borderColor: 'rgba(46,196,182,0.4)',
+    color: '#2ec4b6',
+  }
+
+  const secondaryBtn: React.CSSProperties = {
+    ...btnBase,
+    background: 'rgba(255,255,255,0.05)',
+    borderColor: 'rgba(255,255,255,0.12)',
+    color: 'rgba(255,255,255,0.65)',
+  }
+
+  const warnBtn: React.CSSProperties = {
+    ...btnBase,
+    background: 'rgba(245,166,35,0.1)',
+    borderColor: 'rgba(245,166,35,0.3)',
+    color: '#f5a623',
+  }
+
+  // If Earni sent specific check-in options, use those plus our fixed extras
+  const hasCheckIn = checkIn && checkIn.length > 0
+
+  function handleGotIt() {
+    onRespond(`${childName} understands. Move to a practice question.`)
+  }
+
+  function handleMoreExamples() {
+    onRespond(`${childName} wants another example before trying. Show a different real-world example, then give a gentle practice question.`)
+  }
+
+  function handleDontUnderstand() {
+    onRespond(`${childName} doesn't understand yet. Start from scratch with a completely different explanation — use a story or real-world scenario. Take it slower.`)
+  }
+
+  function handleExplainSubmit() {
+    if (!explainText.trim()) return
+    onRespond(`${childName} tried to explain it in their own words: "${explainText}". Give warm, specific feedback on whether they got it right. Correct any misconceptions gently, then give a practice question.`)
+    setExplainText('')
+    setShowExplainBox(false)
+  }
+
+  if (showExplainBox) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxWidth: '400px', width: '100%' }}>
+        <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.5)', fontFamily: "'Nunito', sans-serif", fontWeight: 700 }}>
+          Tell Earni what you think you just learned:
+        </div>
+        <textarea
+          value={explainText}
+          onChange={e => setExplainText(e.target.value)}
+          placeholder="In my own words..."
+          rows={3}
+          style={{
+            background: 'rgba(255,255,255,0.06)',
+            border: '1.5px solid rgba(255,255,255,0.15)',
+            borderRadius: '14px',
+            padding: '12px 16px',
+            fontSize: '14px',
+            color: 'white',
+            fontFamily: "'Plus Jakarta Sans', sans-serif",
+            resize: 'none',
+            outline: 'none',
+          }}
+          onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleExplainSubmit() } }}
+        />
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <button onClick={handleExplainSubmit} style={primaryBtn}>Send to Earni →</button>
+          <button onClick={() => setShowExplainBox(false)} style={secondaryBtn}>Cancel</button>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center' }}>
+      {/* Earni-provided check-in options (if any) */}
+      {hasCheckIn && checkIn.map((option: string, i: number) => (
+        <button
+          key={i}
+          onClick={() => {
+            // Map common check-in responses to meaningful messages for Earni
+            const lower = option.toLowerCase()
+            if (lower.includes('sense') || lower.includes('got it') || lower.includes('understand') || lower.includes('ready')) {
+              handleGotIt()
+            } else if (lower.includes('confused') || lower.includes('don\'t') || lower.includes('again') || lower.includes('different')) {
+              handleDontUnderstand()
+            } else if (lower.includes('example') || lower.includes('more') || lower.includes('another')) {
+              handleMoreExamples()
+            } else {
+              onRespond(`${childName} responded: "${option}". Continue the lesson.`)
+            }
+          }}
+          style={i === 0 ? primaryBtn : secondaryBtn}
+        >
+          {option}
+        </button>
+      ))}
+
+      {/* Fixed rich-interaction buttons — always shown */}
+      {!hasCheckIn && (
+        <button onClick={handleGotIt} style={primaryBtn}>Got it, let’s go →</button>
+      )}
+      <button onClick={handleMoreExamples} style={secondaryBtn}>Show me another example</button>
+      <button onClick={handleDontUnderstand} style={warnBtn}>I don’t understand</button>
+      <button onClick={() => setShowExplainBox(true)} style={secondaryBtn}>Let me explain it back</button>
+    </div>
+  )
+}
+
 type Phase = 'warmup' | 'lesson' | 'financial' | 'closing' | 'reward'
 // Note: 'reward' phase no longer shows jar allocation — vault lives on kid hub
 
@@ -1361,78 +1504,18 @@ export default function SessionPage() {
           </div>
         )}
 
-        {/* Teaching — check-in response buttons */}
+        {/* Teaching — rich interaction buttons */}
         {isTeaching && (
-          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center' }}>
-            {state.checkIn && state.checkIn.length > 0 ? (
-              state.checkIn.map((option: string, i: number) => (
-                <button
-                  key={i}
-                  onClick={() => {
-                    lastActivityRef.current = Date.now()
-                    historyRef.current.push({ role: 'user', content: `${childName} responded: "${option}"` })
-                    fetchQuestion(state.phase)
-                  }}
-                  style={{
-                    background: i === 0 ? 'rgba(46,196,182,0.15)' : 'rgba(255,255,255,0.06)',
-                    border: i === 0 ? '1px solid rgba(46,196,182,0.3)' : '1px solid rgba(255,255,255,0.1)',
-                    borderRadius: '30px',
-                    padding: '12px 24px',
-                    fontSize: '14px',
-                    fontWeight: 700,
-                    fontFamily: "'Nunito', sans-serif",
-                    color: i === 0 ? '#2ec4b6' : 'rgba(255,255,255,0.6)',
-                    cursor: 'pointer',
-                  }}
-                >
-                  {option}
-                </button>
-              ))
-            ) : (
-              <>
-                <button
-                  onClick={() => {
-                    lastActivityRef.current = Date.now()
-                    historyRef.current.push({ role: 'user', content: `${childName} says they understand. Move to the next step or give a practice question.` })
-                    fetchQuestion(state.phase)
-                  }}
-                  style={{
-                    background: 'rgba(46,196,182,0.15)',
-                    border: '1px solid rgba(46,196,182,0.3)',
-                    borderRadius: '30px',
-                    padding: '12px 24px',
-                    fontSize: '14px',
-                    fontWeight: 700,
-                    fontFamily: "'Nunito', sans-serif",
-                    color: '#2ec4b6',
-                    cursor: 'pointer',
-                  }}
-                >
-                  Makes sense! →
-                </button>
-                <button
-                  onClick={() => {
-                    lastActivityRef.current = Date.now()
-                    historyRef.current.push({ role: 'user', content: `${childName} is confused and needs a different explanation. Try a completely different approach — use a story, analogy, or different visual.` })
-                    fetchQuestion(state.phase)
-                  }}
-                  style={{
-                    background: 'rgba(255,255,255,0.06)',
-                    border: '1px solid rgba(255,255,255,0.1)',
-                    borderRadius: '30px',
-                    padding: '12px 24px',
-                    fontSize: '14px',
-                    fontWeight: 700,
-                    fontFamily: "'Nunito', sans-serif",
-                    color: 'rgba(255,255,255,0.6)',
-                    cursor: 'pointer',
-                  }}
-                >
-                  Explain differently
-                </button>
-              </>
-            )}
-          </div>
+          <TeachingButtons
+            childName={childName}
+            onRespond={(msg) => {
+              lastActivityRef.current = Date.now()
+              historyRef.current.push({ role: 'user', content: msg })
+              fetchQuestion(state.phase)
+            }}
+            checkIn={state.checkIn}
+            phase={state.phase}
+          />
         )}
 
         {/* Type-in answer */}
