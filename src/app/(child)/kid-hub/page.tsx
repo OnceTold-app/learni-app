@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { getCurrentRank, getNextRank, getProgressToNextRank } from '@/lib/ranks'
 import { Skeleton, SkeletonStyles } from '@/components/ui/skeleton'
 import EarniFAB from '@/components/earni-fab'
@@ -42,6 +42,19 @@ export default function KidHubPage() {
   const [starsPerDollar, setStarsPerDollar] = useState(20)
   const [rateSet, setRateSet] = useState(true) // default true with 20 stars = $1
   const [earningsExpanded, setEarningsExpanded] = useState(false)
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false)
+  const profileMenuRef = useRef<HTMLDivElement>(null)
+
+  // Close profile menu when clicking outside
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (profileMenuRef.current && !profileMenuRef.current.contains(e.target as Node)) {
+        setProfileMenuOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
   const [ledger, setLedger] = useState<Array<{ id: string; type: string; stars: number; dollar_value: number | null; note: string | null; created_at: string; session_id: string | null }>>([])
   const [lifetimeStats, setLifetimeStats] = useState<{ totalEarned: number; totalPaidOut: number; lastPayout: { dollar_value: number | null; created_at: string } | null }>({ totalEarned: 0, totalPaidOut: 0, lastPayout: null })
   // Money Vault state
@@ -1539,49 +1552,109 @@ export default function KidHubPage() {
           learni<span style={{ color: '#2ec4b6' }}>.</span>
         </span>
 
-        {/* Avatar circle — taps to More tab */}
-        <button
-          onClick={() => setActiveTab('more')}
-          style={{
-            background: 'none',
-            border: 'none',
-            cursor: 'pointer',
-            padding: 0,
-          }}
-        >
-          {avatarUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={avatarUrl}
-              alt={displayUsername}
-              width={36}
-              height={36}
-              style={{
-                borderRadius: '50%',
-                background: 'rgba(255,255,255,0.06)',
-                display: 'block',
+        {/* Avatar — taps to open profile menu */}
+        <div ref={profileMenuRef} style={{ position: 'relative' }}>
+          <button
+            onClick={() => setProfileMenuOpen(o => !o)}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+          >
+            {avatarUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={avatarUrl}
+                alt={displayUsername}
+                width={36}
+                height={36}
+                style={{ borderRadius: '50%', display: 'block', border: '2px solid rgba(46,196,182,0.4)' }}
+              />
+            ) : (
+              <div style={{
+                width: '36px', height: '36px', borderRadius: '50%',
+                background: 'linear-gradient(145deg, #2ec4b6, #1a9e92)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: '14px', fontWeight: 900, color: 'white',
+                fontFamily: "'Nunito', sans-serif",
                 border: '2px solid rgba(46,196,182,0.4)',
-              }}
-            />
-          ) : (
+              }}>
+                {displayUsername.charAt(0).toUpperCase()}
+              </div>
+            )}
+          </button>
+
+          {/* Profile dropdown */}
+          {profileMenuOpen && (
             <div style={{
-              width: '36px',
-              height: '36px',
-              borderRadius: '50%',
-              background: 'linear-gradient(145deg, #2ec4b6, #1a9e92)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '14px',
-              fontWeight: 900,
-              color: 'white',
-              fontFamily: "'Nunito', sans-serif",
-              border: '2px solid rgba(46,196,182,0.4)',
+              position: 'absolute', top: '46px', right: 0,
+              width: '220px',
+              background: '#0f3330',
+              border: '1px solid rgba(46,196,182,0.2)',
+              borderRadius: '18px',
+              boxShadow: '0 12px 40px rgba(0,0,0,0.4)',
+              overflow: 'hidden',
+              zIndex: 200,
             }}>
-              {displayUsername.charAt(0).toUpperCase()}
+              {/* Name header */}
+              <div style={{
+                padding: '16px 18px 12px',
+                borderBottom: '1px solid rgba(255,255,255,0.07)',
+              }}>
+                <div style={{ fontFamily: "'Nunito', sans-serif", fontWeight: 900, fontSize: '15px', color: 'white' }}>
+                  {displayUsername || childName}
+                </div>
+                <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.35)', marginTop: '2px' }}>
+                  ⭐ {totalStars} stars earned
+                </div>
+              </div>
+
+              {/* Menu items */}
+              {[
+                { emoji: '🏠', label: 'My Hub', action: () => { setActiveTab('home'); setProfileMenuOpen(false) } },
+                { emoji: '💪', label: 'Practice a skill', action: () => { window.location.href = '/start-session'; setProfileMenuOpen(false) } },
+                { emoji: '🎨', label: 'Change my look', action: () => { window.location.href = '/kid-avatar'; setProfileMenuOpen(false) } },
+                { emoji: '🏆', label: 'My progress', action: () => { setActiveTab('skills'); setProfileMenuOpen(false) } },
+                { emoji: '💰', label: 'My wallet', action: () => { setActiveTab('money'); setProfileMenuOpen(false) } },
+              ].map(item => (
+                <button
+                  key={item.label}
+                  onClick={item.action}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: '12px',
+                    width: '100%', padding: '12px 18px',
+                    background: 'none', border: 'none', cursor: 'pointer',
+                    textAlign: 'left',
+                    borderBottom: '1px solid rgba(255,255,255,0.04)',
+                  }}
+                >
+                  <span style={{ fontSize: '16px', width: '22px', textAlign: 'center' }}>{item.emoji}</span>
+                  <span style={{ fontFamily: "'Nunito', sans-serif", fontSize: '14px', fontWeight: 700, color: 'rgba(255,255,255,0.85)' }}>{item.label}</span>
+                </button>
+              ))}
+
+              {/* Log out */}
+              <button
+                onClick={() => {
+                  localStorage.removeItem('learni_child_id')
+                  localStorage.removeItem('learni_child_name')
+                  localStorage.removeItem('learni_child_pin')
+                  localStorage.removeItem('learni_child_username')
+                  localStorage.removeItem('learni_year_level')
+                  localStorage.removeItem('learni_avatar_url')
+                  window.location.href = '/kid-login'
+                }}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '12px',
+                  width: '100%', padding: '12px 18px',
+                  background: 'none', border: 'none', cursor: 'pointer',
+                  textAlign: 'left',
+                  borderTop: '1px solid rgba(255,255,255,0.07)',
+                }}
+              >
+                <span style={{ fontSize: '16px', width: '22px', textAlign: 'center' }}>👋</span>
+                <span style={{ fontFamily: "'Nunito', sans-serif", fontSize: '14px', fontWeight: 700, color: 'rgba(230,80,80,0.85)' }}>Log out</span>
+              </button>
             </div>
           )}
-        </button>
+        </div>
       </div>
 
       {/* Main content area */}
