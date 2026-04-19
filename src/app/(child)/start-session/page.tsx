@@ -211,7 +211,7 @@ const SUBJECT_GROUPS: SubjectGroup[] = [
   {
     id: 'money',
     emoji: '💰',
-    label: 'Money & Life',
+    label: 'Wealth Wise',
     categories: [
       {
         id: 'practice',

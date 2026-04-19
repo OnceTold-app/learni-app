@@ -891,7 +891,7 @@ export default function SessionPage() {
       console.error('Session save failed:', err)
     }
 
-    // Track vault module unlock if topic is a Money & Life vault module
+    // Track vault module unlock if topic is a Wealth Wise vault module
     const vaultModules = ['what-is-saving', 'spending-wisely', 'setting-a-goal', 'giving-and-why']
     if (sessionTopic && vaultModules.includes(sessionTopic)) {
       const childId = localStorage.getItem('learni_child_id')

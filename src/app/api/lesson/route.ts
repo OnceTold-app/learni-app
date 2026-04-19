@@ -299,7 +299,7 @@ It is IMPOSSIBLE for you to teach any other topic.${relatedTopicHint ? `\nIf you
         systemPrompt = rapidFirePrompt(childName, yearLevel, drillTopics.length > 0 ? drillTopics : ['times tables', 'number bonds'])
         break
       case 'lesson': {
-        const isMoneySubject = subject.toLowerCase().includes('money') || subject.toLowerCase().includes('financial') || subject.toLowerCase().includes('life')
+        const isMoneySubject = subject.toLowerCase().includes('money') || subject.toLowerCase().includes('financial') || subject.toLowerCase().includes('wealth') || subject.toLowerCase().includes('wise')
         if (isMoneySubject) {
           systemPrompt = financialPrompt(childName, yearLevel, false)
         } else {

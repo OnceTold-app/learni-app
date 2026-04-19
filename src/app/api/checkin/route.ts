@@ -16,7 +16,7 @@ RESPONSE FORMAT — return JSON:
   "earniSays": "Your response to the child",
   "action": "continue" | "nudge" | "start_session",
   "topicId": "topic-id-if-starting" | null,
-  "subject": "Maths" | "Reading & Writing" | "Money & Life" | null
+  "subject": "Maths" | "Reading & Writing" | "Wealth Wise" | null
 }
 
 action:
