@@ -120,7 +120,7 @@ export async function POST(req: NextRequest) {
     const response = await client.messages.create({
       model: 'claude-haiku-4-5-20251001', // Haiku sufficient for calibration Q&A
       max_tokens: 300,
-      system: [{ type: 'text', text: BASELINE_PROMPT, cache_control: { type: 'ephemeral' } }],
+      system: BASELINE_PROMPT,
       messages,
     })
 
