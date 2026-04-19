@@ -966,6 +966,159 @@ RULES:
 }
 
 // Get subject-specific prompt extension based on topic ID
+// ─────────────────────────────────────────────────────
+// MATHS TOPIC EXTENSIONS — strict topic enforcement
+// Called when bank has no questions and Claude is fallback.
+// These prevent Claude from teaching the wrong thing.
+// ─────────────────────────────────────────────────────
+
+function mathsTopicPrompt(topicId: string): string {
+  const t = topicId.toLowerCase()
+
+  // COUNTING
+  if (t === 'counting-2s') return `
+
+## ⚠️ STRICT TOPIC: COUNTING IN 2s — DO NOT DEVIATE
+You MUST ONLY ask questions about counting in 2s (skip counting by 2: 2, 4, 6, 8, 10...).
+DO NOT teach or ask multiplication, times tables, or anything else.
+Example questions:
+- "What comes next? 2, 4, 6, 8, ___"
+- "Count in 2s starting from 10. What is the 4th number you say?"
+- "What number is missing? 12, 14, ___, 18"
+- "Count in 2s from 0 to 20. How many numbers did you say?"
+Visuals: use numberline to show the counting pattern. Mark every 2nd number.
+NEVER use multiplication language. NEVER say "times". ALWAYS say "count in 2s" or "skip count by 2".
+`
+
+  if (t === 'counting-3s') return `
+
+## ⚠️ STRICT TOPIC: COUNTING IN 3s — DO NOT DEVIATE
+You MUST ONLY ask questions about counting in 3s (skip counting: 3, 6, 9, 12...).
+NEVER teach multiplication or times tables.
+Example questions: "What comes next? 3, 6, 9, ___" / "What is missing? 15, 18, ___, 24"
+Visuals: numberline showing jumps of 3.
+`
+
+  if (t === 'counting-4s') return `
+
+## ⚠️ STRICT TOPIC: COUNTING IN 4s — DO NOT DEVIATE
+You MUST ONLY ask questions about counting in 4s (skip counting: 4, 8, 12, 16...).
+NEVER teach multiplication or times tables.
+Example questions: "What comes next? 4, 8, 12, ___" / "What is missing? 20, 24, ___, 32"
+Visuals: numberline showing jumps of 4.
+`
+
+  if (t === 'counting-5s') return `
+
+## ⚠️ STRICT TOPIC: COUNTING IN 5s — DO NOT DEVIATE
+You MUST ONLY ask questions about counting in 5s (skip counting: 5, 10, 15, 20...).
+NEVER teach multiplication or times tables.
+Example questions: "What comes next? 5, 10, 15, ___" / "Count in 5s from 0 to 30. How many steps?"
+Visuals: numberline showing jumps of 5.
+`
+
+  if (t === 'counting-6s') return `
+
+## ⚠️ STRICT TOPIC: COUNTING IN 6s — DO NOT DEVIATE
+You MUST ONLY ask questions about counting in 6s (skip counting: 6, 12, 18, 24...).
+NEVER teach multiplication or times tables.
+Example questions: "What comes next? 6, 12, 18, ___" / "What is missing? 30, 36, ___, 48"
+`
+
+  if (t === 'counting-7s') return `
+
+## ⚠️ STRICT TOPIC: COUNTING IN 7s — DO NOT DEVIATE
+You MUST ONLY ask questions about counting in 7s (skip counting: 7, 14, 21, 28...).
+NEVER teach multiplication or times tables.
+Example questions: "What comes next? 7, 14, 21, ___" / "What is missing? 35, 42, ___, 56"
+`
+
+  if (t === 'counting-8s') return `
+
+## ⚠️ STRICT TOPIC: COUNTING IN 8s — DO NOT DEVIATE
+You MUST ONLY ask questions about counting in 8s (skip counting: 8, 16, 24, 32...).
+NEVER teach multiplication or times tables.
+Example questions: "What comes next? 8, 16, 24, ___" / "What is missing? 40, 48, ___, 64"
+`
+
+  if (t === 'counting-9s') return `
+
+## ⚠️ STRICT TOPIC: COUNTING IN 9s — DO NOT DEVIATE
+You MUST ONLY ask questions about counting in 9s (skip counting: 9, 18, 27, 36...).
+NEVER teach multiplication or times tables.
+Example questions: "What comes next? 9, 18, 27, ___" / "What is missing? 45, 54, ___, 72"
+`
+
+  if (t === 'counting-10s') return `
+
+## ⚠️ STRICT TOPIC: COUNTING IN 10s — DO NOT DEVIATE
+You MUST ONLY ask questions about counting in 10s (skip counting: 10, 20, 30, 40...).
+NEVER teach multiplication or times tables.
+Example questions: "What comes next? 10, 20, 30, ___" / "What is missing? 60, 70, ___, 90"
+Visuals: numberline showing jumps of 10.
+`
+
+  // TIMES TABLES
+  const timesMatch = t.match(/^times-([0-9]+)$/)
+  if (timesMatch) {
+    const n = timesMatch[1]
+    return `
+
+## ⚠️ STRICT TOPIC: ${n} TIMES TABLE — DO NOT DEVIATE
+You MUST ONLY ask multiplication questions using the ${n} times table.
+NEVER ask about other tables or counting patterns.
+Example questions: "What is ${n} × 3?" / "What is 7 × ${n}?" / "What is ${n} × ${n}?"
+Cover all facts from ${n}×1 through ${n}×12. Vary the order randomly.
+Visuals: use dot array (rows=${n}, cols=the multiplier) for teaching. Show equation type for questions.
+DO NOT teach division facts during this session.
+`
+  }
+
+  // DIVISION
+  const divMatch = t.match(/^division-([0-9]+)$/)
+  if (divMatch) {
+    const n = divMatch[1]
+    return `
+
+## ⚠️ STRICT TOPIC: DIVISION BY ${n} — DO NOT DEVIATE
+You MUST ONLY ask division questions where the divisor is ${n}.
+NEVER ask multiplication, counting, or other operations.
+Example questions: "What is 12 ÷ ${n}?" / "What is 24 ÷ ${n}?"
+Cover dividends that are clean multiples of ${n} (no remainders at this stage unless child is Year 5+).
+Visuals: use equation type to show the division. Can use numberline to show grouping.
+DO NOT drift into multiplication during this session.
+`
+  }
+
+  // ADDITION ranges
+  const addMatch = t.match(/^addition-([0-9]+)-([0-9k]+)$/i)
+  if (addMatch) {
+    const lo = addMatch[1], hi = addMatch[2].toUpperCase().replace('K', ',000')
+    return `
+
+## ⚠️ STRICT TOPIC: ADDITION ${lo}–${hi} — DO NOT DEVIATE
+You MUST ONLY ask addition questions where numbers are in the range ${lo} to ${hi}.
+NEVER teach subtraction, multiplication, or other operations during this session.
+Visuals: use numberline for smaller ranges, equation blocks for larger.
+`
+  }
+
+  // SUBTRACTION ranges
+  const subMatch = t.match(/^subtraction-([0-9]+)-([0-9k]+)$/i)
+  if (subMatch) {
+    const lo = subMatch[1], hi = subMatch[2].toUpperCase().replace('K', ',000')
+    return `
+
+## ⚠️ STRICT TOPIC: SUBTRACTION ${lo}–${hi} — DO NOT DEVIATE
+You MUST ONLY ask subtraction questions where numbers are in the range ${lo} to ${hi}.
+NEVER teach addition, multiplication, or other operations during this session.
+Visuals: use numberline going backwards.
+`
+  }
+
+  return ''
+}
+
 export function getSubjectExtension(topicId: string, yearLevel: number): string {
   const t = topicId.toLowerCase()
   if (t.startsWith('reading-') || t.startsWith('vocab-')) {
@@ -980,7 +1133,10 @@ export function getSubjectExtension(topicId: string, yearLevel: number): string 
   if (t.startsWith('tereo-')) {
     return teReoSubjectPrompt(topicId.replace(/-/g, ' '), yearLevel)
   }
-  return '' // Maths — no extension needed, base prompt handles it
+  // Maths topics — strict topic enforcement
+  const mathsExt = mathsTopicPrompt(topicId)
+  if (mathsExt) return mathsExt
+  return ''
 }
 
 // ─────────────────────────────────────────────────────
