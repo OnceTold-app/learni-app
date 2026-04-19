@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 import { createClient } from '@supabase/supabase-js'
+import { z } from 'zod'
 import { CLAUDE_MODEL } from '@/lib/claude'
 import { tutorPrompt, rapidFirePrompt, financialPrompt } from '@/lib/earni-prompts'
 
@@ -13,59 +14,100 @@ function getSupabase() {
   )
 }
 
-// Session phases
+// ─── Request Schema ───────────────────────────────────────────────────────────
+const LessonRequestSchema = z.object({
+  childName: z.string().min(1),
+  yearLevel: z.number().int().min(1).max(13),
+  subject: z.string().min(1),
+  phase: z.enum(['warmup', 'lesson', 'financial', 'closing', 'reward']),
+  topicId: z.string().optional(),
+  learnerId: z.string().optional(),
+  drillTopics: z.array(z.string()).optional().default([]),
+  history: z.array(z.object({
+    role: z.enum(['user', 'assistant']),
+    content: z.string(),
+  })).optional().default([]),
+  answer: z.string().optional(),
+  currentQuestion: z.string().optional(),
+  currentCorrectAnswer: z.string().optional(),
+  masteryContext: z.object({
+    topicId: z.string().optional(),
+    correctCount: z.number().optional(),
+    isMastered: z.boolean().optional(),
+    streakCurrent: z.number().optional(),
+    relatedTopics: z.array(z.object({
+      topicId: z.string(),
+      correctCount: z.number(),
+      isMastered: z.boolean(),
+    })).optional(),
+  }).optional(),
+  sessionStats: z.object({
+    correctCount: z.number(),
+    totalQuestions: z.number(),
+    streakCount: z.number(),
+    personalBest: z.number(),
+    starsEarned: z.number(),
+  }).optional().default({ correctCount: 0, totalQuestions: 0, streakCount: 0, personalBest: 0, starsEarned: 0 }),
+  focusAreas: z.array(z.string()).optional().default([]),
+  weakTopics: z.array(z.string()).optional().default([]),
+  reviewTopics: z.array(z.string()).optional().default([]),
+  childProfile: z.object({
+    interests: z.array(z.string()).optional(),
+    personality: z.string().optional(),
+    challenges: z.string().optional(),
+    parentGoals: z.string().optional(),
+  }).optional().default({}),
+})
+
 type Phase = 'warmup' | 'lesson' | 'financial' | 'closing' | 'reward'
 
-interface LessonRequest {
-  childName: string
-  yearLevel: number
-  subject: string
-  phase: Phase
-  // Question bank: topic key + learner for spaced repetition
-  topicId?: string
-  learnerId?: string
-  // For warmup/closing: previous topics to drill
-  drillTopics?: string[]
-  // For tracking conversation context
-  history?: Array<{ role: 'user' | 'assistant'; content: string }>
-  // Child's answer to evaluate
-  answer?: string
-  // Current question for answer evaluation
-  currentQuestion?: string
-  currentCorrectAnswer?: string
-  // Mastery context for topic-aware suggestions
-  masteryContext?: {
-    topicId?: string
-    correctCount?: number
-    isMastered?: boolean
-    streakCurrent?: number
-    relatedTopics?: Array<{ topicId: string; correctCount: number; isMastered: boolean }>
+interface LessonResponse {
+  earniSays: string
+  question?: string | null
+  answer?: string | null
+  options: string[]
+  inputType: 'text' | 'choice' | 'none'
+  visual?: Record<string, unknown> | null
+  checkIn: string[]
+  stars: number
+  hint?: string | null
+}
+
+// ─── Topic Validation ─────────────────────────────────────────────────────────
+function validateQuestionTopic(question: string, answer: string | null, topicId: string): boolean {
+  const q = (question + ' ' + (answer || '')).toLowerCase()
+  if (topicId.startsWith('counting-')) {
+    const n = topicId.replace('counting-', '')
+    return q.includes('count') || q.includes(`in ${n}`) || q.includes(`by ${n}`) || q.includes('___') || q.includes('next')
   }
-  // Session stats
-  sessionStats?: {
-    correctCount: number
-    totalQuestions: number
-    streakCount: number
-    personalBest: number
-    starsEarned: number
+  if (topicId.startsWith('times-')) {
+    const n = topicId.replace('times-', '')
+    return q.includes('×') || q.includes('times') || q.includes(`× ${n}`) || q.includes(`${n} ×`)
   }
-  // Parent-set focus areas
-  focusAreas?: string[]
-  // Mastery data
-  weakTopics?: string[]
-  reviewTopics?: string[]
-  // Child profile
-  childProfile?: {
-    interests?: string[]
-    personality?: string
-    challenges?: string
-    parentGoals?: string
+  if (topicId.startsWith('division-')) {
+    return q.includes('÷') || q.includes('divide') || q.includes('division')
   }
+  if (topicId.startsWith('addition-')) {
+    return q.includes('+') || q.includes('add') || q.includes('sum') || q.includes('total') || q.includes('more')
+  }
+  if (topicId.startsWith('subtraction-')) {
+    return q.includes('-') || q.includes('minus') || q.includes('subtract') || q.includes('less') || q.includes('take away')
+  }
+  return true
 }
 
 export async function POST(req: NextRequest) {
   try {
-    const body: LessonRequest = await req.json()
+    // ─── Validate Request ─────────────────────────────────────────────────────
+    const parseResult = LessonRequestSchema.safeParse(await req.json())
+    if (!parseResult.success) {
+      return NextResponse.json(
+        { error: 'Invalid request', details: parseResult.error.flatten() },
+        { status: 400 }
+      )
+    }
+    const body = parseResult.data
+
     const {
       childName,
       yearLevel,
@@ -73,16 +115,15 @@ export async function POST(req: NextRequest) {
       phase,
       topicId,
       learnerId,
-      drillTopics = [],
-      history = [],
+      drillTopics,
+      history,
       answer,
       currentQuestion,
       currentCorrectAnswer,
-      sessionStats = { correctCount: 0, totalQuestions: 0, streakCount: 0, personalBest: 0, starsEarned: 0 },
-      focusAreas = [],
-      weakTopics = [],
-      reviewTopics = [],
-      childProfile = {},
+      sessionStats,
+      focusAreas,
+      weakTopics,
+      childProfile,
     } = body
 
     // ─── Question Bank Helpers ────────────────────────────────────────────────
@@ -98,12 +139,10 @@ export async function POST(req: NextRequest) {
         } catch { /* not JSON, skip */ }
       }
     }
-    // Also add currentQuestion if present
     if (currentQuestion) sessionAskedQuestions.add(currentQuestion.toLowerCase().trim())
 
     async function fetchBankQuestion(tid: string, year: number): Promise<Record<string, unknown> | null> {
       try {
-        // Build combined exclusion list: 7-day history + current session
         const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
         let dbSeenIds: string[] = []
         if (learnerId) {
@@ -115,8 +154,6 @@ export async function POST(req: NextRequest) {
           dbSeenIds = dbHistory?.map((h: { question_id: string }) => h.question_id) || []
         }
 
-        // Try exact year first, then nearby years (±1, ±2) as fallback
-        // This prevents year-level gaps in the bank from breaking sessions
         const yearCandidates = [year, year - 1, year + 1, year - 2, year + 2].filter(y => y >= 1 && y <= 13)
         let candidates: Record<string, unknown>[] = []
 
@@ -127,35 +164,40 @@ export async function POST(req: NextRequest) {
             .eq('topic_id', tid)
             .eq('year_level', tryYear)
 
-          // Get a pool of candidates, filter out session-asked questions client-side
           if (dbSeenIds.length > 0) {
             const { data: unseen } = await baseQuery
               .not('id', 'in', `(${dbSeenIds.join(',')})`)
               .limit(40)
             candidates = unseen || []
           }
-          // Fallback: use all questions if unseen pool is empty
           if (candidates.length === 0) {
             const { data: all } = await baseQuery.limit(40)
             candidates = all || []
           }
-          if (candidates.length > 0) break // found questions at this year level
+          if (candidates.length > 0) break
         }
 
-        // Filter out questions asked this session
         const fresh = candidates.filter((q: Record<string, unknown>) => {
           const qText = ((q.question as string) || '').toLowerCase().trim()
           return !sessionAskedQuestions.has(qText)
         })
 
-        const pool = fresh.length > 0 ? fresh : candidates // fallback to any if all seen
+        const pool = fresh.length > 0 ? fresh : candidates
         if (pool.length === 0) return null
 
         const q = pool[Math.floor(Math.random() * pool.length)]
-
-        // Record in history
         if (learnerId) {
-          void (async () => { try { await supabase.from('learner_question_history').insert({ learner_id: learnerId, question_id: q.id, seen_at: new Date().toISOString(), was_correct: null, attempts: 1 }) } catch { /* ignore */ } })()
+          void (async () => {
+            try {
+              await supabase.from('learner_question_history').insert({
+                learner_id: learnerId,
+                question_id: q.id,
+                seen_at: new Date().toISOString(),
+                was_correct: null,
+                attempts: 1,
+              })
+            } catch { /* ignore */ }
+          })()
         }
         return q
       } catch { return null }
@@ -200,16 +242,13 @@ export async function POST(req: NextRequest) {
     function getChallengeInstruction(challenges?: string): string {
       if (!challenges) return ''
       const key = challenges.toLowerCase().trim()
-      // Try exact match first, then partial
       if (challengeInstructions[key]) return challengeInstructions[key]
       for (const [k, v] of Object.entries(challengeInstructions)) {
         if (key.includes(k)) return v
       }
-      // Fallback for any other challenge: generic but supportive
       return `LEARNING NOTE (${challenges}): Be extra patient and use more visuals. Adapt pace to this child's needs.`
     }
 
-    // Build child context string
     const profileContext = [
       childProfile?.interests?.length ? `Interests: ${childProfile.interests.join(', ')}. Use these in examples!` : '',
       childProfile?.personality ? `Personality: ${childProfile.personality}. Adapt your pace and style.` : '',
@@ -242,6 +281,17 @@ export async function POST(req: NextRequest) {
       ? `\n\n## MASTERY PROGRESS\n${masteryContextLines.join('\n')}\nUse this to guide question difficulty and topic focus.`
       : ''
 
+    // ─── Topic lock instruction for system prompt ─────────────────────────────
+    function topicLockInstruction(tid: string): string {
+      const relatedTopicHint = tid.startsWith('times-') ? 'division' :
+        tid.startsWith('division-') ? 'multiplication' :
+        tid.startsWith('addition-') ? 'subtraction' :
+        tid.startsWith('subtraction-') ? 'addition' : ''
+      return `\nCRITICAL TOPIC LOCK: You are teaching "${tid}" ONLY.
+Every question you generate MUST be about ${tid}.
+It is IMPOSSIBLE for you to teach any other topic.${relatedTopicHint ? `\nIf you find yourself thinking about ${relatedTopicHint}, STOP and return to ${tid}.` : ''}`
+    }
+
     // Build the system prompt based on phase
     let systemPrompt: string
     switch (phase) {
@@ -249,18 +299,16 @@ export async function POST(req: NextRequest) {
         systemPrompt = rapidFirePrompt(childName, yearLevel, drillTopics.length > 0 ? drillTopics : ['times tables', 'number bonds'])
         break
       case 'lesson': {
-        // Money & Life sessions use the dedicated financial prompt with NZD currency constraints
         const isMoneySubject = subject.toLowerCase().includes('money') || subject.toLowerCase().includes('financial') || subject.toLowerCase().includes('life')
         if (isMoneySubject) {
           systemPrompt = financialPrompt(childName, yearLevel, false)
         } else {
-          // Use topicId first (most specific), then fall back to drillTopics[0]
-          // This ensures Claude teaches exactly the topic the child selected
           systemPrompt = tutorPrompt(childName, yearLevel, subject, topicId || drillTopics[0] || '')
-          + (profileContext ? `\n\n## CHILD PROFILE\n${profileContext}` : '')
-          + `\n\n## YEAR LEVEL CEILING\nCRITICAL: Never escalate difficulty more than 1 year above the child's registered year level (Year ${yearLevel}).\n- Max difficulty: Year ${yearLevel + 1} content\n- If child is consistently correct, stay at ceiling \u2014 do NOT keep escalating\n- If child is performing above ceiling for 3+ questions in a row, include a note in earniSays: "You're flying through this! I'll let your parent know you might be ready for harder work."\n- Never teach concepts from 2+ years above their level`
-          + `\n\n## CONTENT CALIBRATION \u2014 CRITICAL\nThis child is in Year ${yearLevel}. \n- MINIMUM difficulty: Year ${Math.max(1, yearLevel - 1)} content\n- MAXIMUM difficulty: Year ${yearLevel + 1} content\n- START at exactly Year ${yearLevel} difficulty\n- Do NOT give Year 1 questions to a Year 4 child. Do NOT give Year 9 questions to a Year 4 child.\n- If the topic requested is simpler than Year ${yearLevel}, teach it at Year ${yearLevel} depth and complexity\n- Year ${yearLevel} examples: ${yearLevel <= 3 ? 'counting objects, number bonds, simple addition to 20' : yearLevel <= 6 ? 'times tables, fractions, place value to 1000' : yearLevel <= 9 ? 'algebra basics, decimals, percentages, ratios' : 'quadratics, statistics, trigonometry basics'}`
-          + masteryContextStr
+            + (profileContext ? `\n\n## CHILD PROFILE\n${profileContext}` : '')
+            + `\n\n## YEAR LEVEL CEILING\nCRITICAL: Never escalate difficulty more than 1 year above the child's registered year level (Year ${yearLevel}).\n- Max difficulty: Year ${yearLevel + 1} content\n- If child is consistently correct, stay at ceiling \u2014 do NOT keep escalating\n- If child is performing above ceiling for 3+ questions in a row, include a note in earniSays: "You're flying through this! I'll let your parent know you might be ready for harder work."\n- Never teach concepts from 2+ years above their level`
+            + `\n\n## CONTENT CALIBRATION \u2014 CRITICAL\nThis child is in Year ${yearLevel}. \n- MINIMUM difficulty: Year ${Math.max(1, yearLevel - 1)} content\n- MAXIMUM difficulty: Year ${yearLevel + 1} content\n- START at exactly Year ${yearLevel} difficulty\n- Do NOT give Year 1 questions to a Year 4 child. Do NOT give Year 9 questions to a Year 4 child.\n- If the topic requested is simpler than Year ${yearLevel}, teach it at Year ${yearLevel} depth and complexity\n- Year ${yearLevel} examples: ${yearLevel <= 3 ? 'counting objects, number bonds, simple addition to 20' : yearLevel <= 6 ? 'times tables, fractions, place value to 1000' : yearLevel <= 9 ? 'algebra basics, decimals, percentages, ratios' : 'quadratics, statistics, trigonometry basics'}`
+            + masteryContextStr
+            + (topicId ? topicLockInstruction(topicId) : '')
         }
         break
       }
@@ -274,7 +322,6 @@ export async function POST(req: NextRequest) {
         systemPrompt = rapidFirePrompt(childName, yearLevel, [subject])
         break
       case 'reward':
-        // Reward phase doesn't need Claude — it's calculated
         return NextResponse.json({
           phase: 'reward',
           starsEarned: sessionStats.starsEarned,
@@ -295,17 +342,15 @@ export async function POST(req: NextRequest) {
     // Build messages — include answer evaluation if provided
     const messages: Array<{ role: 'user' | 'assistant'; content: string }> = [...history]
 
+    const trimmedAnswer = answer?.toLowerCase().trim() || ''
+    const trimmedCorrect = currentCorrectAnswer?.toLowerCase().trim() || ''
+    const isCorrect = answer && currentQuestion ? trimmedAnswer === trimmedCorrect : false
+    const helpPhrases = ['help', 'hint', 'i dont know', "i don't know", 'idk', 'stuck', 'confused', 'what', 'how', 'why', 'explain', 'huh', '?', 'please help']
+    const isAskingForHelp = answer ? (helpPhrases.some(p => trimmedAnswer.includes(p)) || trimmedAnswer === '?') : false
+    const isFirstMessage = history.length === 0 && !answer
+
     if (answer && currentQuestion) {
-      const trimmedAnswer = answer.toLowerCase().trim()
-      const trimmedCorrect = currentCorrectAnswer?.toLowerCase().trim() || ''
-      const isCorrect = trimmedAnswer === trimmedCorrect
-
-      // Detect if the child is asking for help instead of answering
-      const helpPhrases = ['help', 'hint', 'i dont know', "i don't know", 'idk', 'stuck', 'confused', 'what', 'how', 'why', 'explain', 'huh', '?', 'please help']
-      const isAskingForHelp = helpPhrases.some(p => trimmedAnswer.includes(p)) || trimmedAnswer === '?'
-
-      // Reinforce subject on EVERY message so Claude never drifts
-      const subjectNote = `[SUBJECT: ${subject}. Stay on this subject for the ENTIRE session. Never switch to maths or anything else unless the subject IS maths.]`
+      const subjectNote = `[SUBJECT: ${subject}. Stay on this subject for the ENTIRE session.]`
 
       if (isAskingForHelp) {
         messages.push({
@@ -324,9 +369,9 @@ export async function POST(req: NextRequest) {
             : `${childName} answered "${answer}" to "${currentQuestion}" — INCORRECT (correct answer: "${currentCorrectAnswer}").
 
 ${
-                phase === 'warmup' || phase === 'closing'
-                  ? `Kindly correct them and give a different ${subject} question.`
-                  : `WRONG ANSWER PROTOCOL — follow exactly:
+  phase === 'warmup' || phase === 'closing'
+    ? `Kindly correct them and give a different ${subject} question.`
+    : `WRONG ANSWER PROTOCOL — follow exactly:
 1. FIRST, immediately acknowledge the wrong answer warmly but clearly:
    - Year 1-3: Say "Ooh, not quite! Let's figure it out together."
    - Year 4-7: Say "Not quite — let's look at why."
@@ -334,11 +379,10 @@ ${
 2. THEN give a hint or re-explanation
 3. Do NOT skip straight to re-explanation — the child must know they got it wrong first
 4. Keep it warm and brief — never make them feel bad`
-              } ${subjectNote}`,
+} ${subjectNote}`,
         })
       }
     } else if (messages.length === 0) {
-      // First question of this phase
       messages.push({
         role: 'user',
         content: phase === 'warmup'
@@ -369,15 +413,7 @@ Remember: you're a tutor, not a quiz machine. Teach first. Questions come AFTER 
       })
     }
 
-    // ─── Question Bank Interception — serve from bank when possible ─────────
-    // Compute answer evaluation flags early so we can use them for bank routing
-    const trimmedAnswer = answer?.toLowerCase().trim() || ''
-    const trimmedCorrect = currentCorrectAnswer?.toLowerCase().trim() || ''
-    const isCorrect = answer && currentQuestion ? trimmedAnswer === trimmedCorrect : false
-    const helpPhrases = ['help', 'hint', 'i dont know', "i don't know", 'idk', 'stuck', 'confused', 'explain', 'please help']
-    const isAskingForHelp = answer ? (helpPhrases.some(p => trimmedAnswer.includes(p)) || trimmedAnswer === '?') : false
-    const isFirstMessage = history.length === 0 && !answer
-
+    // ─── Question Bank Interception — serve from bank for practice topics ────
     if (topicId) {
       // LESSON: first message → serve concept bank teaching content
       if (phase === 'lesson' && isFirstMessage) {
@@ -385,15 +421,13 @@ Remember: you're a tutor, not a quiz machine. Teach first. Questions come AFTER 
         if (concept) {
           const q = await fetchBankQuestion(topicId, yearLevel)
           const teachText = `Hey ${childName}! Today we're learning about **${concept.concept_name}**. 📚\n\n${concept.explanation_1}\n\n💡 *${concept.analogy}*\n\nDoes that make sense? Once you're ready, let's try a question!`
-          if (q) {
-            return NextResponse.json({
-              phase, source: 'bank',
-              earniSays: teachText,
-              question: null, answer: null, visual: concept.visual_suggestion || null,
-              conceptData: concept,
-            })
-          }
-          return NextResponse.json({ phase, source: 'bank', earniSays: teachText, question: null, visual: concept.visual_suggestion || null })
+          return NextResponse.json({
+            phase, source: 'bank',
+            earniSays: teachText,
+            question: null, answer: null, visual: concept.visual_suggestion || null,
+            conceptData: concept,
+            ...(q ? {} : {}),
+          })
         }
         // Concept bank empty → fall through to Claude
       }
@@ -442,70 +476,61 @@ Remember: you're a tutor, not a quiz machine. Teach first. Questions come AFTER 
     }
     // ─── End Question Bank Interception ──────────────────────────────────────
 
-    // Use Haiku for rapid fire + financial (cheaper + faster), Sonnet only for main lesson + homework
+    // ─── Claude via tool_use for guaranteed JSON structure ────────────────────
     const model = (phase === 'warmup' || phase === 'closing' || phase === 'financial') ? 'claude-haiku-4-5-20251001' : CLAUDE_MODEL
 
     const response = await client.messages.create({
       model,
       max_tokens: phase === 'warmup' || phase === 'closing' ? 300 : 600,
-      // Enable prompt caching — system prompt is identical every call
-      // Cached reads cost 90% less than uncached
-      system: [{ type: 'text', text: systemPrompt, cache_control: { type: 'ephemeral' } }] as Parameters<typeof client.messages.create>[0]['system'],
+      system: systemPrompt,
       messages,
+      tools: [{
+        name: 'lesson_response',
+        description: 'Structure the lesson response for the child',
+        input_schema: {
+          type: 'object' as const,
+          properties: {
+            earniSays: { type: 'string', description: 'What Earni says to the child — encouragement, teaching, or feedback' },
+            question: { type: 'string', description: 'The question to ask (null if teaching/no question this turn)' },
+            answer: { type: 'string', description: 'The correct answer (null if no question)' },
+            options: { type: 'array', items: { type: 'string' }, description: 'Multiple choice options (empty array if not choice type)' },
+            inputType: { type: 'string', enum: ['text', 'choice', 'none'], description: 'How the child should respond' },
+            visual: { type: 'object', description: 'Optional visual aid (null if none)' },
+            checkIn: { type: 'array', items: { type: 'string' }, description: 'Quick check-in prompts (empty array if none)' },
+            stars: { type: 'number', description: 'Stars awarded this turn (0-3)' },
+            hint: { type: 'string', description: 'A hint for this question (null if none)' },
+          },
+          required: ['earniSays', 'inputType', 'stars', 'options', 'checkIn'],
+        },
+      }],
+      tool_choice: { type: 'any' as const },
     })
 
-    const rawText = response.content[0].type === 'text' ? response.content[0].text : '{}'
-    // Strip markdown code fences if Claude wrapped its response (e.g. ```json ... ```)
-    const text = rawText.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/i, '').trim()
+    const toolBlock = response.content.find(b => b.type === 'tool_use')
+    if (!toolBlock || toolBlock.type !== 'tool_use') {
+      // Fallback: try to extract text if tool use failed unexpectedly
+      const textBlock = response.content.find(b => b.type === 'text')
+      const fallbackText = textBlock && textBlock.type === 'text' ? textBlock.text : 'Let me think about that...'
+      return NextResponse.json({ phase, earniSays: fallbackText, inputType: 'text', stars: 0, options: [], checkIn: [] })
+    }
 
-    // Parse JSON response — handle multiple JSON objects from Claude
-    try {
-      // Try parsing the whole thing first
-      const parsed = JSON.parse(text)
-      return NextResponse.json({ phase, ...parsed })
-    } catch {
-      // Find the first complete JSON object
-      let depth = 0
-      let start = -1
-      for (let i = 0; i < text.length; i++) {
-        if (text[i] === '{') {
-          if (depth === 0) start = i
-          depth++
-        } else if (text[i] === '}') {
-          depth--
-          if (depth === 0 && start >= 0) {
-            try {
-              const parsed = JSON.parse(text.slice(start, i + 1))
-              // If this is a teaching response with no question, check if there's a second JSON with the question
-              if (!parsed.question && parsed.earniSays) {
-                // Look for the next JSON object
-                const remaining = text.slice(i + 1)
-                let d2 = 0, s2 = -1
-                for (let j = 0; j < remaining.length; j++) {
-                  if (remaining[j] === '{') { if (d2 === 0) s2 = j; d2++ }
-                  else if (remaining[j] === '}') {
-                    d2--
-                    if (d2 === 0 && s2 >= 0) {
-                      try {
-                        const second = JSON.parse(remaining.slice(s2, j + 1))
-                        // Merge: use first earniSays, second's question/answer/visual
-                        return NextResponse.json({ phase, ...parsed, ...second, earniSays: parsed.earniSays + (second.earniSays ? ' ' + second.earniSays : '') })
-                      } catch { /* use first only */ }
-                      break
-                    }
-                  }
-                }
-              }
-              return NextResponse.json({ phase, ...parsed })
-            } catch { /* keep looking */ }
-            start = -1
-          }
+    const parsed = toolBlock.input as LessonResponse
+
+    // ─── Server-side topic validation ─────────────────────────────────────────
+    if (topicId && parsed.question) {
+      const isOnTopic = validateQuestionTopic(parsed.question, parsed.answer || null, topicId)
+      if (!isOnTopic) {
+        const bankQ = await fetchBankQuestion(topicId, yearLevel)
+        if (bankQ) {
+          parsed.question = bankQ.question as string
+          parsed.answer = bankQ.answer as string
+          parsed.options = (bankQ.options as string[]) || []
         }
       }
-      // Last resort — strip JSON artifacts from text and return as earniSays
-      const cleaned = text.replace(/[{}"\[\]]/g, '').replace(/earniSays:|question:|answer:|options:|visual:|inputType:|stars:|phase:/g, '').trim()
-      return NextResponse.json({ phase, earniSays: cleaned || 'Let me think about that...' })
     }
+
+    return NextResponse.json({ phase, ...parsed })
+
   } catch (error) {
     console.error('Lesson API error:', error)
     return NextResponse.json(
