@@ -275,7 +275,6 @@ const CATEGORIES: Category[] = SUBJECT_GROUPS.flatMap(g => g.categories)
 export default function StartSessionPage() {
   const [childName, setChildName] = useState('')
   const [yearLevel, setYearLevel] = useState(5)
-  const [activeSubject, setActiveSubject] = useState<string>('maths')
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null)
 
   const [foundationsExpanded, setFoundationsExpanded] = useState(false)
@@ -292,7 +291,7 @@ export default function StartSessionPage() {
     window.location.href = '/session'
   }
 
-  const activeGroup = SUBJECT_GROUPS.find(g => g.id === activeSubject) || SUBJECT_GROUPS[0]
+  const activeGroup = SUBJECT_GROUPS[0]
 
   return (
     <div style={{
@@ -306,35 +305,10 @@ export default function StartSessionPage() {
 
         <h1 style={{
           fontFamily: "'Nunito', sans-serif", fontSize: '22px', fontWeight: 900,
-          color: 'white', marginTop: '12px', marginBottom: '4px',
+          color: 'white', marginTop: '12px', marginBottom: '20px',
         }}>
-          What do you want to do, {childName}?
+          Hey {childName}.
         </h1>
-        
-        {/* Subject tabs */}
-        <div className="hide-scrollbar" style={{
-          display: 'flex', gap: '8px', marginBottom: '20px',
-          overflowX: 'auto', paddingBottom: '4px',
-          scrollbarWidth: 'none',
-        }}>
-          {SUBJECT_GROUPS.map(group => (
-            <button
-              key={group.id}
-              onClick={() => { setActiveSubject(group.id); setSelectedCategory(null) }}
-              style={{
-                display: 'flex', alignItems: 'center', gap: '6px',
-                padding: '8px 14px', borderRadius: '30px', border: 'none',
-                cursor: 'pointer', flexShrink: 0, fontSize: '13px', fontWeight: 700,
-                background: activeSubject === group.id ? '#2ec4b6' : 'rgba(255,255,255,0.07)',
-                color: activeSubject === group.id ? 'white' : 'rgba(255,255,255,0.45)',
-                transition: 'all 0.15s',
-                fontFamily: "'Nunito', sans-serif",
-              }}
-            >
-              <span>{group.emoji}</span> {group.label}
-            </button>
-          ))}
-        </div>
 
         {!selectedCategory ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
