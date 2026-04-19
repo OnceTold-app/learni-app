@@ -447,14 +447,16 @@ Remember: you're a tutor, not a quiz machine. Teach first. Questions come AFTER 
 
     const response = await client.messages.create({
       model,
-      max_tokens: phase === 'warmup' || phase === 'closing' ? 200 : 300, // tightened - Earni JSON responses average ~120 tokens
+      max_tokens: phase === 'warmup' || phase === 'closing' ? 300 : 600,
       // Enable prompt caching — system prompt is identical every call
       // Cached reads cost 90% less than uncached
       system: [{ type: 'text', text: systemPrompt, cache_control: { type: 'ephemeral' } }] as Parameters<typeof client.messages.create>[0]['system'],
       messages,
     })
 
-    const text = response.content[0].type === 'text' ? response.content[0].text : '{}'
+    const rawText = response.content[0].type === 'text' ? response.content[0].text : '{}'
+    // Strip markdown code fences if Claude wrapped its response (e.g. ```json ... ```)
+    const text = rawText.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/i, '').trim()
 
     // Parse JSON response — handle multiple JSON objects from Claude
     try {
