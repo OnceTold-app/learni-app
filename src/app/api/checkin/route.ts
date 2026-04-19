@@ -74,7 +74,7 @@ Keep it conversational and encouraging. Child must never feel like they're being
 
 export async function POST(req: NextRequest) {
   try {
-    const { childId, childName, yearLevel, message, history, phase, nudge, mode, imageBase64, isFirstTime } = await req.json()
+    const { childId, childName, yearLevel, message, history, phase, nudge, mode, imageBase64, isFirstTime, lastTopic, daysSinceLastSession } = await req.json()
 
     const messages = history
       .filter((m: any) => m.role !== 'system')
@@ -126,10 +126,12 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    const fullSystem = systemPrompt + `\n\nCONTEXT:\n` + contextNote
     const response = await client.messages.create({
       model: 'claude-haiku-4-5-20251001',
       max_tokens: 250,
-      system: systemPrompt + `\n\nCONTEXT:\n` + contextNote,
+      // Prompt caching — base system prompt cached (contextNote varies so appended separately)
+      system: [{ type: 'text' as const, text: fullSystem, cache_control: { type: 'ephemeral' as const } }],
       messages,
     })
 

@@ -482,7 +482,8 @@ Remember: you're a tutor, not a quiz machine. Teach first. Questions come AFTER 
     const response = await client.messages.create({
       model,
       max_tokens: phase === 'warmup' || phase === 'closing' ? 300 : 600,
-      system: systemPrompt,
+      // Prompt caching — system prompt cached after first call, 90% cheaper reads
+      system: [{ type: 'text' as const, text: systemPrompt, cache_control: { type: 'ephemeral' as const } }],
       messages,
       tools: [{
         name: 'lesson_response',

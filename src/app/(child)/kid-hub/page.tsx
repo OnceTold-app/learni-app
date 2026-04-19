@@ -33,7 +33,7 @@ export default function KidHubPage() {
   const [needsBaseline, setNeedsBaseline] = useState(false)
   const [baselineLevelName, setBaselineLevelName] = useState('')
   const [topicsMastered, setTopicsMastered] = useState(0)
-  const [badges, setBadges] = useState<Array<{ id: string; name: string; emoji: string; desc: string; earned: boolean; isNew: boolean; earnedAt?: string | null }>>([])
+  const [badges, setBadges] = useState<Array<{ id: string; name: string; emoji: string; subject: string | null; earniSays: string; desc: string; earned: boolean; isNew: boolean; earnedAt?: string | null }>>([])  
   // Mastery map state
   const [tierSummary, setTierSummary] = useState<Array<{ tier: number; total: number; mastered: number }>>([])
   const [topicMastery, setTopicMastery] = useState<Array<{ topic_id: string; tier: number; correct_count: number; streak_current: number; is_mastered: boolean }>>([])
@@ -102,7 +102,7 @@ export default function KidHubPage() {
           } else if (hoursAgo >= 24 && hoursAgo < 168) {
             wbMsg = `Good to see you, ${dName}! Last time: ${lastTopic}. Pick up where you left off?`
           } else if (hoursAgo >= 168) {
-            wbMsg = `Hey ${dName} — it's been a little while. Let's ease back in with something familiar before we push forward.`
+            wbMsg = `Hey ${dName} - it's been a little while. Let's ease back in with something familiar before we push forward.`
             setWelcomeBackAction('/start-session')
           }
           if (wbMsg) {
@@ -189,7 +189,7 @@ export default function KidHubPage() {
           setDraftSplit(loadedSplit)
           setGoalVault(vaultData.goalVault || null)
         }
-      } catch { /* best effort — vault columns may not exist yet */ }
+      } catch { /* best effort - vault columns may not exist yet */ }
     } catch {
       setStatsError(true)
     }
@@ -519,7 +519,7 @@ export default function KidHubPage() {
           ))}
         </div>
 
-        {/* Tier summary chips — Maths only */}
+        {/* Tier summary chips - Maths only */}
         {skillsSubject === 'maths' && (<>
         {/* Tier summary chips */}
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '20px' }}>
@@ -680,7 +680,7 @@ export default function KidHubPage() {
           Your Money
         </h2>
 
-        {/* Tier 1 — Piggy Bank (always unlocked) */}
+        {/* Tier 1 - Piggy Bank (always unlocked) */}
         <div style={{
           background: 'rgba(255,255,255,0.04)',
           border: '1.5px solid #2ec4b6',
@@ -701,7 +701,7 @@ export default function KidHubPage() {
           )}
         </div>
 
-        {/* Tier 2 — Three Jars */}
+        {/* Tier 2 - Three Jars */}
         {vaultTier < 2 ? (
           <button
             onClick={async () => {
@@ -806,7 +806,7 @@ export default function KidHubPage() {
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
                             lineHeight: 1,
                           }}
-                        >−</button>
+                        >-</button>
                         <div style={{
                           flex: 1, textAlign: 'center',
                           fontFamily: "'Nunito', sans-serif", fontSize: '18px', fontWeight: 900, color: 'white',
@@ -865,7 +865,7 @@ export default function KidHubPage() {
                       opacity: savingJarSplit ? 0.7 : 1,
                     }}
                   >
-                    {savingJarSplit ? 'Saving…' : 'Save split ✓'}
+                    {savingJarSplit ? 'Saving...' : 'Save split ✓'}
                   </button>
                   <button
                     onClick={() => setEditingJarSplit(false)}
@@ -885,7 +885,7 @@ export default function KidHubPage() {
           </div>
         )}
 
-        {/* Tier 3 — Goal Jar */}
+        {/* Tier 3 - Goal Jar */}
         {vaultTier < 3 ? (
           <div style={{
             background: 'rgba(255,255,255,0.04)',
@@ -962,7 +962,7 @@ export default function KidHubPage() {
                     cursor: (!goalName.trim() || !goalTarget || parseFloat(goalTarget) <= 0) ? 'not-allowed' : 'pointer',
                   }}
                 >
-                  {savingGoal ? 'Setting…' : 'Set my goal →'}
+                  {savingGoal ? 'Setting...' : 'Set my goal →'}
                 </button>
               </div>
             )
@@ -1032,7 +1032,7 @@ export default function KidHubPage() {
           }
         })()}
 
-        {/* Tier 4 — Give Impact */}
+        {/* Tier 4 - Give Impact */}
         {vaultTier < 4 ? (
           <div style={{
             background: 'rgba(255,255,255,0.04)',
@@ -1049,7 +1049,7 @@ export default function KidHubPage() {
         ) : (() => {
           const giveDollars = totalDollars * jarSplit.give / 100
           const impactStatement =
-            giveDollars < 1 ? 'Every cent adds up — keep going.'
+            giveDollars < 1 ? 'Every cent adds up - keep going.'
             : giveDollars < 5 ? 'This could buy a meal for someone who needs one.'
             : giveDollars < 20 ? 'This could buy a book for a child who doesn\'t have one.'
             : 'This could make a real difference. What cause matters to you?'
@@ -1197,40 +1197,149 @@ export default function KidHubPage() {
   }
 
   // ─── ACHIEVEMENT ROW ─────────────────────────────────────────────────
-  function AchievementRow({ badges }: { badges: Array<{ id: string; name: string; emoji: string; desc: string; earned: boolean; isNew: boolean; earnedAt?: string | null }> }) {
-    const [selectedBadge, setSelectedBadge] = useState<string | null>(null)
-    return (
-      <div style={{ marginTop: '4px' }}>
-        <div style={{ fontSize: '11px', fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>Achievements</div>
-        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-          {badges.map(b => (
-            <div key={b.id} style={{ position: 'relative' }} onClick={() => setSelectedBadge(selectedBadge === b.id ? null : b.id)}>
+  function AchievementRow({ badges }: { badges: Array<{ id: string; name: string; emoji: string; subject: string | null; earniSays: string; desc: string; earned: boolean; isNew: boolean; earnedAt?: string | null }> }) {
+    const [selectedBadge, setSelectedBadge] = useState<typeof badges[0] | null>(null)
+
+    const consistencyIds = ['streak_3','streak_7','streak_30','back_again','never_quit']
+    const masteryIds = ['cracked_it','on_a_roll','getting_dangerous','unstoppable']
+
+    const effortBadges = badges.filter(b => b.subject !== null)
+    const consistencyBadges = badges.filter(b => consistencyIds.includes(b.id))
+    const masteryBadges = badges.filter(b => masteryIds.includes(b.id))
+
+    function renderBadgeRow(items: typeof badges) {
+      return (
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+          {items.map(b => (
+            <div
+              key={b.id}
+              onClick={() => setSelectedBadge(b)}
+              style={{ cursor: 'pointer', position: 'relative' }}
+            >
               <div style={{
-                width: '44px', height: '44px', borderRadius: '12px',
-                background: b.earned ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.03)',
-                border: b.isNew ? '1.5px solid #f5a623' : b.earned ? '1px solid rgba(255,255,255,0.12)' : '1px solid rgba(255,255,255,0.05)',
+                width: '56px', height: '56px', borderRadius: '14px',
+                background: b.earned ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.02)',
+                border: b.isNew ? '2px solid #f5a623' : b.earned ? '1.5px solid rgba(255,255,255,0.15)' : '1px solid rgba(255,255,255,0.05)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: '22px', opacity: b.earned ? 1 : 0.3, cursor: 'pointer',
+                fontSize: '26px',
+                opacity: b.earned ? 1 : 0.25,
                 filter: b.earned ? 'none' : 'grayscale(100%)',
-              }}>{b.emoji}</div>
-              {selectedBadge === b.id && (
+                transition: 'transform 0.1s',
+              }}>
+                {b.emoji}
+              </div>
+              {b.isNew && (
                 <div style={{
-                  position: 'absolute', bottom: '50px', left: '50%', transform: 'translateX(-50%)',
-                  background: '#0d2b28', border: '1px solid rgba(46,196,182,0.3)',
-                  borderRadius: '10px', padding: '8px 12px',
-                  fontSize: '11px', color: 'white', fontWeight: 600,
-                  whiteSpace: 'nowrap', zIndex: 50, boxShadow: '0 4px 16px rgba(0,0,0,0.4)',
-                }}>
-                  <div style={{ fontWeight: 800, marginBottom: '2px' }}>{b.name}</div>
-                  <div style={{ color: b.earned ? '#2ec4b6' : 'rgba(255,255,255,0.5)' }}>
-                    {b.earned ? '✓ Earned' : b.desc}
-                  </div>
-                </div>
+                  position: 'absolute', top: '-5px', right: '-5px',
+                  background: '#f5a623', color: 'white',
+                  borderRadius: '8px', fontSize: '8px', fontWeight: 800,
+                  padding: '2px 5px',
+                }}>NEW</div>
               )}
             </div>
           ))}
         </div>
-      </div>
+      )
+    }
+
+    return (
+      <>
+        <div style={{ marginTop: '8px' }}>
+          {/* Effort badges grouped by subject */}
+          {(['Maths', 'Reading', 'Wealth Wise'] as const).map(subj => {
+            const group = effortBadges.filter(b => b.subject === subj)
+            if (group.length === 0) return null
+            return (
+              <div key={subj} style={{ marginBottom: '10px' }}>
+                <div style={{ fontSize: '10px', fontWeight: 800, color: 'rgba(255,255,255,0.25)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '6px' }}>
+                  {subj === 'Maths' ? '📐' : subj === 'Reading' ? '✏️' : '💰'} {subj}
+                </div>
+                {renderBadgeRow(group)}
+              </div>
+            )
+          })}
+
+          {/* Consistency */}
+          {consistencyBadges.length > 0 && (
+            <div style={{ marginBottom: '10px' }}>
+              <div style={{ fontSize: '10px', fontWeight: 800, color: 'rgba(255,255,255,0.25)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '6px' }}>📅 Consistency</div>
+              {renderBadgeRow(consistencyBadges)}
+            </div>
+          )}
+
+          {/* Mastery */}
+          {masteryBadges.length > 0 && (
+            <div style={{ marginBottom: '10px' }}>
+              <div style={{ fontSize: '10px', fontWeight: 800, color: 'rgba(255,255,255,0.25)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '6px' }}>🏆 Mastery</div>
+              {renderBadgeRow(masteryBadges)}
+            </div>
+          )}
+        </div>
+
+        {/* Badge detail overlay */}
+        {selectedBadge && (
+          <div
+            onClick={() => setSelectedBadge(null)}
+            style={{
+              position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              zIndex: 300, padding: '24px',
+            }}
+          >
+            <div
+              onClick={e => e.stopPropagation()}
+              style={{
+                background: '#0d2b28',
+                border: '1px solid rgba(46,196,182,0.2)',
+                borderRadius: '24px',
+                padding: '32px 28px',
+                maxWidth: '320px', width: '100%',
+                textAlign: 'center',
+              }}
+            >
+              <div style={{ fontSize: '52px', marginBottom: '12px' }}>{selectedBadge.emoji}</div>
+              <div style={{ fontFamily: "'Nunito', sans-serif", fontSize: '20px', fontWeight: 900, color: 'white', marginBottom: '8px' }}>
+                {selectedBadge.name}
+              </div>
+              {selectedBadge.subject && (
+                <div style={{ fontSize: '12px', color: '#2ec4b6', fontWeight: 700, marginBottom: '12px' }}>
+                  {selectedBadge.subject}
+                </div>
+              )}
+              <div style={{
+                fontFamily: "'Nunito', sans-serif",
+                fontSize: '17px', fontWeight: 700,
+                color: selectedBadge.earned ? '#2ec4b6' : 'rgba(255,255,255,0.5)',
+                lineHeight: 1.5,
+                marginBottom: '16px',
+                fontStyle: 'italic',
+              }}>
+                &quot;{selectedBadge.earniSays}&quot;
+              </div>
+              <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.35)', marginBottom: '20px' }}>
+                {selectedBadge.earned
+                  ? `Earned${selectedBadge.earnedAt ? ` · ${new Date(selectedBadge.earnedAt).toLocaleDateString('en-NZ', { day: 'numeric', month: 'short', year: 'numeric' })}` : ''}`
+                  : `How to earn: ${selectedBadge.desc}`}
+              </div>
+              <button
+                onClick={() => setSelectedBadge(null)}
+                style={{
+                  padding: '10px 28px',
+                  background: 'rgba(46,196,182,0.15)',
+                  border: '1.5px solid rgba(46,196,182,0.3)',
+                  borderRadius: '30px',
+                  color: '#2ec4b6',
+                  fontFamily: "'Nunito', sans-serif",
+                  fontWeight: 800, fontSize: '14px',
+                  cursor: 'pointer',
+                }}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        )}
+      </>
     )
   }
 
@@ -1302,45 +1411,6 @@ export default function KidHubPage() {
             : `⭐ ${totalStars} stars`}
         </p>
 
-        {/* Baseline prompt */}
-        {needsBaseline && !baselineLevelName && (
-          <a
-            href="/baseline"
-            style={{
-              display: 'block',
-              background: 'rgba(245,166,35,0.1)',
-              border: '1.5px solid rgba(245,166,35,0.25)',
-              padding: '18px 20px',
-              borderRadius: '16px',
-              textDecoration: 'none',
-              marginBottom: '16px',
-              textAlign: 'center',
-            }}
-          >
-            <div style={{ fontSize: '24px', marginBottom: '6px' }}>🎯</div>
-            <div style={{ fontFamily: "'Nunito', sans-serif", fontSize: '16px', fontWeight: 900, color: '#f5a623', marginBottom: '4px' }}>Let&apos;s find your level!</div>
-            <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.4)' }}>Quick assessment so Earni knows where to start</div>
-          </a>
-        )}
-        {baselineLevelName && (
-          <div style={{
-            background: 'rgba(46,196,182,0.08)',
-            border: '1.5px solid rgba(46,196,182,0.2)',
-            padding: '14px 18px',
-            borderRadius: '14px',
-            marginBottom: '16px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '12px',
-          }}>
-            <span style={{ fontSize: '22px' }}>📊</span>
-            <div>
-              <div style={{ fontFamily: "'Nunito', sans-serif", fontSize: '14px', fontWeight: 800, color: '#2ec4b6' }}>Starting level: {baselineLevelName}</div>
-              <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.45)', marginTop: '2px' }}>Earni will teach from here</div>
-            </div>
-          </div>
-        )}
-
         {/* Welcome back card */}
         {welcomeBack && (
           <div style={{
@@ -1383,7 +1453,7 @@ export default function KidHubPage() {
           </div>
         )}
 
-        {/* Start with Earni — full width teal button */}
+        {/* Start with Earni - full width teal button */}
         <a
           href="/kid-checkin"
           style={{
@@ -1450,29 +1520,19 @@ export default function KidHubPage() {
           </button>
         </div>
 
-        {/* Stat row — streak and sessions */}
-        <div style={{ display: 'flex', gap: '8px', marginTop: '12px', marginBottom: '12px' }}>
-          <div style={{
-            flex: 1, background: 'rgba(255,255,255,0.04)',
-            border: '1px solid rgba(255,255,255,0.07)',
-            borderRadius: '14px', padding: '12px',
-            textAlign: 'center',
-          }}>
-            <div style={{ fontSize: '22px', fontWeight: 900, fontFamily: "'Nunito', sans-serif", color: '#f5a623' }}>🔥 {streak}</div>
-            <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', marginTop: '3px', fontWeight: 700 }}>Day streak</div>
-          </div>
-          <div style={{
-            flex: 1, background: 'rgba(255,255,255,0.04)',
-            border: '1px solid rgba(255,255,255,0.07)',
-            borderRadius: '14px', padding: '12px',
-            textAlign: 'center',
-          }}>
-            <div style={{ fontSize: '22px', fontWeight: 900, fontFamily: "'Nunito', sans-serif", color: '#a78bfa' }}>📚 {sessions.length}</div>
-            <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', marginTop: '3px', fontWeight: 700 }}>Sessions</div>
-          </div>
-        </div>
+        {/* Stat line — compact beneath earnings */}
+        <p style={{
+          textAlign: 'center',
+          fontSize: '13px',
+          color: 'rgba(255,255,255,0.35)',
+          fontWeight: 700,
+          fontFamily: "'Nunito', sans-serif",
+          margin: '0 0 20px',
+        }}>
+          🔥 {streak} day streak · 📚 {sessions.length} session{sessions.length !== 1 ? 's' : ''}
+        </p>
 
-        {/* Achievements — compact locked badge row */}
+        {/* Achievements - compact locked badge row */}
         {badges.length > 0 && (
           <AchievementRow badges={badges} />
         )}
@@ -1499,7 +1559,7 @@ export default function KidHubPage() {
         {activeTab === 'money' && <MoneyContent />}
       </div>
 
-      {/* Bottom nav — 3 tabs */}
+      {/* Bottom nav - 3 tabs */}
       <div style={{
         position: 'fixed', bottom: 0, left: 0, right: 0,
         background: '#0d2b28',

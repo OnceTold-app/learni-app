@@ -6,35 +6,78 @@ const supabase = () => createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY || ''
 )
 
-// Badge definitions
-const BADGES = [
-  { id: 'first_session', name: 'First Steps', emoji: '👣', desc: 'Complete your first session', check: (s: Stats) => s.totalSessions >= 1 },
-  { id: 'star_collector_50', name: 'Star Collector', emoji: '⭐', desc: 'Earn 50 stars', check: (s: Stats) => s.totalStars >= 50 },
-  { id: 'star_collector_200', name: 'Star Hoarder', emoji: '🌟', desc: 'Earn 200 stars', check: (s: Stats) => s.totalStars >= 200 },
-  { id: 'star_collector_500', name: 'Superstar', emoji: '💫', desc: 'Earn 500 stars', check: (s: Stats) => s.totalStars >= 500 },
-  { id: 'streak_3', name: 'Warming Up', emoji: '🔥', desc: '3-day streak', check: (s: Stats) => s.streakDays >= 3 },
-  { id: 'streak_7', name: 'On Fire', emoji: '🔥🔥', desc: '7-day streak', check: (s: Stats) => s.streakDays >= 7 },
-  { id: 'streak_30', name: 'Unstoppable', emoji: '🏆', desc: '30-day streak', check: (s: Stats) => s.streakDays >= 30 },
-  { id: 'perfect_session', name: 'Perfect Score', emoji: '💯', desc: 'Get every question right in a session', check: (s: Stats) => s.hadPerfectSession },
-  { id: 'speed_star', name: 'Speed Star', emoji: '⚡', desc: '10 rapid fire in a row', check: (s: Stats) => s.bestStreak >= 10 },
-  { id: 'marathon', name: 'Marathon Learner', emoji: '🏃', desc: '10 sessions completed', check: (s: Stats) => s.totalSessions >= 10 },
-  { id: 'century', name: 'Century Club', emoji: '💪', desc: '100 questions answered', check: (s: Stats) => s.totalQuestions >= 100 },
-  { id: 'helper', name: 'Smart Cookie', emoji: '🍪', desc: 'Ask for help 5 times (asking is smart!)', check: (s: Stats) => s.helpRequests >= 5 },
-  { id: 'saver', name: 'Money Wise', emoji: '🐷', desc: 'Put 60%+ in Save jar 3 times', check: (s: Stats) => s.highSaveCount >= 3 },
-  { id: 'generous', name: 'Big Heart', emoji: '💙', desc: 'Put 30%+ in Give jar 3 times', check: (s: Stats) => s.highGiveCount >= 3 },
-]
-
 interface Stats {
   totalSessions: number
+  // Per-subject star counts
+  mathsStars: number
+  readingStars: number
+  wealthStars: number
   totalStars: number
+  // Streak
   streakDays: number
-  hadPerfectSession: boolean
+  // Mastery
+  masteredTopics: number
+  masteredCategories: string[]  // category names where ALL topics are mastered
+  // Return behaviour
+  longestAbsenceDays: number   // longest gap between sessions
+  // Existing
   bestStreak: number
   totalQuestions: number
-  helpRequests: number
-  highSaveCount: number
-  highGiveCount: number
 }
+
+interface Badge {
+  id: string
+  name: string
+  emoji: string
+  subject: string | null
+  earniSays: string
+  desc: string
+  check: (s: Stats) => boolean
+}
+
+// Badge definitions
+const BADGES: Badge[] = [
+  // ── EFFORT: per-subject star milestones ─────────────────────────────────────
+  // Maths effort
+  { id: 'maths_spark',       name: 'First Spark',      emoji: '✨', subject: 'Maths',       desc: 'Earn your first Maths star',         earniSays: "You started. That's everything.",                          check: (s: Stats) => s.mathsStars >= 1 },
+  { id: 'maths_warm',        name: 'Getting Warm',     emoji: '🌡️', subject: 'Maths',       desc: 'Earn 50 Maths stars',                earniSays: "You're building something here.",                          check: (s: Stats) => s.mathsStars >= 50 },
+  { id: 'maths_way',         name: 'On Your Way',      emoji: '🛤️', subject: 'Maths',       desc: 'Earn 150 Maths stars',               earniSays: 'This is becoming a habit — a good one.',                   check: (s: Stats) => s.mathsStars >= 150 },
+  { id: 'maths_on',          name: 'Switched On',      emoji: '💡', subject: 'Maths',       desc: 'Earn 400 Maths stars',               earniSays: "You've put in real work. It shows.",                       check: (s: Stats) => s.mathsStars >= 400 },
+  { id: 'maths_sharp',       name: 'Sharp',            emoji: '🎯', subject: 'Maths',       desc: 'Earn 1,000 Maths stars',             earniSays: 'Not many kids get here. You did.',                         check: (s: Stats) => s.mathsStars >= 1000 },
+  { id: 'maths_brilliant',   name: 'Brilliant',        emoji: '🌠', subject: 'Maths',       desc: 'Earn 2,500 Maths stars',             earniSays: 'You should be proud of this.',                             check: (s: Stats) => s.mathsStars >= 2500 },
+  { id: 'maths_extra',       name: 'Extraordinary',    emoji: '🚀', subject: 'Maths',       desc: 'Earn 6,000 Maths stars',             earniSays: 'This is exceptional. Remember this feeling.',              check: (s: Stats) => s.mathsStars >= 6000 },
+
+  // Reading effort
+  { id: 'reading_spark',     name: 'First Spark',      emoji: '✨', subject: 'Reading',     desc: 'Earn your first Reading star',       earniSays: "You started. That's everything.",                          check: (s: Stats) => s.readingStars >= 1 },
+  { id: 'reading_warm',      name: 'Getting Warm',     emoji: '🌡️', subject: 'Reading',     desc: 'Earn 50 Reading stars',              earniSays: "You're building something here.",                          check: (s: Stats) => s.readingStars >= 50 },
+  { id: 'reading_way',       name: 'On Your Way',      emoji: '🛤️', subject: 'Reading',     desc: 'Earn 150 Reading stars',             earniSays: 'This is becoming a habit — a good one.',                   check: (s: Stats) => s.readingStars >= 150 },
+  { id: 'reading_on',        name: 'Switched On',      emoji: '💡', subject: 'Reading',     desc: 'Earn 400 Reading stars',             earniSays: "You've put in real work. It shows.",                       check: (s: Stats) => s.readingStars >= 400 },
+  { id: 'reading_sharp',     name: 'Sharp',            emoji: '🎯', subject: 'Reading',     desc: 'Earn 1,000 Reading stars',           earniSays: 'Not many kids get here. You did.',                         check: (s: Stats) => s.readingStars >= 1000 },
+  { id: 'reading_brilliant', name: 'Brilliant',        emoji: '🌠', subject: 'Reading',     desc: 'Earn 2,500 Reading stars',           earniSays: 'You should be proud of this.',                             check: (s: Stats) => s.readingStars >= 2500 },
+  { id: 'reading_extra',     name: 'Extraordinary',    emoji: '🚀', subject: 'Reading',     desc: 'Earn 6,000 Reading stars',           earniSays: 'This is exceptional. Remember this feeling.',              check: (s: Stats) => s.readingStars >= 6000 },
+
+  // Wealth Wise effort
+  { id: 'wealth_spark',      name: 'First Spark',      emoji: '✨', subject: 'Wealth Wise', desc: 'Earn your first Wealth Wise star',   earniSays: "You started. That's everything.",                          check: (s: Stats) => s.wealthStars >= 1 },
+  { id: 'wealth_warm',       name: 'Getting Warm',     emoji: '🌡️', subject: 'Wealth Wise', desc: 'Earn 50 Wealth Wise stars',          earniSays: "You're building something here.",                          check: (s: Stats) => s.wealthStars >= 50 },
+  { id: 'wealth_way',        name: 'On Your Way',      emoji: '🛤️', subject: 'Wealth Wise', desc: 'Earn 150 Wealth Wise stars',         earniSays: 'This is becoming a habit — a good one.',                   check: (s: Stats) => s.wealthStars >= 150 },
+  { id: 'wealth_on',         name: 'Switched On',      emoji: '💡', subject: 'Wealth Wise', desc: 'Earn 400 Wealth Wise stars',         earniSays: "You've put in real work. It shows.",                       check: (s: Stats) => s.wealthStars >= 400 },
+  { id: 'wealth_sharp',      name: 'Sharp',            emoji: '🎯', subject: 'Wealth Wise', desc: 'Earn 1,000 Wealth Wise stars',       earniSays: 'Not many kids get here. You did.',                         check: (s: Stats) => s.wealthStars >= 1000 },
+  { id: 'wealth_brilliant',  name: 'Brilliant',        emoji: '🌠', subject: 'Wealth Wise', desc: 'Earn 2,500 Wealth Wise stars',       earniSays: 'You should be proud of this.',                             check: (s: Stats) => s.wealthStars >= 2500 },
+  { id: 'wealth_extra',      name: 'Extraordinary',    emoji: '🚀', subject: 'Wealth Wise', desc: 'Earn 6,000 Wealth Wise stars',       earniSays: 'This is exceptional. Remember this feeling.',              check: (s: Stats) => s.wealthStars >= 6000 },
+
+  // ── CONSISTENCY: streak and return ──────────────────────────────────────────
+  { id: 'streak_3',          name: 'Showed Up',        emoji: '🔥', subject: null,          desc: '3 day streak',                       earniSays: "Three days straight. That's how it starts.",               check: (s: Stats) => s.streakDays >= 3 },
+  { id: 'streak_7',          name: 'Making it a Habit',emoji: '📅', subject: null,          desc: '7 day streak',                       earniSays: "A whole week. You're serious about this.",                 check: (s: Stats) => s.streakDays >= 7 },
+  { id: 'streak_30',         name: 'The Real Deal',    emoji: '💎', subject: null,          desc: '30 day streak',                      earniSays: "A month. You've earned every star.",                       check: (s: Stats) => s.streakDays >= 30 },
+  { id: 'back_again',        name: 'Back Again',       emoji: '🔄', subject: null,          desc: 'Returns after 7+ days away',         earniSays: 'You came back. That matters more than you think.',         check: (s: Stats) => s.longestAbsenceDays >= 7 && s.totalSessions >= 2 },
+  { id: 'never_quit',        name: 'Never Quit',       emoji: '🧗', subject: null,          desc: 'Returns after 30+ days away',        earniSays: "Some people don't come back. You did.",                    check: (s: Stats) => s.longestAbsenceDays >= 30 && s.totalSessions >= 2 },
+
+  // ── MASTERY: skill based ─────────────────────────────────────────────────────
+  { id: 'cracked_it',        name: 'Cracked It',       emoji: '🟢', subject: null,          desc: 'First skill mastered',               earniSays: 'You owned that. Completely.',                              check: (s: Stats) => s.masteredTopics >= 1 },
+  { id: 'on_a_roll',         name: 'On a Roll',        emoji: '🎳', subject: null,          desc: '5 skills mastered',                  earniSays: 'Five skills locked in. Keep going.',                       check: (s: Stats) => s.masteredTopics >= 5 },
+  { id: 'getting_dangerous', name: 'Getting Dangerous',emoji: '⚡', subject: null,          desc: '15 skills mastered',                 earniSays: "You're becoming someone who's good at this.",              check: (s: Stats) => s.masteredTopics >= 15 },
+  { id: 'unstoppable',       name: 'Unstoppable',      emoji: '🏆', subject: null,          desc: 'All topics in one category mastered',earniSays: "You've mastered an entire area. That's rare.",             check: (s: Stats) => s.masteredCategories.length >= 1 },
+]
 
 export async function GET(req: NextRequest) {
   const childId = req.nextUrl.searchParams.get('childId')
@@ -53,20 +96,37 @@ export async function GET(req: NextRequest) {
   // Get stats for checking new badges
   const { data: sessions } = await db
     .from('sessions')
-    .select('stars_earned, questions_correct, questions_total, created_at')
+    .select('stars_earned, questions_correct, questions_total, created_at, subject')
     .eq('learner_id', childId)
 
-  const { data: jars } = await db
-    .from('jar_allocations')
-    .select('save_pct, give_pct')
-    .eq('learner_id', childId)
+  const allSessions = sessions || []
+  const totalStars = allSessions.reduce((s, r) => s + (r.stars_earned || 0), 0)
+  const totalQuestions = allSessions.reduce((s, r) => s + (r.questions_total || 0), 0)
 
-  const totalStars = (sessions || []).reduce((s, r) => s + (r.stars_earned || 0), 0)
-  const totalQuestions = (sessions || []).reduce((s, r) => s + (r.questions_total || 0), 0)
-  const hadPerfect = (sessions || []).some(s => s.questions_total > 3 && s.questions_correct === s.questions_total)
+  // Per-subject stars — match by subject field in sessions table
+  const mathsStars = allSessions
+    .filter(s => {
+      const sub = (s.subject || '').toLowerCase()
+      return sub.includes('maths') || sub.includes('math') || sub.includes('counting') || sub.includes('addition') || sub.includes('subtraction') || sub.includes('times') || sub.includes('division')
+    })
+    .reduce((acc, s) => acc + (s.stars_earned || 0), 0)
+
+  const readingStars = allSessions
+    .filter(s => {
+      const sub = (s.subject || '').toLowerCase()
+      return sub.includes('reading') || sub.includes('writing') || sub.includes('spelling') || sub.includes('grammar') || sub.includes('comprehension')
+    })
+    .reduce((acc, s) => acc + (s.stars_earned || 0), 0)
+
+  const wealthStars = allSessions
+    .filter(s => {
+      const sub = (s.subject || '').toLowerCase()
+      return sub.includes('wealth') || sub.includes('money') || sub.includes('financial') || sub.includes('saving') || sub.includes('vault')
+    })
+    .reduce((acc, s) => acc + (s.stars_earned || 0), 0)
 
   // Calculate streak
-  const dates = [...new Set((sessions || []).map(s => new Date(s.created_at).toDateString()))]
+  const dates = [...new Set(allSessions.map(s => new Date(s.created_at).toDateString()))]
   let streak = 0
   const today = new Date()
   for (let i = 0; i < 365; i++) {
@@ -75,16 +135,47 @@ export async function GET(req: NextRequest) {
     else if (i > 0) break
   }
 
+  // Mastery stats
+  const { data: masteryRows } = await db
+    .from('topic_mastery')
+    .select('topic_id, is_mastered')
+    .eq('learner_id', childId)
+    .eq('is_mastered', true)
+
+  const masteredTopics = (masteryRows || []).length
+
+  // Check if all topics in a category are mastered
+  const { ALL_MASTERY_TOPICS } = await import('@/lib/question-bank-generator')
+  const masteredIds = new Set((masteryRows || []).map(r => r.topic_id))
+  const categories = [...new Set(ALL_MASTERY_TOPICS.map(t => t.category))]
+  const masteredCategories = categories.filter(cat => {
+    const catTopics = ALL_MASTERY_TOPICS.filter(t => t.category === cat)
+    return catTopics.length > 0 && catTopics.every(t => masteredIds.has(t.id))
+  })
+
+  // Longest absence calculation
+  const sessionDates = allSessions
+    .map(s => new Date(s.created_at).getTime())
+    .sort((a, b) => a - b)
+
+  let longestAbsenceDays = 0
+  for (let i = 1; i < sessionDates.length; i++) {
+    const gap = (sessionDates[i] - sessionDates[i - 1]) / (1000 * 60 * 60 * 24)
+    if (gap > longestAbsenceDays) longestAbsenceDays = gap
+  }
+
   const stats: Stats = {
-    totalSessions: (sessions || []).length,
+    totalSessions: allSessions.length,
+    mathsStars,
+    readingStars,
+    wealthStars,
     totalStars,
     streakDays: streak,
-    hadPerfectSession: hadPerfect,
-    bestStreak: 0, // Would need to track in session
+    masteredTopics,
+    masteredCategories,
+    longestAbsenceDays,
+    bestStreak: 0,
     totalQuestions,
-    helpRequests: 0, // Would need to track
-    highSaveCount: (jars || []).filter(j => (j.save_pct || 0) >= 60).length,
-    highGiveCount: (jars || []).filter(j => (j.give_pct || 0) >= 30).length,
   }
 
   // Check for new badges
@@ -99,11 +190,15 @@ export async function GET(req: NextRequest) {
   const earnedMap = Object.fromEntries((earned || []).map(e => [e.badge_id, e.earned_at]))
 
   const allBadges = BADGES.map(b => ({
-    ...b,
+    id: b.id,
+    name: b.name,
+    emoji: b.emoji,
+    subject: b.subject,
+    earniSays: b.earniSays,
+    desc: b.desc,
     earned: earnedIds.includes(b.id) || newBadges.includes(b.id),
     isNew: newBadges.includes(b.id),
     earnedAt: earnedMap[b.id] || null,
-    check: undefined,
   }))
 
   return NextResponse.json({ badges: allBadges, newBadges })
