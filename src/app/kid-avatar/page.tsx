@@ -195,7 +195,7 @@ export default function KidAvatarPage() {
       }}>
         {/* LEFT: Controls */}
         <div style={{ flex: 1, minWidth: 0, paddingBottom: '100px' }}>
-          <a href="/kid-hub" style={{ fontSize: '13px', color: 'rgba(255,255,255,0.3)', textDecoration: 'none' }}>← Back</a>
+          <button onClick={() => { if (window.history.length > 1) { window.history.back() } else { window.location.href = '/kid-hub' } }} style={{ background: 'none', border: 'none', fontSize: '13px', color: 'rgba(255,255,255,0.3)', textDecoration: 'none', cursor: 'pointer', padding: 0 }}>← Back</button>
           <h1 style={{ fontFamily: "'Nunito', sans-serif", fontSize: '24px', fontWeight: 900, color: 'white', marginTop: '12px', marginBottom: '20px' }}>
             Design your look{childName ? `, ${childName}` : ''}!
           </h1>

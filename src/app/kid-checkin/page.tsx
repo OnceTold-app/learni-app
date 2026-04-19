@@ -271,7 +271,7 @@ export default function KidCheckinPage() {
 
       {/* Header */}
       <div style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', gap: '12px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-        <a href="/kid-home" style={{ color: 'rgba(255,255,255,0.4)', textDecoration: 'none', fontSize: '14px' }}>← Back</a>
+        <button onClick={() => { if (window.history.length > 1) { window.history.back() } else { window.location.href = '/kid-hub' } }} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', textDecoration: 'none', fontSize: '14px', cursor: 'pointer', padding: 0 }}>← Back</button>
         <span style={{ fontFamily: "'Nunito', sans-serif", fontWeight: 800, color: 'white', fontSize: '16px' }}>Earni</span>
       </div>
 
