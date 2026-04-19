@@ -1,8 +1,13 @@
 'use client'
 
 import { useEffect, useState, useRef } from 'react'
+import { usePathname } from 'next/navigation'
+
+// Child portal routes that have their own header — NavBar not needed
+const CHILD_PORTAL_ROUTES = ['/kid-hub', '/kid-home', '/kid-checkin', '/kid-avatar', '/kid-more', '/kid-welcome', '/kid-login', '/session', '/baseline', '/start-session', '/session/well-done']
 
 export default function NavBar() {
+  const pathname = usePathname()
   const [parentName, setParentName] = useState('')
   const [parentEmail, setParentEmail] = useState('')
   const [isParent, setIsParent] = useState(false)
@@ -62,6 +67,10 @@ export default function NavBar() {
     localStorage.removeItem('learni_avatar_url')
     window.location.href = '/login'
   }
+
+  // Suppress NavBar on child portal pages — they have their own header
+  const isChildRoute = CHILD_PORTAL_ROUTES.some(r => pathname?.startsWith(r))
+  if (isChildRoute) return null
 
   const isLoggedIn = isParent || isKid
   const displayName = isKid ? kidName : parentName
