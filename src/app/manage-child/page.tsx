@@ -61,38 +61,35 @@ export default function ManageChildPage() {
     }
   }
 
-  function showSaveToast() {
-    // Remove any existing toast
-    const existing = document.getElementById('save-toast')
-    if (existing) existing.remove()
+  function showSaveToast(text = 'Changes saved ✓') {
+    // Remove existing
+    document.getElementById('mc-toast')?.remove()
 
-    // Create new toast
     const toast = document.createElement('div')
-    toast.id = 'save-toast'
-    toast.textContent = 'Changes saved ✓'
-    toast.style.cssText = `
-      position: fixed;
-      bottom: 24px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: #1a8f85;
-      color: white;
-      padding: 12px 28px;
-      border-radius: 30px;
-      font-family: 'Nunito', sans-serif;
-      font-weight: 700;
-      font-size: 15px;
-      z-index: 99999;
-      box-shadow: 0 4px 20px rgba(26,143,133,0.4);
-      white-space: nowrap;
-      pointer-events: none;
-    `
+    toast.id = 'mc-toast'
+    toast.textContent = text
+    Object.assign(toast.style, {
+      position: 'fixed',
+      bottom: '24px',
+      left: '50%',
+      transform: 'translateX(-50%)',
+      background: '#1a8f85',
+      color: 'white',
+      padding: '12px 28px',
+      borderRadius: '30px',
+      fontFamily: "'Nunito', sans-serif",
+      fontWeight: '700',
+      fontSize: '15px',
+      zIndex: '99999',
+      boxShadow: '0 4px 20px rgba(26,143,133,0.4)',
+      whiteSpace: 'nowrap',
+      pointerEvents: 'none',
+      transition: 'opacity 0.3s',
+    })
     document.body.appendChild(toast)
 
-    // Auto-remove after 3 seconds
     setTimeout(() => {
       toast.style.opacity = '0'
-      toast.style.transition = 'opacity 0.3s'
       setTimeout(() => toast.remove(), 300)
     }, 3000)
   }
@@ -122,7 +119,7 @@ export default function ManageChildPage() {
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
-      console.log('Save successful, showing toast')
+      console.log('SAVE SUCCESS - showing toast')
       showSaveToast()
       setIsDirty(false)
     } catch (err: unknown) {
