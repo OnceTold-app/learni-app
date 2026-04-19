@@ -134,8 +134,14 @@ export default function DashboardPage() {
       .then(r => r.json())
       .then(d => {
         if (d.referralCode) setReferralCode(d.referralCode)
-        if (d.trial_ends_at) setTrialEndsAt(d.trial_ends_at)
-        if (d.subscription_status) setSubscriptionStatus(d.subscription_status)
+        const trialEnd = d.trial_ends_at || null
+        if (trialEnd) setTrialEndsAt(trialEnd)
+        const subStatus = d.subscriptionStatus || d.subscription_status || null
+        if (subStatus) setSubscriptionStatus(subStatus)
+        // If trialing but no explicit status, derive from trial dates
+        if (!subStatus && trialEnd && new Date(trialEnd) > new Date()) {
+          setSubscriptionStatus('trialing')
+        }
       })
       .catch(() => {})
 
@@ -354,7 +360,7 @@ export default function DashboardPage() {
       })()}
 
       <div className="dashboard-main" style={{ maxWidth: '800px', margin: '0 auto', padding: '24px' }}>
-        {subscriptionStatus === 'trialing' && trialEndsAt && (() => {
+        {(subscriptionStatus === 'trialing' || (trialEndsAt && subscriptionStatus !== 'active')) && trialEndsAt && (() => {
           const daysLeft = Math.ceil((new Date(trialEndsAt).getTime() - Date.now()) / 86400000)
           if (daysLeft <= 0) return (
             <div style={{ background: '#fee2e2', border: '1px solid #fca5a5', borderRadius: '12px', padding: '12px 20px', marginBottom: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
