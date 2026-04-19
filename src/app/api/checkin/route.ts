@@ -126,15 +126,13 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const systemBlocks = [
-      { type: 'text' as const, text: systemPrompt, cache_control: { type: 'ephemeral' as const } },
-      { type: 'text' as const, text: 'CONTEXT:
-' + contextNote },
-    ]
     const response = await client.messages.create({
       model: 'claude-haiku-4-5-20251001',
       max_tokens: 250,
-      system: systemBlocks,
+      system: systemPrompt + '
+
+CONTEXT:
+' + contextNote,
       messages,
     })
 
