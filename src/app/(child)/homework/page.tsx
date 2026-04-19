@@ -8,6 +8,7 @@ interface HelpResponse {
   subject?: string
   helpWith?: string
   hint?: string
+  practiceQuestions?: string[]
   checkIn?: string[]
 }
 
@@ -324,6 +325,68 @@ export default function HomeworkPage() {
                 </div>
               </div>
             ))}
+          </div>
+        )}
+
+        {/* Subject badge + what Earni identified */}
+        {response?.subject && !loading && (
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap', marginBottom: '14px' }}>
+            <span style={{
+              background: 'rgba(46,196,182,0.12)',
+              border: '1px solid rgba(46,196,182,0.25)',
+              borderRadius: '20px',
+              padding: '4px 12px',
+              fontSize: '12px',
+              fontWeight: 800,
+              color: '#2ec4b6',
+              fontFamily: "'Nunito', sans-serif",
+            }}>
+              {response.subject}
+            </span>
+            {response.helpWith && (
+              <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.45)', fontWeight: 600 }}>
+                {response.helpWith}
+              </span>
+            )}
+          </div>
+        )}
+
+        {/* Practice questions — different scenarios, same concept */}
+        {response?.practiceQuestions && response.practiceQuestions.length > 0 && !loading && (
+          <div style={{
+            background: 'rgba(255,255,255,0.04)',
+            border: '1px solid rgba(255,255,255,0.08)',
+            borderRadius: '16px',
+            padding: '16px',
+            marginBottom: '16px',
+          }}>
+            <div style={{ fontSize: '12px', fontWeight: 800, color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '10px' }}>
+              Practice questions — try these yourself
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {response.practiceQuestions.map((q, i) => (
+                <button
+                  key={i}
+                  onClick={() => handleSubmit(`Can you help me with this practice question: ${q}`)}
+                  style={{
+                    display: 'flex', alignItems: 'flex-start', gap: '10px',
+                    background: 'rgba(255,255,255,0.03)',
+                    border: '1px solid rgba(255,255,255,0.07)',
+                    borderRadius: '12px',
+                    padding: '12px 14px',
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    color: 'white',
+                  }}
+                >
+                  <span style={{ fontSize: '13px', color: '#2ec4b6', fontWeight: 800, flexShrink: 0 }}>{i + 1}.</span>
+                  <span style={{ fontSize: '13px', lineHeight: 1.5, fontFamily: "'Plus Jakarta Sans', sans-serif", color: 'rgba(255,255,255,0.75)' }}>{q}</span>
+                </button>
+              ))}
+            </div>
+            <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.25)', marginTop: '10px', fontStyle: 'italic' }}>
+              Tap a question to work through it with Earni. These are practice questions — not your homework answers.
+            </div>
           </div>
         )}
 
