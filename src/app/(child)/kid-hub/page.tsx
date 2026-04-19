@@ -1538,15 +1538,18 @@ export default function KidHubPage() {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        borderBottom: '1px solid rgba(255,255,255,0.06)',
+        borderBottom: '1px solid rgba(46,196,182,0.12)',
         flexShrink: 0,
+        background: 'rgba(255,255,255,0.95)',
+        backdropFilter: 'saturate(180%) blur(20px)',
+        WebkitBackdropFilter: 'saturate(180%) blur(20px)',
       }}>
         {/* learni. logo */}
         <span style={{
           fontFamily: "'Nunito', sans-serif",
           fontSize: '22px',
           fontWeight: 900,
-          color: 'white',
+          color: '#0d2b28',
           letterSpacing: '-0.02em',
         }}>
           learni<span style={{ color: '#2ec4b6' }}>.</span>
