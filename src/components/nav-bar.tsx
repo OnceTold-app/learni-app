@@ -53,6 +53,16 @@ export default function NavBar() {
     window.location.href = '/'
   }
 
+  function handleKidLogout() {
+    localStorage.removeItem('learni_child_id')
+    localStorage.removeItem('learni_child_name')
+    localStorage.removeItem('learni_child_pin')
+    localStorage.removeItem('learni_child_username')
+    localStorage.removeItem('learni_year_level')
+    localStorage.removeItem('learni_avatar_url')
+    window.location.href = '/login'
+  }
+
   const isLoggedIn = isParent || isKid
   const displayName = isKid ? kidName : parentName
   const initial = displayName.charAt(0).toUpperCase()
@@ -121,6 +131,12 @@ export default function NavBar() {
                 }}>
                   {initial}
                 </span>
+                {isKid && (
+                  <>
+                    <span style={{ fontFamily: "'Nunito', sans-serif", fontWeight: 700, fontSize: '14px', color: '#0d2b28' }}>{displayName}</span>
+                    <span style={{ fontSize: '10px', color: '#5a8a84' }}>▾</span>
+                  </>
+                )}
               </button>
 
               {menuOpen && (
@@ -165,11 +181,17 @@ export default function NavBar() {
                   <div style={{ padding: '6px 0' }}>
                     {isKid && (
                       <a href="/kid-hub" style={menuItemStyle} onClick={() => setMenuOpen(false)}>
-                            <span style={menuIconStyle}>🏠</span>
-                          My Hub
+                        <span style={menuIconStyle}>🏠</span>
+                        My Hub
                       </a>
                     )}
-                    {isParent && (
+                    {isKid && (
+                      <a href="/kid-avatar" style={menuItemStyle} onClick={() => setMenuOpen(false)}>
+                        <span style={menuIconStyle}>🎨</span>
+                        Change my look
+                      </a>
+                    )}
+                    {isParent && !isKid && (
                       <>
                         <a href="/dashboard" style={menuItemStyle} onClick={() => setMenuOpen(false)}>
                           <span style={menuIconStyle}>⚙️</span>
@@ -181,17 +203,11 @@ export default function NavBar() {
                         </a>
                       </>
                     )}
-                    {isKid && (
-                      <a href="/kid-avatar" style={menuItemStyle} onClick={() => setMenuOpen(false)}>
-                        <span style={menuIconStyle}>🎨</span>
-                        Change my look
-                      </a>
-                    )}
                   </div>
 
                   {/* Sign out */}
                   <div style={{ borderTop: '1px solid rgba(0,0,0,0.06)', padding: '6px 0' }}>
-                    <button onClick={handleSignOut} style={{
+                    <button onClick={isKid ? handleKidLogout : handleSignOut} style={{
                       ...menuItemStyle,
                       width: '100%',
                       border: 'none',
