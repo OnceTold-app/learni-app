@@ -85,9 +85,26 @@ export default function KidWelcomePage() {
           lineHeight: 1.5,
         }}>
           {yearLevel <= 6
-            ? "I'm Earni — your study buddy! 👋"
-            : `I'm Earni. I'll help you nail Year ${yearLevel}.`}
+            ? "I'm Earni — your AI study buddy! 👋"
+            : `I'm Earni — an AI tutor. I'll help you nail Year ${yearLevel}.`}
         </p>
+
+        {/* AI disclosure — Anthropic compliance requirement */}
+        <div style={{
+          background: 'rgba(255,255,255,0.04)',
+          border: '1px solid rgba(255,255,255,0.08)',
+          borderRadius: '12px',
+          padding: '12px 16px',
+          marginBottom: '24px',
+          fontSize: '13px',
+          color: 'rgba(255,255,255,0.35)',
+          lineHeight: 1.6,
+        }}>
+          {yearLevel <= 6
+            ? '🤖 Earni is a computer program — not a real person. Your parents can see everything Earni says to you.'
+            : '🤖 Earni is an AI — not a human tutor. Your parent account has full visibility of all sessions.'}
+        </div>
+
         <p style={{
           color: 'rgba(255,255,255,0.4)',
           fontSize: '15px',

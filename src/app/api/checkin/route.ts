@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 import { CLAUDE_MODEL } from '@/lib/claude'
+import { CHILD_SAFETY_SYSTEM_PROMPT, moderateEarniResponse } from '@/lib/child-safety'
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
@@ -115,7 +116,7 @@ export async function POST(req: NextRequest) {
       `Exchange count: ${exchangeCount || 1}`,
     ].filter(Boolean).join('\n')
 
-    let systemPrompt = CHECKIN_PROMPT
+    let systemPrompt = CHILD_SAFETY_SYSTEM_PROMPT + '\n\n---\n\n' + CHECKIN_PROMPT
     if (isFirstTime) {
       systemPrompt += CALIBRATION_PROMPT
     }
@@ -160,12 +161,18 @@ export async function POST(req: NextRequest) {
 
     try {
       const parsed = JSON.parse(text)
+      // Output moderation before sending to child
+      const mod = moderateEarniResponse(parsed.earniSays || '', childId || undefined)
+      if (mod.flagged) parsed.earniSays = mod.text
       return NextResponse.json(parsed)
     } catch {
       // Extract JSON from response
       const match = text.match(/\{[\s\S]*\}/)
       if (match) {
-        return NextResponse.json(JSON.parse(match[0]))
+        const parsed = JSON.parse(match[0])
+        const mod = moderateEarniResponse(parsed.earniSays || '', childId || undefined)
+        if (mod.flagged) parsed.earniSays = mod.text
+        return NextResponse.json(parsed)
       }
       return NextResponse.json({
         earniSays: "What are you working on at school right now?",

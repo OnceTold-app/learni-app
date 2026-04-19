@@ -66,6 +66,7 @@ export default function DashboardPage() {
   const [statsPeriod, setStatsPeriod] = useState<'week' | 'month' | 'all'>('week')
   const [periodStars, setPeriodStars] = useState<number | null>(null)
   const [periodStreak, setPeriodStreak] = useState<number | null>(null)
+  const [sessionFlags, setSessionFlags] = useState<Array<{ id: string; flagged_at: string; reason: string; response_excerpt: string; reviewed: boolean }>>([])
   const lastActivityRef = useRef(Date.now())
 
   // Inactivity timeout — log parent out after 10 minutes
@@ -311,6 +312,13 @@ export default function DashboardPage() {
       })
       const data = await res.json()
       setSessions(data.sessions || [])
+    } catch { /* */ }
+
+    // Fetch safety flags for this child
+    try {
+      const flagRes = await fetch(`/api/parent/flags?childId=${childId}`)
+      const flagData = await flagRes.json()
+      setSessionFlags(flagData.flags || [])
     } catch { /* */ }
   }
 
@@ -915,6 +923,58 @@ export default function DashboardPage() {
 
             {/* Focus areas */}
             <FocusAreas childId={child?.id || ''} childName={child?.name || ''} />
+
+            {/* Safety alerts — shown only when flags exist */}
+            {sessionFlags.filter(f => !f.reviewed).length > 0 && (
+              <div style={{
+                background: '#fff5f5',
+                border: '1.5px solid #fed7d7',
+                borderRadius: '14px',
+                padding: '16px 20px',
+                marginBottom: '20px',
+              }}>
+                <div style={{ fontFamily: "'Nunito', sans-serif", fontWeight: 900, fontSize: '15px', color: '#c53030', marginBottom: '10px' }}>
+                  ⚠️ Safety alert — {sessionFlags.filter(f => !f.reviewed).length} flagged response{sessionFlags.filter(f => !f.reviewed).length !== 1 ? 's' : ''}
+                </div>
+                <p style={{ fontSize: '13px', color: '#744210', marginBottom: '12px', lineHeight: 1.6 }}>
+                  Earni’s output moderation flagged the following responses before they were shown to {child?.name}. They were replaced with a safe fallback. Please review.
+                </p>
+                {sessionFlags.filter(f => !f.reviewed).slice(0, 5).map(flag => (
+                  <div key={flag.id} style={{
+                    background: 'white',
+                    border: '1px solid #fed7d7',
+                    borderRadius: '10px',
+                    padding: '12px 14px',
+                    marginBottom: '8px',
+                  }}>
+                    <div style={{ fontSize: '11px', color: '#c53030', fontWeight: 700, marginBottom: '4px' }}>
+                      {new Date(flag.flagged_at).toLocaleString('en-NZ')} · {flag.reason}
+                    </div>
+                    <div style={{ fontSize: '13px', color: '#744210', fontStyle: 'italic', marginBottom: '8px' }}>
+                      &ldquo;{flag.response_excerpt?.slice(0, 200)}&rdquo;
+                    </div>
+                    <button
+                      onClick={async () => {
+                        await fetch('/api/parent/flags', {
+                          method: 'PATCH',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ flagId: flag.id }),
+                        })
+                        setSessionFlags(prev => prev.map(f => f.id === flag.id ? { ...f, reviewed: true } : f))
+                      }}
+                      style={{
+                        fontSize: '12px', fontWeight: 700,
+                        background: 'none', border: '1px solid #c53030',
+                        borderRadius: '8px', padding: '4px 12px',
+                        color: '#c53030', cursor: 'pointer',
+                      }}
+                    >
+                      Mark as reviewed
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
 
             {/* Recent sessions */}
             <h3 style={{ fontFamily: "'Nunito', sans-serif", fontWeight: 900, color: '#0d2b28', marginBottom: '12px' }}>

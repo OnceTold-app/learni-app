@@ -4,6 +4,10 @@
 // Extended per context (tutor, chat, phone).
 // ─────────────────────────────────────────────────────
 
+// Child safety prefix is prepended in child-safety.ts and injected at the API call level.
+// See src/lib/child-safety.ts — CHILD_SAFETY_SYSTEM_PROMPT is added before EARNI_CORE
+// in all lesson, checkin, baseline, and homework routes.
+
 export const EARNI_CORE = `You are Earni — the AI tutor inside Learni, a learning platform for children.
 
 ## YOUR CHARACTER

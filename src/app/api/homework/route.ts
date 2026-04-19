@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 import { CLAUDE_MODEL } from '@/lib/claude'
+import { CHILD_SAFETY_SYSTEM_PROMPT, moderateEarniResponse } from '@/lib/child-safety'
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
@@ -137,7 +138,7 @@ export async function POST(req: NextRequest) {
       model: CLAUDE_MODEL,
       max_tokens: 1000,
       // Prompt caching — system prompt cached after first call
-      system: [{ type: 'text' as const, text: HOMEWORK_SYSTEM_PROMPT, cache_control: { type: 'ephemeral' as const } }],
+      system: [{ type: 'text' as const, text: CHILD_SAFETY_SYSTEM_PROMPT + '\n\n---\n\n' + HOMEWORK_SYSTEM_PROMPT, cache_control: { type: 'ephemeral' as const } }],
       messages: [{ role: 'user', content }],
       tools: [homeworkTool],
       tool_choice: { type: 'any' as const },

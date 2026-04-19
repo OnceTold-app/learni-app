@@ -4,6 +4,7 @@ import { createClient } from '@supabase/supabase-js'
 import { z } from 'zod'
 import { CLAUDE_MODEL } from '@/lib/claude'
 import { tutorPrompt, rapidFirePrompt, financialPrompt } from '@/lib/earni-prompts'
+import { CHILD_SAFETY_SYSTEM_PROMPT, moderateEarniResponse } from '@/lib/child-safety'
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
@@ -293,6 +294,8 @@ It is IMPOSSIBLE for you to teach any other topic.${relatedTopicHint ? `\nIf you
     }
 
     // Build the system prompt based on phase
+    // Child safety prefix — prepended to ALL Earni system prompts
+    // Per Anthropic guidelines for organisations serving minors
     let systemPrompt: string
     switch (phase) {
       case 'warmup':
@@ -338,6 +341,9 @@ It is IMPOSSIBLE for you to teach any other topic.${relatedTopicHint ? `\nIf you
       default:
         return NextResponse.json({ error: 'Invalid phase' }, { status: 400 })
     }
+
+    // Prepend child safety system prompt to ALL Earni calls
+    systemPrompt = CHILD_SAFETY_SYSTEM_PROMPT + '\n\n---\n\n' + systemPrompt
 
     // Build messages — include answer evaluation if provided
     const messages: Array<{ role: 'user' | 'assistant'; content: string }> = [...history]
@@ -528,6 +534,15 @@ Remember: you're a tutor, not a quiz machine. Teach first. Questions come AFTER 
           parsed.options = (bankQ.options as string[]) || []
         }
       }
+    }
+
+    // ─── Output moderation — safety check before sending to child ──────────────
+    const modResult = moderateEarniResponse(parsed.earniSays || '', learnerId || undefined)
+    if (modResult.flagged) {
+      parsed.earniSays = modResult.text
+      // Also clear any question if the response was flagged
+      parsed.question = null
+      parsed.answer = null
     }
 
     return NextResponse.json({ phase, ...parsed })
