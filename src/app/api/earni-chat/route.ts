@@ -78,7 +78,7 @@ export async function POST(req: NextRequest) {
       body: JSON.stringify({
         model: 'claude-haiku-4-5-20251001', // Haiku sufficient for homepage FAQ chat
         max_tokens: 500,
-        system: [{ type: 'text', text: systemPrompt, cache_control: { type: 'ephemeral' } }],
+        system: systemPrompt,
         messages: chatMsgs,
       }),
     })
