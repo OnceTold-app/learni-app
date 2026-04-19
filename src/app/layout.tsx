@@ -100,7 +100,7 @@ export default function RootLayout({
         <meta name="msapplication-TileColor" content="#2ec4b6" />
         <meta name="theme-color" content="#2ec4b6" />
       </head>
-      <body className="antialiased" style={{ paddingTop: '52px' }}>
+      <body className="antialiased">
         <PostHogProvider />
         <NavBar />
         {children}
