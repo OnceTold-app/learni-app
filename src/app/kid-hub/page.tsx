@@ -623,10 +623,10 @@ export default function KidHubPage() {
           marginBottom: '10px',
         }}>
           <div style={{ fontSize: '48px', marginBottom: '8px' }}>🐷</div>
-          <div style={{ fontFamily: "'Nunito', sans-serif", fontSize: '20px', fontWeight: 900, color: '#f5a623' }}>⭐ {totalStars} stars</div>
+          <div style={{ fontFamily: "'Nunito', sans-serif", fontSize: '15px', fontWeight: 800, color: 'rgba(255,255,255,0.6)' }}>Tier 1 Piggy Bank</div>
           {rateSet && (
             <div style={{ fontSize: '16px', fontWeight: 700, color: '#2ec4b6', marginTop: '4px' }}>
-              = ${(totalStars / starsPerDollar).toFixed(2)} earned
+              ${(totalStars / starsPerDollar).toFixed(2)} earned
             </div>
           )}
           {!rateSet && (
