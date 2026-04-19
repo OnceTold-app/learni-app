@@ -59,8 +59,7 @@ export default function ChildHeader() {
 
   const menuItems = [
     { emoji: '🏠', label: 'My Hub', href: '/kid-hub' },
-    { emoji: '💪', label: 'Practice a skill', href: '/start-session' },
-    { emoji: '🎨', label: 'Change my look', href: '/kid-avatar' },
+    { emoji: '😊', label: 'Change my look', href: '/kid-avatar' },
   ]
 
   return (
@@ -164,7 +163,7 @@ export default function ChildHeader() {
                   {displayName}
                 </div>
                 <div style={{ fontSize: '12px', color: '#5a8a84', marginTop: '2px' }}>
-                  ⭐ {totalStars} stars
+                  ⭐ {totalStars} stars = ${(totalStars / 20).toFixed(2)}
                 </div>
               </div>
 

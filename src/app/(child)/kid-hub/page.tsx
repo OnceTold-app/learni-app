@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { getCurrentRank, getNextRank, getProgressToNextRank } from '@/lib/ranks'
 import { Skeleton, SkeletonStyles } from '@/components/ui/skeleton'
 import EarniFAB from '@/components/earni-fab'
@@ -15,7 +15,7 @@ interface SessionData {
   duration_seconds: number
 }
 
-type ActiveTab = 'home' | 'skills' | 'money' | 'more'
+type ActiveTab = 'home' | 'skills' | 'money'
 
 export default function KidHubPage() {
   const [childName, setChildName] = useState('')
@@ -42,19 +42,6 @@ export default function KidHubPage() {
   const [starsPerDollar, setStarsPerDollar] = useState(20)
   const [rateSet, setRateSet] = useState(true) // default true with 20 stars = $1
   const [earningsExpanded, setEarningsExpanded] = useState(false)
-  const [profileMenuOpen, setProfileMenuOpen] = useState(false)
-  const profileMenuRef = useRef<HTMLDivElement>(null)
-
-  // Close profile menu when clicking outside
-  useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
-      if (profileMenuRef.current && !profileMenuRef.current.contains(e.target as Node)) {
-        setProfileMenuOpen(false)
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [])
   const [ledger, setLedger] = useState<Array<{ id: string; type: string; stars: number; dollar_value: number | null; note: string | null; created_at: string; session_id: string | null }>>([])
   const [lifetimeStats, setLifetimeStats] = useState<{ totalEarned: number; totalPaidOut: number; lastPayout: { dollar_value: number | null; created_at: string } | null }>({ totalEarned: 0, totalPaidOut: 0, lastPayout: null })
   // Money Vault state
@@ -76,7 +63,7 @@ export default function KidHubPage() {
     // Deep-link support: ?tab=skills|money|more
     const params = new URLSearchParams(window.location.search)
     const tabParam = params.get('tab') as ActiveTab | null
-    if (tabParam && ['skills', 'money', 'more'].includes(tabParam)) {
+    if (tabParam && ['skills', 'money'].includes(tabParam)) {
       setActiveTab(tabParam)
     }
 
@@ -1065,74 +1052,9 @@ export default function KidHubPage() {
             </div>
           )
         })()}
-      </div>
-    )
-  }
-
-  // ─── MORE TAB CONTENT ─────────────────────────────────────────────────
-  function MoreContent() {
-    return (
-      <div style={{ padding: '20px' }}>
-        {/* Streak + Sessions stat cards */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '20px' }}>
-          <div style={{
-            background: 'rgba(255,255,255,0.06)',
-            border: '1px solid rgba(255,255,255,0.08)',
-            borderRadius: '16px',
-            padding: '16px',
-            textAlign: 'center',
-          }}>
-            <div style={{ fontSize: '32px', fontWeight: 900, fontFamily: "'Nunito', sans-serif", color: '#f5a623' }}>🔥 {streak}</div>
-            <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', marginTop: '6px', fontWeight: 700 }}>Day Streak</div>
-          </div>
-          <div style={{
-            background: 'rgba(255,255,255,0.06)',
-            border: '1px solid rgba(255,255,255,0.08)',
-            borderRadius: '16px',
-            padding: '16px',
-            textAlign: 'center',
-          }}>
-            <div style={{ fontSize: '32px', fontWeight: 900, fontFamily: "'Nunito', sans-serif", color: '#a78bfa' }}>📚 {sessions.length}</div>
-            <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', marginTop: '6px', fontWeight: 700 }}>Sessions</div>
-          </div>
-        </div>
-
-        {/* Achievements */}
-        {badges.length > 0 && (
-          <div style={{ marginBottom: '24px' }}>
-            <h2 style={{ fontFamily: "'Nunito', sans-serif", fontSize: '16px', fontWeight: 800, color: 'rgba(255,255,255,0.5)', marginBottom: '12px', marginTop: 0 }}>Achievements</h2>
-            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-              {badges.map(b => (
-                <div key={b.id} style={{
-                  background: b.earned ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.02)',
-                  border: b.isNew ? '1.5px solid #f5a623' : b.earned ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(255,255,255,0.04)',
-                  borderRadius: '14px',
-                  padding: '10px 14px',
-                  textAlign: 'center',
-                  minWidth: '80px',
-                  opacity: b.earned ? 1 : 0.35,
-                  position: 'relative',
-                }}>
-                  {b.isNew && (
-                    <div style={{ position: 'absolute', top: '-6px', right: '-6px', background: '#f5a623', color: 'white', borderRadius: '10px', fontSize: '9px', fontWeight: 800, padding: '2px 6px' }}>NEW!</div>
-                  )}
-                  <div style={{ fontSize: '24px' }}>{b.emoji}</div>
-                  <div style={{ fontSize: '10px', fontWeight: 700, color: 'rgba(255,255,255,0.6)', marginTop: '4px' }}>{b.name}</div>
-                  {b.earned ? (
-                    <div style={{ fontSize: '9px', fontWeight: 600, color: '#2ec4b6', marginTop: '3px' }}>
-                      {b.earnedAt ? `Earned ${new Date(b.earnedAt).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' })}` : 'Earned'}
-                    </div>
-                  ) : (
-                    <div style={{ fontSize: '9px', fontWeight: 500, color: 'rgba(255,255,255,0.3)', marginTop: '3px' }}>{b.desc}</div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
 
         {/* Earnings History */}
-        <div style={{ marginBottom: '20px' }}>
+        <div style={{ marginBottom: '20px', marginTop: '10px' }}>
           <button
             onClick={() => setEarningsExpanded(x => !x)}
             style={{
@@ -1203,103 +1125,44 @@ export default function KidHubPage() {
             </div>
           )}
         </div>
+      </div>
+    )
+  }
 
-        {/* Profile links */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '20px' }}>
-          <a
-            href="/kid-welcome"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              padding: '14px 18px',
-              background: 'rgba(255,255,255,0.04)',
-              border: '1px solid rgba(255,255,255,0.08)',
-              borderRadius: '14px',
-              textDecoration: 'none',
-              color: 'white',
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <span style={{ fontSize: '18px' }}>✏️</span>
-              <span style={{ fontFamily: "'Nunito', sans-serif", fontSize: '14px', fontWeight: 700 }}>Username</span>
+  // ─── ACHIEVEMENT ROW ─────────────────────────────────────────────────
+  function AchievementRow({ badges }: { badges: Array<{ id: string; name: string; emoji: string; desc: string; earned: boolean; isNew: boolean; earnedAt?: string | null }> }) {
+    const [selectedBadge, setSelectedBadge] = useState<string | null>(null)
+    return (
+      <div style={{ marginTop: '4px' }}>
+        <div style={{ fontSize: '11px', fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>Achievements</div>
+        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+          {badges.map(b => (
+            <div key={b.id} style={{ position: 'relative' }} onClick={() => setSelectedBadge(selectedBadge === b.id ? null : b.id)}>
+              <div style={{
+                width: '44px', height: '44px', borderRadius: '12px',
+                background: b.earned ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.03)',
+                border: b.isNew ? '1.5px solid #f5a623' : b.earned ? '1px solid rgba(255,255,255,0.12)' : '1px solid rgba(255,255,255,0.05)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: '22px', opacity: b.earned ? 1 : 0.3, cursor: 'pointer',
+                filter: b.earned ? 'none' : 'grayscale(100%)',
+              }}>{b.emoji}</div>
+              {selectedBadge === b.id && (
+                <div style={{
+                  position: 'absolute', bottom: '50px', left: '50%', transform: 'translateX(-50%)',
+                  background: '#0d2b28', border: '1px solid rgba(46,196,182,0.3)',
+                  borderRadius: '10px', padding: '8px 12px',
+                  fontSize: '11px', color: 'white', fontWeight: 600,
+                  whiteSpace: 'nowrap', zIndex: 50, boxShadow: '0 4px 16px rgba(0,0,0,0.4)',
+                }}>
+                  <div style={{ fontWeight: 800, marginBottom: '2px' }}>{b.name}</div>
+                  <div style={{ color: b.earned ? '#2ec4b6' : 'rgba(255,255,255,0.5)' }}>
+                    {b.earned ? '✓ Earned' : b.desc}
+                  </div>
+                </div>
+              )}
             </div>
-            <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.3)' }}>→</span>
-          </a>
-          <a
-            href="/kid-avatar"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              padding: '14px 18px',
-              background: 'rgba(255,255,255,0.04)',
-              border: '1px solid rgba(255,255,255,0.08)',
-              borderRadius: '14px',
-              textDecoration: 'none',
-              color: 'white',
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <span style={{ fontSize: '18px' }}>🎨</span>
-              <span style={{ fontFamily: "'Nunito', sans-serif", fontSize: '14px', fontWeight: 700 }}>My look</span>
-            </div>
-            <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.3)' }}>→</span>
-          </a>
-          <button
-            onClick={() => {
-              // Trigger Earni FAB / chat
-              document.querySelector<HTMLButtonElement>('[data-earni-fab]')?.click()
-            }}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              padding: '14px 18px',
-              background: 'rgba(255,255,255,0.04)',
-              border: '1px solid rgba(255,255,255,0.08)',
-              borderRadius: '14px',
-              cursor: 'pointer',
-              color: 'white',
-              width: '100%',
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <span style={{ fontSize: '18px' }}>💬</span>
-              <span style={{ fontFamily: "'Nunito', sans-serif", fontSize: '14px', fontWeight: 700 }}>Help (chat with Earni)</span>
-            </div>
-            <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.3)' }}>→</span>
-          </button>
+          ))}
         </div>
-
-        {/* Switch user */}
-        <button
-          onClick={async () => {
-            const childId = localStorage.getItem('learni_child_id')
-            if (childId) {
-              try {
-                await fetch('/api/session/daily-summary', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ childId }),
-                })
-              } catch { /* fire and forget */ }
-            }
-            handleLogout()
-          }}
-          style={{
-            display: 'block',
-            margin: '16px auto 0',
-            background: 'none',
-            border: 'none',
-            color: 'rgba(255,255,255,0.25)',
-            fontSize: '13px',
-            fontWeight: 600,
-            cursor: 'pointer',
-          }}
-        >
-          Log out
-        </button>
       </div>
     )
   }
@@ -1519,6 +1382,33 @@ export default function KidHubPage() {
             <span style={{ fontFamily: "'Nunito', sans-serif", fontSize: '13px', fontWeight: 800 }}>Practice a skill</span>
           </button>
         </div>
+
+        {/* Stat row — streak and sessions */}
+        <div style={{ display: 'flex', gap: '8px', marginTop: '12px', marginBottom: '12px' }}>
+          <div style={{
+            flex: 1, background: 'rgba(255,255,255,0.04)',
+            border: '1px solid rgba(255,255,255,0.07)',
+            borderRadius: '14px', padding: '12px',
+            textAlign: 'center',
+          }}>
+            <div style={{ fontSize: '22px', fontWeight: 900, fontFamily: "'Nunito', sans-serif", color: '#f5a623' }}>🔥 {streak}</div>
+            <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', marginTop: '3px', fontWeight: 700 }}>Day streak</div>
+          </div>
+          <div style={{
+            flex: 1, background: 'rgba(255,255,255,0.04)',
+            border: '1px solid rgba(255,255,255,0.07)',
+            borderRadius: '14px', padding: '12px',
+            textAlign: 'center',
+          }}>
+            <div style={{ fontSize: '22px', fontWeight: 900, fontFamily: "'Nunito', sans-serif", color: '#a78bfa' }}>📚 {sessions.length}</div>
+            <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', marginTop: '3px', fontWeight: 700 }}>Sessions</div>
+          </div>
+        </div>
+
+        {/* Achievements — compact locked badge row */}
+        {badges.length > 0 && (
+          <AchievementRow badges={badges} />
+        )}
       </div>
     )
   }
@@ -1540,44 +1430,22 @@ export default function KidHubPage() {
         {activeTab === 'home' && <HomeContent />}
         {activeTab === 'skills' && <SkillsContent />}
         {activeTab === 'money' && <MoneyContent />}
-        {activeTab === 'more' && <MoreContent />}
       </div>
 
-      {/* Bottom nav */}
+      {/* Bottom nav — 3 tabs */}
       <div style={{
-        position: 'fixed',
-        bottom: 0,
-        left: 0,
-        right: 0,
+        position: 'fixed', bottom: 0, left: 0, right: 0,
         background: '#0d2b28',
         borderTop: '1px solid rgba(255,255,255,0.08)',
         display: 'flex',
         padding: '8px 0 16px',
         zIndex: 100,
       }}>
-        {/* Home tab */}
-        <button
-          onClick={() => setActiveTab('home')}
-          style={{
-            flex: 1,
-            background: 'none',
-            border: 'none',
-            cursor: 'pointer',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: '3px',
-            padding: '4px 0',
-          }}
-        >
-          <span style={{ fontSize: '20px' }}>🏠</span>
-          <span style={{ fontSize: '10px', fontWeight: 700, color: activeTab === 'home' ? '#2ec4b6' : 'rgba(255,255,255,0.35)', fontFamily: "'Nunito', sans-serif" }}>Home</span>
-        </button>
-        {[
+        {([
+          { id: 'home' as ActiveTab, emoji: '🏠', label: 'Home' },
           { id: 'skills' as ActiveTab, emoji: '⭐', label: 'Skills' },
           { id: 'money' as ActiveTab, emoji: '💰', label: 'My Wallet' },
-          { id: 'more' as ActiveTab, emoji: '📚', label: 'More' },
-        ].map(tab => (
+        ] as Array<{ id: ActiveTab; emoji: string; label: string }>).map(tab => (
           <button key={tab.id} onClick={() => setActiveTab(tab.id)} style={{
             flex: 1, background: 'none', border: 'none', cursor: 'pointer',
             display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '3px', padding: '4px 0',
