@@ -1,7 +1,6 @@
 import type { Metadata } from 'next'
 import { Nunito, Plus_Jakarta_Sans } from 'next/font/google'
 import './globals.css'
-import NavBar from '@/components/nav-bar'
 import PostHogProvider from '@/components/posthog-provider'
 import CookieBanner from '@/components/CookieBanner'
 
@@ -102,18 +101,9 @@ export default function RootLayout({
       </head>
       <body className="antialiased">
         <PostHogProvider />
-        <NavBar />
         {children}
         <CookieBanner />
-        <script dangerouslySetInnerHTML={{ __html: `
-          if ('serviceWorker' in navigator) {
-            window.addEventListener('load', function() {
-              navigator.serviceWorker.register('/sw.js').catch(function(err) {
-                console.warn('SW registration failed:', err);
-              });
-            });
-          }
-        `}} />
+        <script dangerouslySetInnerHTML={{ __html: `if ('serviceWorker' in navigator) { window.addEventListener('load', function() { navigator.serviceWorker.register('/sw.js').catch(function(err) { console.warn('SW registration failed:', err); }); }); }` }} />
       </body>
     </html>
   )
