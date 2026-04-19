@@ -50,7 +50,7 @@ export default function KidWelcomePage() {
       justifyContent: 'center',
       background: '#0d2b28',
       fontFamily: "'Plus Jakarta Sans', sans-serif",
-      padding: '24px',
+      padding: '76px 24px 24px', // 76 = 52px fixed header + 24px breathing room
     }}>
       <div style={{
         maxWidth: '420px',

@@ -188,7 +188,7 @@ export default function KidAvatarPage() {
       <div style={{
         maxWidth: '900px',
         margin: '0 auto',
-        padding: '24px',
+        padding: '76px 24px 24px', // 76 = 52px fixed header + 24px breathing room
         display: 'flex',
         gap: '32px',
         minHeight: '100vh',

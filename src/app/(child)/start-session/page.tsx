@@ -298,7 +298,7 @@ export default function StartSessionPage() {
       minHeight: '100vh',
       background: 'linear-gradient(180deg, #0d2b28 0%, #143330 100%)',
       fontFamily: "'Plus Jakarta Sans', sans-serif",
-      padding: '16px 16px 80px',
+      padding: '68px 16px 80px', // 68 = 52px fixed header + 16px breathing room
     }}>
       <div style={{ maxWidth: '600px', margin: '0 auto' }}>
         <a href="/kid-hub" style={{ fontSize: '13px', color: 'rgba(255,255,255,0.3)', textDecoration: 'none' }}>← Back</a>
