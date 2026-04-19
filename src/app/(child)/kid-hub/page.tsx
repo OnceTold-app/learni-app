@@ -409,6 +409,7 @@ export default function KidHubPage() {
 
   // ─── SKILLS TAB CONTENT ───────────────────────────────────────────────
   function SkillsContent() {
+    const [skillsSubject, setSkillsSubject] = useState<'maths' | 'reading' | 'wealth'>('maths')
     const tmMap = new Map(topicMastery.map(r => [r.topic_id, r]))
 
     const CATEGORIES: Array<{ key: string; label: string }> = [
@@ -486,10 +487,40 @@ export default function KidHubPage() {
 
     return (
       <div style={{ padding: '20px' }}>
-        <h2 style={{ fontFamily: "'Nunito', sans-serif", fontSize: '20px', fontWeight: 900, color: 'white', margin: '0 0 16px' }}>
+        <h2 style={{ fontFamily: "'Nunito', sans-serif", fontSize: '20px', fontWeight: 900, color: 'white', margin: '0 0 14px' }}>
           ⭐ My Skills
         </h2>
 
+        {/* Subject filter pills */}
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', flexWrap: 'wrap' }}>
+          {([
+            { id: 'maths' as const, emoji: '📐', label: 'Maths' },
+            { id: 'reading' as const, emoji: '✏️', label: 'Reading & Writing' },
+            { id: 'wealth' as const, emoji: '💰', label: 'Wealth Wise' },
+          ]).map(s => (
+            <button
+              key={s.id}
+              onClick={() => setSkillsSubject(s.id)}
+              style={{
+                padding: '8px 16px',
+                borderRadius: '30px',
+                fontSize: '13px',
+                fontWeight: 800,
+                fontFamily: "'Nunito', sans-serif",
+                cursor: 'pointer',
+                border: skillsSubject === s.id ? '1.5px solid #2ec4b6' : '1.5px solid rgba(255,255,255,0.1)',
+                background: skillsSubject === s.id ? 'rgba(46,196,182,0.15)' : 'rgba(255,255,255,0.04)',
+                color: skillsSubject === s.id ? '#2ec4b6' : 'rgba(255,255,255,0.45)',
+                transition: 'all 0.15s',
+              }}
+            >
+              {s.emoji} {s.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Tier summary chips — Maths only */}
+        {skillsSubject === 'maths' && (<>
         {/* Tier summary chips */}
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '20px' }}>
           {tierSummary.length > 0 ? tierSummary.map(ts => (
@@ -510,6 +541,41 @@ export default function KidHubPage() {
           )}
         </div>
 
+        </>)}
+
+        {/* Reading & Writing placeholder */}
+        {skillsSubject === 'reading' && (
+          <div style={{
+            background: 'rgba(255,255,255,0.04)',
+            border: '1px solid rgba(255,255,255,0.08)',
+            borderRadius: '16px',
+            padding: '32px 20px',
+            textAlign: 'center',
+          }}>
+            <div style={{ fontSize: '40px', marginBottom: '12px' }}>✏️</div>
+            <div style={{ fontFamily: "'Nunito', sans-serif", fontWeight: 800, fontSize: '16px', color: 'white', marginBottom: '8px' }}>Reading & Writing</div>
+            <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.4)', lineHeight: 1.6 }}>Mastery tracking for Reading & Writing is coming soon. You can still practice from the session picker!</div>
+            <a href="/start-session" style={{ display: 'inline-block', marginTop: '16px', padding: '10px 24px', background: 'rgba(46,196,182,0.15)', border: '1.5px solid rgba(46,196,182,0.3)', borderRadius: '30px', color: '#2ec4b6', fontFamily: "'Nunito', sans-serif", fontWeight: 800, fontSize: '13px', textDecoration: 'none' }}>Practice now →</a>
+          </div>
+        )}
+
+        {/* Wealth Wise placeholder */}
+        {skillsSubject === 'wealth' && (
+          <div style={{
+            background: 'rgba(255,255,255,0.04)',
+            border: '1px solid rgba(255,255,255,0.08)',
+            borderRadius: '16px',
+            padding: '32px 20px',
+            textAlign: 'center',
+          }}>
+            <div style={{ fontSize: '40px', marginBottom: '12px' }}>💰</div>
+            <div style={{ fontFamily: "'Nunito', sans-serif", fontWeight: 800, fontSize: '16px', color: 'white', marginBottom: '8px' }}>Wealth Wise</div>
+            <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.4)', lineHeight: 1.6 }}>Complete Wealth Wise lessons to unlock your Money Vault and track your progress here.</div>
+            <a href="/start-session" style={{ display: 'inline-block', marginTop: '16px', padding: '10px 24px', background: 'rgba(245,166,35,0.1)', border: '1.5px solid rgba(245,166,35,0.3)', borderRadius: '30px', color: '#f5a623', fontFamily: "'Nunito', sans-serif", fontWeight: 800, fontSize: '13px', textDecoration: 'none' }}>Go to Wealth Wise →</a>
+          </div>
+        )}
+
+        {skillsSubject === 'maths' && <>
         {/* Times Table heatmap toggle */}
         <div style={{ marginBottom: '20px' }}>
           <button
@@ -577,6 +643,7 @@ export default function KidHubPage() {
             </div>
           </div>
         )}
+        </>}{/* end maths section */}
       </div>
     )
   }
