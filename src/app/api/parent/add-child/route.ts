@@ -1,5 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { z } from 'zod'
+
+const AddChildSchema = z.object({
+  name: z.string().min(1, 'Name is required'),
+  yearLevel: z.number().int().min(1).max(13),
+  age: z.number().int().min(0).max(20).optional(),
+  pin: z.string().min(4).max(8).default('0000'),
+  language: z.string().optional().default('en'),
+  sessionLanguage: z.string().optional().default('en'),
+  school: z.string().optional(),
+  interests: z.array(z.string()).optional().default([]),
+  personality: z.string().optional(),
+  challenges: z.string().optional(),
+  parentGoals: z.string().optional(),
+  username: z.string().optional(),
+})
 
 export async function POST(req: NextRequest) {
   const token = req.headers.get('authorization')?.replace('Bearer ', '')
@@ -23,14 +39,21 @@ export async function POST(req: NextRequest) {
 
   if (!account) return NextResponse.json({ error: 'Account not found' }, { status: 404 })
 
-  const body = await req.json()
-  const { name, age, yearLevel, pin, language, sessionLanguage, school, interests, personality, challenges, parentGoals, username } = body
-
-  if (!name || !yearLevel) {
-    return NextResponse.json({ error: 'Name and year level required' }, { status: 400 })
+  // Validate request body
+  const parseResult = AddChildSchema.safeParse(await req.json())
+  if (!parseResult.success) {
+    return NextResponse.json(
+      { error: 'Invalid request', details: parseResult.error.flatten() },
+      { status: 400 }
+    )
   }
 
-  // Check child limit (1 on standard, up to 4 with add-ons)
+  const {
+    name, age, yearLevel, pin, language, sessionLanguage,
+    school, interests, personality, challenges, parentGoals, username,
+  } = parseResult.data
+
+  // Check child limit (max 4 per account)
   const { data: existing } = await supabase
     .from('learners')
     .select('id')
@@ -50,13 +73,13 @@ export async function POST(req: NextRequest) {
       age: age || null,
       year_level: yearLevel,
       curriculum: 'nz',
-      primary_language: language || 'en',
-      session_language: sessionLanguage || 'en',
+      primary_language: language,
+      session_language: sessionLanguage,
       input_mode: 'tap',
-      pin: pin || '0000',
+      pin,
       has_onboarded: false,
       school: school || null,
-      interests: interests || [],
+      interests,
       personality: personality || null,
       learning_challenges: challenges || null,
       parent_goals: parentGoals || null,
@@ -69,7 +92,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
-  // Alert Sterling via Telegram if a non-English teaching language is requested
+  // Alert via Telegram if a non-English teaching language is requested
   if (sessionLanguage && sessionLanguage !== 'en') {
     const LANGUAGE_NAMES: Record<string, string> = {
       mi: 'Te Reo Māori', af: 'Afrikaans', zh: 'Mandarin',

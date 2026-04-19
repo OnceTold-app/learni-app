@@ -600,7 +600,9 @@ export default function SessionPage() {
 
     // Track mastery + question count
     if (state.question) {
-      masteryResultsRef.current.push({ topic: subject, correct: isCorrect, question: state.question || '' })
+      // Use sessionTopic (e.g. "counting-2s") not subject (e.g. "Maths — 2s")
+      // sessionTopic maps directly to topic_mastery.topic_id in the DB
+      masteryResultsRef.current.push({ topic: sessionTopic || subject, correct: isCorrect, question: state.question || '' })
       setQuestionsInPhase(q => q + 1)
       if (state.phase === 'warmup') setWarmupCount(c => c + 1)
       if (state.phase === 'lesson') setLessonCount(c => c + 1)

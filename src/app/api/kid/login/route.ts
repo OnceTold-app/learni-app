@@ -1,22 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { z } from 'zod'
+
+const KidLoginSchema = z.object({
+  name: z.string().min(1, 'Name is required'),
+  pin: z.string().min(1, 'PIN is required'),
+})
 
 export async function POST(req: NextRequest) {
-  const { name, pin } = await req.json()
-
-  if (!name || !pin) {
-    return NextResponse.json({ error: 'Name and PIN required' }, { status: 400 })
+  const parseResult = KidLoginSchema.safeParse(await req.json())
+  if (!parseResult.success) {
+    return NextResponse.json(
+      { error: 'Name and PIN required', details: parseResult.error.flatten() },
+      { status: 400 }
+    )
   }
+
+  const { name, pin } = parseResult.data
+  const trimmed = name.trim()
 
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL || '',
     process.env.SUPABASE_SERVICE_ROLE_KEY || ''
   )
 
-  // Find child by name OR username + pin
-  const trimmed = name.trim()
-  
-  // Try username first, then name
+  // Find child by username OR name + pin
   let child = null
   let error = null
 
@@ -53,6 +61,6 @@ export async function POST(req: NextRequest) {
       yearLevel: child.year_level,
       sessionLanguage: child.session_language,
       hasOnboarded: child.has_onboarded,
-    }
+    },
   })
 }
