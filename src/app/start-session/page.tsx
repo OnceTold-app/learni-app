@@ -362,7 +362,7 @@ export default function StartSessionPage() {
             {/* Pill/chip layout for practice categories */}
             {selectedCategory.pillGroups ? (
               <div style={{ paddingBottom: '8px' }}>
-                {activeSubject === 'maths' && yearLevel >= 7 ? (
+                {yearLevel >= 7 ? (
                   /* Year 7+ special ordering: advanced content first, foundations collapsed */
                   <>
                     <div style={{
