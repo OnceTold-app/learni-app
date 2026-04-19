@@ -528,7 +528,7 @@ export default function KidHubPage() {
               gap: '6px',
             }}
           >
-            📊 Times Table Detail {showHeatmap ? '▲' : '▼'}
+            {showHeatmap ? 'See the grid ▲' : 'See the grid →'}
           </button>
           {showHeatmap && (
             <div style={{ marginTop: '12px' }}>
