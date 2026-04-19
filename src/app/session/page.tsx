@@ -287,7 +287,7 @@ export default function SessionPage() {
           reviewTopics,
           baselineLevel: typeof window !== 'undefined' ? localStorage.getItem('learni_baseline_level') : null,
           childProfile,
-          history: historyRef.current.slice(-8),
+          history: historyRef.current.slice(-4), // 4 messages sufficient context, reduces input tokens
           answer,
           currentQuestion,
           currentCorrectAnswer,
