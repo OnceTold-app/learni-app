@@ -438,7 +438,7 @@ Remember: you're a tutor, not a quiz machine. Teach first. Questions come AFTER 
 
     const response = await client.messages.create({
       model,
-      max_tokens: phase === 'warmup' || phase === 'closing' ? 300 : 500,
+      max_tokens: phase === 'warmup' || phase === 'closing' ? 200 : 300, // tightened - Earni JSON responses average ~120 tokens
       // Enable prompt caching — system prompt is identical every call
       // Cached reads cost 90% less than uncached
       system: [{ type: 'text', text: systemPrompt, cache_control: { type: 'ephemeral' } }] as Parameters<typeof client.messages.create>[0]['system'],
