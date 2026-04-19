@@ -276,12 +276,19 @@ export default function StartSessionPage() {
   const [childName, setChildName] = useState('')
   const [yearLevel, setYearLevel] = useState(5)
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null)
+  const [activeGroupId, setActiveGroupId] = useState<string>('maths')
 
   const [foundationsExpanded, setFoundationsExpanded] = useState(false)
 
   useEffect(() => {
     setChildName(localStorage.getItem('learni_child_name') || 'Student')
     setYearLevel(parseInt(localStorage.getItem('learni_year_level') || '5'))
+    // Pre-select subject group if navigated from Skills tab
+    const startSubject = localStorage.getItem('learni_start_subject')
+    if (startSubject) {
+      localStorage.removeItem('learni_start_subject')
+      setActiveGroupId(startSubject)
+    }
   }, [])
 
   function startSession(topicId: string, mode: string, subjectLabel: string) {
@@ -291,7 +298,7 @@ export default function StartSessionPage() {
     window.location.href = '/session'
   }
 
-  const activeGroup = SUBJECT_GROUPS[0]
+  const activeGroup = SUBJECT_GROUPS.find(g => g.id === activeGroupId) || SUBJECT_GROUPS[0]
 
   return (
     <div style={{
@@ -305,10 +312,31 @@ export default function StartSessionPage() {
 
         <h1 style={{
           fontFamily: "'Nunito', sans-serif", fontSize: '22px', fontWeight: 900,
-          color: 'white', marginTop: '12px', marginBottom: '20px',
+          color: 'white', marginTop: '12px', marginBottom: '16px',
         }}>
           Hey {childName}.
         </h1>
+
+        {/* Subject group pills */}
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', flexWrap: 'wrap' }}>
+          {SUBJECT_GROUPS.map(g => (
+            <button
+              key={g.id}
+              onClick={() => { setActiveGroupId(g.id); setSelectedCategory(null) }}
+              style={{
+                padding: '8px 16px', borderRadius: '30px',
+                fontSize: '13px', fontWeight: 800,
+                fontFamily: "'Nunito', sans-serif",
+                cursor: 'pointer',
+                border: activeGroup.id === g.id ? '1.5px solid #2ec4b6' : '1.5px solid rgba(255,255,255,0.1)',
+                background: activeGroup.id === g.id ? 'rgba(46,196,182,0.15)' : 'rgba(255,255,255,0.04)',
+                color: activeGroup.id === g.id ? '#2ec4b6' : 'rgba(255,255,255,0.5)',
+              }}
+            >
+              {g.emoji} {g.label}
+            </button>
+          ))}
+        </div>
 
         {!selectedCategory ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>

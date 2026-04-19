@@ -10,6 +10,8 @@ export default function KidCheckinPage() {
   const [listening, setListening] = useState(false)
   const [phase, setPhase] = useState<'greeting' | 'topic' | 'nudge' | 'starting'>('greeting')
   const [isFirstTime, setIsFirstTime] = useState(false)
+  const [lastTopicRef, setLastTopicRef] = useState('')
+  const [daysSinceRef, setDaysSinceRef] = useState(-1)
   // Homework mode
   const [homeworkMode, setHomeworkMode] = useState(false)
   const [homeworkSubMode, setHomeworkSubMode] = useState<'choose' | 'photo' | 'type' | null>(null)
@@ -49,6 +51,7 @@ export default function KidCheckinPage() {
     let lastTopic = ''
     let nudgeText = ''
 
+    let daysSinceLastSession = -1
     if (childId) {
       try {
         const r = await fetch(`/api/kid/stats?childId=${childId}`)
@@ -56,6 +59,8 @@ export default function KidCheckinPage() {
         sessionsCount = (d.sessions || []).length
         if (d.sessions && d.sessions.length > 0) {
           lastTopic = d.sessions[0].subject || ''
+          const lastDate = new Date(d.sessions[0].completed_at || d.sessions[0].created_at)
+          daysSinceLastSession = Math.floor((Date.now() - lastDate.getTime()) / (1000 * 60 * 60 * 24))
         }
       } catch {}
     }
@@ -106,6 +111,8 @@ export default function KidCheckinPage() {
 
     if (yl <= 6) speakText(greeting)
     if (nudgeText) localStorage.setItem('learni_checkin_nudge', nudgeText)
+    setLastTopicRef(lastTopic)
+    setDaysSinceRef(daysSinceLastSession)
   }
 
   async function speakText(text: string) {
@@ -231,6 +238,8 @@ export default function KidCheckinPage() {
           phase,
           nudge: localStorage.getItem('learni_checkin_nudge') || '',
           isFirstTime,
+          lastTopic: lastTopicRef,
+          daysSinceLastSession: daysSinceRef,
         })
       })
       const d = await r.json()

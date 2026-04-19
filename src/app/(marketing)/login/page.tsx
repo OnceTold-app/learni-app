@@ -66,6 +66,10 @@ export default function LoginPage() {
         const data = await res.json()
         if (!res.ok) throw new Error(data.error || 'Wrong name or PIN')
 
+        // Clear stale parent session when child logs in
+        const parentKeys = ['learni_parent_token', 'learni_parent_name', 'learni_parent_email', 'learni_parent_id']
+        parentKeys.forEach(k => localStorage.removeItem(k))
+
         localStorage.setItem('learni_child_id', data.child.id)
         localStorage.setItem('learni_child_name', data.child.name)
         localStorage.setItem('learni_child_username', data.child.username || '')

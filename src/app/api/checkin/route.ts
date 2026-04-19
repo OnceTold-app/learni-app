@@ -88,9 +88,26 @@ export async function POST(req: NextRequest) {
       messages.push({ role: 'user', content: `${childName} says: "${message}"` })
     }
 
+    // Time-based returning context
+    let returningContext = ''
+    if (!isFirstTime && typeof daysSinceLastSession === 'number') {
+      if (daysSinceLastSession === 0) {
+        returningContext = lastTopic
+          ? `Returning same day. Last topic: ${lastTopic}. Say: "Last time we worked on ${lastTopic}. Same again or something different today?"`
+          : 'Returning same day. Ask what they want to focus on.'
+      } else if (daysSinceLastSession <= 6) {
+        returningContext = `Returning after ${daysSinceLastSession} day(s). Say: "Good to see you. What's your class working on this week?"${lastTopic ? ` (last topic was ${lastTopic})` : ''}`
+      } else if (daysSinceLastSession >= 30) {
+        returningContext = `Returning after ${daysSinceLastSession} days away. Say: "Welcome back. What are you working on at school right now?" Do NOT mention the long absence.`
+      } else {
+        returningContext = `Returning after ${daysSinceLastSession} days. Say: "Welcome back. What are you working on at school right now?"`
+      }
+    }
+
     const contextNote = [
       `Child: ${childName}, Year ${yearLevel}`,
-      nudge ? `Achievement nudge available: ${nudge}` : '',
+      nudge ? `Achievement nudge: after child responds to your opening, add one sentence: "By the way — you're close to mastering ${nudge}. Want to go for that today?"` : '',
+      returningContext || '',
       `Current phase: ${phase}`,
     ].filter(Boolean).join('\n')
 

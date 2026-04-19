@@ -543,37 +543,24 @@ export default function KidHubPage() {
 
         </>)}
 
-        {/* Reading & Writing placeholder */}
-        {skillsSubject === 'reading' && (
-          <div style={{
-            background: 'rgba(255,255,255,0.04)',
-            border: '1px solid rgba(255,255,255,0.08)',
-            borderRadius: '16px',
-            padding: '32px 20px',
-            textAlign: 'center',
-          }}>
-            <div style={{ fontSize: '40px', marginBottom: '12px' }}>✏️</div>
-            <div style={{ fontFamily: "'Nunito', sans-serif", fontWeight: 800, fontSize: '16px', color: 'white', marginBottom: '8px' }}>Reading & Writing</div>
-            <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.4)', lineHeight: 1.6 }}>Mastery tracking for Reading & Writing is coming soon. You can still practice from the session picker!</div>
-            <a href="/start-session" style={{ display: 'inline-block', marginTop: '16px', padding: '10px 24px', background: 'rgba(46,196,182,0.15)', border: '1.5px solid rgba(46,196,182,0.3)', borderRadius: '30px', color: '#2ec4b6', fontFamily: "'Nunito', sans-serif", fontWeight: 800, fontSize: '13px', textDecoration: 'none' }}>Practice now →</a>
-          </div>
-        )}
+        {/* Reading & Writing — go straight to session picker */}
+        {skillsSubject === 'reading' && (() => {
+          // Navigate immediately on pill tap
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('learni_start_subject', 'spelling')
+            window.location.href = '/start-session'
+          }
+          return null
+        })()}
 
-        {/* Wealth Wise placeholder */}
-        {skillsSubject === 'wealth' && (
-          <div style={{
-            background: 'rgba(255,255,255,0.04)',
-            border: '1px solid rgba(255,255,255,0.08)',
-            borderRadius: '16px',
-            padding: '32px 20px',
-            textAlign: 'center',
-          }}>
-            <div style={{ fontSize: '40px', marginBottom: '12px' }}>💰</div>
-            <div style={{ fontFamily: "'Nunito', sans-serif", fontWeight: 800, fontSize: '16px', color: 'white', marginBottom: '8px' }}>Wealth Wise</div>
-            <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.4)', lineHeight: 1.6 }}>Complete Wealth Wise lessons to unlock your Money Vault and track your progress here.</div>
-            <a href="/start-session" style={{ display: 'inline-block', marginTop: '16px', padding: '10px 24px', background: 'rgba(245,166,35,0.1)', border: '1.5px solid rgba(245,166,35,0.3)', borderRadius: '30px', color: '#f5a623', fontFamily: "'Nunito', sans-serif", fontWeight: 800, fontSize: '13px', textDecoration: 'none' }}>Go to Wealth Wise →</a>
-          </div>
-        )}
+        {/* Wealth Wise — go straight to session picker */}
+        {skillsSubject === 'wealth' && (() => {
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('learni_start_subject', 'money')
+            window.location.href = '/start-session'
+          }
+          return null
+        })()}
 
         {skillsSubject === 'maths' && <>
         {/* Times Table heatmap toggle */}
