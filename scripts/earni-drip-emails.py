@@ -150,23 +150,31 @@ DO NOT include a subject line. Just the email body in plain text paragraphs."""
 def email_day7_digest(
     parent_name: str, child_name: str,
     sessions_this_week: int, stars_this_week: int,
-    subjects_covered: list, strong_topics: list
+    subjects_covered: list, strong_topics: list,
+    accuracy: int = 0
 ) -> tuple[str, str, str]:
     """Day 7: weekly digest — what the child learned."""
-    subjects_str = ", ".join(subjects_covered) if subjects_covered else "various subjects"
-    strong_str = ", ".join(strong_topics[:3]) if strong_topics else "several topics"
+    subjects_str = ", ".join(subjects_covered) if subjects_covered else "Maths"
+    strong_str = ", ".join(strong_topics[:3]) if strong_topics else ""
     
     prompt = f"""You are Earni, the AI tutor at Learni (learniapp.co).
-Write a short, enthusiastic weekly digest email (3–4 paragraphs) to {parent_name}, parent of {child_name}.
+Write a short, warm weekly summary email (3 paragraphs) to {parent_name}, parent of {child_name}.
 
-This week's stats:
+This week's REAL stats — use these exact numbers:
 - Sessions completed: {sessions_this_week}
 - Stars earned: {stars_this_week}
-- Subjects covered: {subjects_str}
-- Strong topics: {strong_str}
+- Subjects: {subjects_str}
+- Accuracy: {accuracy}%
+{f'- Strong areas: {strong_str}' if strong_str else ''}
 
-Make them feel proud of {child_name}'s progress. Mention 1–2 specific things. Keep it upbeat and real. Sign off as Earni.
-DO NOT include a subject line. Just the email body in plain text."""
+RULES:
+- Never say {child_name} "didn't complete" anything or make excuses for them
+- Lead with what they DID do — mention the actual session count and stars in the first line
+- Be specific with the numbers given — don't vague it up
+- Warm and encouraging, but grounded in real data
+- 3 paragraphs max, plain text
+- Sign off as Earni
+- DO NOT include a subject line"""
     
     body = personalise_email(prompt)
     subject = f"Here's what {child_name} learned this week 📚"
@@ -283,32 +291,51 @@ def run_drip():
             except Exception as e:
                 print(f"    ✗ Day 3 email failed: {e}")
 
-        # ── Day 7: weekly digest ───────────────────────────────────────────────
+        # ── Day 7: weekly digest ─────────────────────────────────────────────────────
         elif days_since_signup >= 7 and "day7" not in drip_sent:
             print(f"    → Sending Day 7 digest")
             try:
                 # Get sessions from last 7 days
+                # Use subject OR topic field (both may exist), filter sessions with actual work done
                 week_ago = (now - timedelta(days=7)).isoformat()
                 sessions = sb_get("sessions", params={
-                    "select": "subject,stars_earned,strong_topics",
+                    "select": "subject,topic,stars_earned,questions_correct,questions_total,strong_topics",
                     "learner_id": f"eq.{child_id}",
                     "completed_at": f"gte.{week_ago}",
+                    "order": "completed_at.desc",
                 })
-                sessions_count = len(sessions)
-                stars_total = sum(s.get("stars_earned", 0) for s in sessions)
-                subjects = list(set(s.get("subject", "") for s in sessions if s.get("subject")))
+
+                # Only count sessions where real work was done (at least 1 question answered)
+                real_sessions = [s for s in sessions if (s.get("questions_total") or 0) > 0]
+                sessions_count = len(real_sessions)
+                stars_total = sum(s.get("stars_earned", 0) for s in real_sessions)
+                questions_correct = sum(s.get("questions_correct", 0) for s in real_sessions)
+                questions_total = sum(s.get("questions_total", 0) for s in real_sessions)
+                accuracy = round((questions_correct / questions_total) * 100) if questions_total > 0 else 0
+
+                # Use topic field, fall back to subject
+                subjects = list(set(
+                    (s.get("topic") or s.get("subject") or "").capitalize()
+                    for s in real_sessions
+                    if (s.get("topic") or s.get("subject"))
+                ))
                 strong = []
-                for s in sessions:
+                for s in real_sessions:
                     strong.extend(s.get("strong_topics") or [])
                 strong = list(set(strong))
 
-                subject, plain, html = email_day7_digest(
-                    parent_name, child_name,
-                    sessions_count, stars_total, subjects, strong
-                )
-                send_email(email, subject, plain, html)
-                drip_sent["day7"] = now.isoformat()
-                sb_patch("accounts", {"id": f"eq.{acct_id}"}, {"email_drip_sent": json.dumps(drip_sent)})
+                # Skip if no real sessions — don't send a "didn't do anything" email
+                if sessions_count == 0:
+                    print(f"    → No real sessions found for {child_name} this week, skipping Day 7")
+                else:
+                    subject, plain, html = email_day7_digest(
+                        parent_name, child_name,
+                        sessions_count, stars_total, subjects, strong,
+                        accuracy=accuracy
+                    )
+                    send_email(email, subject, plain, html)
+                    drip_sent["day7"] = now.isoformat()
+                    sb_patch("accounts", {"id": f"eq.{acct_id}"}, {"email_drip_sent": json.dumps(drip_sent)})
             except Exception as e:
                 print(f"    ✗ Day 7 email failed: {e}")
 
