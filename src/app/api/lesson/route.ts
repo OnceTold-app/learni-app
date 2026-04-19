@@ -103,12 +103,6 @@ export async function POST(req: NextRequest) {
 
     async function fetchBankQuestion(tid: string, year: number): Promise<Record<string, unknown> | null> {
       try {
-        const baseQuery = supabase
-          .from('question_bank')
-          .select('*')
-          .eq('topic_id', tid)
-          .eq('year_level', year)
-
         // Build combined exclusion list: 7-day history + current session
         const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
         let dbSeenIds: string[] = []
@@ -121,18 +115,31 @@ export async function POST(req: NextRequest) {
           dbSeenIds = dbHistory?.map((h: { question_id: string }) => h.question_id) || []
         }
 
-        // Get a pool of candidates, filter out session-asked questions client-side
+        // Try exact year first, then nearby years (±1, ±2) as fallback
+        // This prevents year-level gaps in the bank from breaking sessions
+        const yearCandidates = [year, year - 1, year + 1, year - 2, year + 2].filter(y => y >= 1 && y <= 13)
         let candidates: Record<string, unknown>[] = []
-        if (dbSeenIds.length > 0) {
-          const { data: unseen } = await baseQuery
-            .not('id', 'in', `(${dbSeenIds.join(',')})`)
-            .limit(40)
-          candidates = unseen || []
-        }
-        // Fallback: use all questions if unseen pool is empty
-        if (candidates.length === 0) {
-          const { data: all } = await baseQuery.limit(40)
-          candidates = all || []
+
+        for (const tryYear of yearCandidates) {
+          const baseQuery = supabase
+            .from('question_bank')
+            .select('*')
+            .eq('topic_id', tid)
+            .eq('year_level', tryYear)
+
+          // Get a pool of candidates, filter out session-asked questions client-side
+          if (dbSeenIds.length > 0) {
+            const { data: unseen } = await baseQuery
+              .not('id', 'in', `(${dbSeenIds.join(',')})`)
+              .limit(40)
+            candidates = unseen || []
+          }
+          // Fallback: use all questions if unseen pool is empty
+          if (candidates.length === 0) {
+            const { data: all } = await baseQuery.limit(40)
+            candidates = all || []
+          }
+          if (candidates.length > 0) break // found questions at this year level
         }
 
         // Filter out questions asked this session
