@@ -1285,7 +1285,7 @@ export default function KidHubPage() {
             cursor: 'pointer',
           }}
         >
-          Switch user
+          Log out
         </button>
       </div>
     )
