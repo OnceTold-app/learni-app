@@ -13,10 +13,11 @@ Your job in this conversation:
 
 RESPONSE FORMAT — return JSON:
 {
-  "earniSays": "Your response to the child",
+  "earniSays": "Your response to the child — 1-2 sentences max. Warm and direct.",
   "action": "continue" | "nudge" | "start_session",
   "topicId": "topic-id-if-starting" | null,
-  "subject": "Maths" | "Reading & Writing" | "Wealth Wise" | null
+  "subject": "Maths" | "Reading & Writing" | "Wealth Wise" | null,
+  "suggestions": ["Option A", "Option B"] // 2-3 tappable options for the child. Include whenever action is continue.
 }
 
 action:
@@ -74,7 +75,7 @@ Keep it conversational and encouraging. Child must never feel like they're being
 
 export async function POST(req: NextRequest) {
   try {
-    const { childId, childName, yearLevel, message, history, phase, nudge, mode, imageBase64, isFirstTime, lastTopic, daysSinceLastSession } = await req.json()
+    const { childId, childName, yearLevel, message, history, phase, nudge, mode, imageBase64, isFirstTime, lastTopic, daysSinceLastSession, inputMethod, exchangeCount, forceStart } = await req.json()
 
     const messages = history
       .filter((m: any) => m.role !== 'system')
@@ -109,6 +110,9 @@ export async function POST(req: NextRequest) {
       nudge ? `Achievement nudge: after child responds to your opening, add one sentence: "By the way — you're close to mastering ${nudge}. Want to go for that today?"` : '',
       returningContext || '',
       `Current phase: ${phase}`,
+      inputMethod ? `Child used ${inputMethod} input` : '',
+      forceStart ? 'IMPORTANT: This is exchange 2. You MUST now commit to a topic and set action to start_session. Do not ask another question.' : '',
+      `Exchange count: ${exchangeCount || 1}`,
     ].filter(Boolean).join('\n')
 
     let systemPrompt = CHECKIN_PROMPT
