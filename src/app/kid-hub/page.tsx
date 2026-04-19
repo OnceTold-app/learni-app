@@ -1624,8 +1624,8 @@ export default function KidHubPage() {
         </button>
         {[
           { id: 'skills' as ActiveTab, emoji: '⭐', label: 'Skills' },
-          { id: 'money' as ActiveTab, emoji: '💰', label: 'Money' },
-          { id: 'more' as ActiveTab, emoji: '···', label: 'More' },
+          { id: 'money' as ActiveTab, emoji: '💰', label: 'My Wallet' },
+          { id: 'more' as ActiveTab, emoji: '📚', label: 'More' },
         ].map(tab => (
           <button key={tab.id} onClick={() => setActiveTab(tab.id)} style={{
             flex: 1, background: 'none', border: 'none', cursor: 'pointer',
