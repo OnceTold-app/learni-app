@@ -185,7 +185,20 @@ export async function POST(req: NextRequest) {
     // Extract tool_use block — guaranteed structure
     const toolBlock = response.content.find(b => b.type === 'tool_use')
     if (toolBlock && toolBlock.type === 'tool_use') {
-      return NextResponse.json(toolBlock.input)
+      const result = toolBlock.input as {
+        earniSays: string
+        subject: string
+        helpWith: string
+        practiceQuestions: string[]
+        checkIn: string[]
+        questionsFound?: string[]
+        hint?: string
+      }
+
+      // Seed question bank with generated practice questions (fire and forget)
+      void seedQuestionBank(result, childName, yearLevel)
+
+      return NextResponse.json(result)
     }
 
     // Fallback: text response (shouldn't happen with tool_choice: any)
@@ -207,7 +220,101 @@ export async function POST(req: NextRequest) {
       helpWith: '',
       practiceQuestions: [],
       checkIn: ["Try again", "Type my question instead"],
-      _debug: errMsg, // Temporary — remove after diagnosis
     }, { status: 500 })
+  }
+}
+
+// ─── Topic ID slug ───────────────────────────────────────────────────────────────────
+// Converts "Nouns and not nouns" + "Reading & Writing" → "reading-nouns"
+function slugifyTopic(subject: string, helpWith: string): string {
+  const subjectPrefix: Record<string, string> = {
+    'maths': 'maths', 'math': 'maths', 'mathematics': 'maths',
+    'reading & writing': 'reading', 'reading': 'reading', 'writing': 'reading', 'english': 'reading',
+    'science': 'science', 'history': 'history', 'geography': 'geography',
+    'social studies': 'social-studies', 'te reo māori': 'te-reo', 'te reo maori': 'te-reo',
+  }
+  const prefix = subjectPrefix[subject.toLowerCase()] || subject.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
+
+  // Slugify helpWith: strip filler words, keep meaningful terms
+  const slug = helpWith
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, '')
+    .replace(/\b(and|or|the|a|an|of|in|on|with|for|not|vs|versus)\b/g, '')
+    .trim()
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/(^-|-$)/g, '')
+    .slice(0, 40)
+
+  return `${prefix}-${slug}`
+}
+
+// ─── Subject normaliser ───────────────────────────────────────────────────────────────────
+function normaliseSubject(raw: string): string {
+  const map: Record<string, string> = {
+    'maths': 'Maths', 'math': 'Maths', 'mathematics': 'Maths',
+    'reading': 'Reading & Writing', 'writing': 'Reading & Writing',
+    'reading & writing': 'Reading & Writing', 'english': 'Reading & Writing',
+    'science': 'Science', 'history': 'History', 'geography': 'Geography',
+    'social studies': 'Social Studies', 'te reo māori': 'Te Reo Māori', 'te reo maori': 'Te Reo Māori',
+  }
+  return map[raw.toLowerCase()] || raw
+}
+
+// ─── Seed question bank ───────────────────────────────────────────────────────────────────
+// Called after homework API generates practice questions.
+// Stores them in the shared question bank so future requests are served for free.
+async function seedQuestionBank(
+  result: { subject: string; helpWith: string; practiceQuestions: string[]; hint?: string },
+  childName: string,
+  yearLevel: string
+) {
+  try {
+    if (!result.practiceQuestions?.length || !result.helpWith) return
+
+    const { createClient } = await import('@supabase/supabase-js')
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
+
+    const topicId = slugifyTopic(result.subject, result.helpWith)
+    const subject = normaliseSubject(result.subject)
+    const yr = parseInt(yearLevel) || 5
+
+    for (const question of result.practiceQuestions) {
+      if (!question?.trim()) continue
+
+      // Dedup: skip if this exact question already exists for this topic
+      const { data: existing } = await supabase
+        .from('question_bank')
+        .select('id')
+        .eq('topic_id', topicId)
+        .eq('question', question.trim())
+        .limit(1)
+
+      if (existing && existing.length > 0) continue // Already in bank
+
+      await supabase.from('question_bank').insert({
+        topic_id: topicId,
+        year_level: yr,
+        subject,
+        question: question.trim(),
+        answer: '', // Open-ended homework questions don't have a single answer
+        input_type: 'text',
+        options: [],
+        visual: null,
+        difficulty: Math.min(Math.ceil(yr / 3), 3), // 1-3 based on year level
+        hint_1: result.hint || null,
+        hint_2: null,
+        hint_3: null,
+        tags: ['homework-generated', result.helpWith.toLowerCase().slice(0, 50)],
+      })
+    }
+
+    console.log(`[homework] Seeded ${result.practiceQuestions.length} questions for topic: ${topicId}`)
+  } catch (e) {
+    // Non-blocking — never fail the response due to bank seeding
+    console.error('[homework] Bank seed failed (non-blocking):', e)
   }
 }
