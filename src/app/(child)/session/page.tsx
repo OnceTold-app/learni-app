@@ -389,6 +389,8 @@ export default function SessionPage() {
   const [shake, setShake] = useState(false)
   const [showHelp, setShowHelp] = useState(false)
   const [showNeedHelp, setShowNeedHelp] = useState(false)
+  const [needHelpText, setNeedHelpText] = useState('')
+  const [needHelpListening, setNeedHelpListening] = useState(false)
   const [showWellDone, setShowWellDone] = useState(false)
   const [wellDoneMessage, setWellDoneMessage] = useState('')
   const [wellDoneEmoji, setWellDoneEmoji] = useState('⭐')
@@ -2174,6 +2176,86 @@ export default function SessionPage() {
                   {label}
                 </button>
               ))}
+
+              {/* Divider */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', margin: '16px 0 12px' }}>
+                <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.08)' }} />
+                <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.25)', fontFamily: "'Nunito', sans-serif" }}>or just ask Earni directly</span>
+                <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.08)' }} />
+              </div>
+
+              {/* Free chat input */}
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button
+                  onClick={() => {
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+                    if (!SR) return
+                    const recognition = new SR()
+                    recognition.continuous = false
+                    recognition.interimResults = false
+                    recognition.lang = 'en-NZ'
+                    recognition.onstart = () => setNeedHelpListening(true)
+                    recognition.onend = () => setNeedHelpListening(false)
+                    recognition.onerror = () => setNeedHelpListening(false)
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    recognition.onresult = (event: any) => {
+                      const t = event.results[0][0].transcript.trim()
+                      if (t) setNeedHelpText(t)
+                    }
+                    recognition.start()
+                  }}
+                  style={{
+                    width: '46px', height: '46px', flexShrink: 0,
+                    background: needHelpListening ? 'rgba(239,68,68,0.15)' : 'rgba(255,255,255,0.06)',
+                    border: needHelpListening ? '1px solid rgba(239,68,68,0.3)' : '1px solid rgba(255,255,255,0.1)',
+                    borderRadius: '12px', cursor: 'pointer', fontSize: '20px',
+                  }}
+                >{needHelpListening ? '🔴' : '🎙️'}</button>
+
+                <input
+                  value={needHelpText}
+                  onChange={e => setNeedHelpText(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter' && needHelpText.trim()) {
+                      const msg = needHelpText.trim()
+                      setNeedHelpText('')
+                      setShowNeedHelp(false)
+                      lastActivityRef.current = Date.now()
+                      historyRef.current.push({ role: 'user', content: `${childName} asks: "${msg}". Answer their question warmly, then guide them back to the lesson.` })
+                      fetchQuestion(state.phase)
+                    }
+                  }}
+                  placeholder="Type your question..."
+                  style={{
+                    flex: 1, height: '46px', padding: '0 14px',
+                    background: 'rgba(255,255,255,0.07)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    borderRadius: '12px', fontSize: '14px',
+                    color: 'white', outline: 'none', boxSizing: 'border-box',
+                    fontFamily: "'Plus Jakarta Sans', sans-serif",
+                  }}
+                />
+
+                <button
+                  onClick={() => {
+                    const msg = needHelpText.trim()
+                    if (!msg) return
+                    setNeedHelpText('')
+                    setShowNeedHelp(false)
+                    lastActivityRef.current = Date.now()
+                    historyRef.current.push({ role: 'user', content: `${childName} asks: "${msg}". Answer their question warmly, then guide them back to the lesson.` })
+                    fetchQuestion(state.phase)
+                  }}
+                  disabled={!needHelpText.trim()}
+                  style={{
+                    width: '46px', height: '46px', flexShrink: 0,
+                    background: needHelpText.trim() ? '#2ec4b6' : 'rgba(46,196,182,0.2)',
+                    border: 'none', borderRadius: '12px', cursor: needHelpText.trim() ? 'pointer' : 'default',
+                    fontSize: '18px',
+                  }}
+                >➤</button>
+              </div>
 
               {/* Cancel */}
               <button
