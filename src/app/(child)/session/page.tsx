@@ -456,7 +456,7 @@ export default function SessionPage() {
         phase,
         phaseLabel: PHASE_LABELS[phase],
         earniSays: earniText,
-        question: data.question || null,
+        question: (data.question && data.question !== 'null' && data.question !== 'undefined') ? data.question : null,
         visual: data.visual || null,
         checkIn: data.checkIn || [],
         options: data.options || [],
@@ -1542,8 +1542,8 @@ export default function SessionPage() {
 
             {state.selectedAnswer === null ? (
               <div>
-                {yearLevel <= 4 ? (
-                  /* Number pad for Year 1-4 — large tap targets, no keyboard required */
+                {yearLevel <= 4 && subject !== 'Reading & Writing' && state.options.length === 0 && state.question !== null ? (
+                  /* Number pad for Year 1-4 maths only — never for reading/writing, choice, or teaching phases */
                   <div>
                     <div style={{ display:'flex', alignItems:'center', gap:'8px', marginBottom:'10px', padding:'12px 16px', background:'rgba(255,255,255,0.08)', border:'1.5px solid rgba(255,255,255,0.15)', borderRadius:'14px', minHeight:'54px', justifyContent:'center' }}>
                       <span style={{ fontSize:'24px', fontWeight:800, fontFamily:"'Nunito',sans-serif", color:'white' }}>{typedAnswer || <span style={{opacity:0.3}}>?</span>}</span>
