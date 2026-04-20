@@ -25,6 +25,7 @@ export default function HomeworkPage() {
   const [listening, setListening] = useState(false)
   const [trainingPlan, setTrainingPlan] = useState<string[] | null>(null)
   const [generatingPlan, setGeneratingPlan] = useState(false)
+  const [debugSteps, setDebugSteps] = useState<string[]>([])
 
   useEffect(() => {
     setChildName(localStorage.getItem('learni_child_name') || 'Student')
@@ -42,15 +43,39 @@ export default function HomeworkPage() {
 
   async function handleSubmit(question?: string) {
     setLoading(true)
+    setDebugSteps([])
+    const addStep = (msg: string) => setDebugSteps(prev => [...prev, msg])
     try {
+      // Step 1: build form data
+      addStep(`✅ Step 1: Building request...`)
       const formData = new FormData()
-      if (file && !question) formData.append('image', file)
+      if (file && !question) {
+        formData.append('image', file)
+        addStep(`✅ Step 2: Photo attached — ${file.name} (${file.type}, ${(file.size/1024).toFixed(1)}KB)`)
+      }
       formData.append('childName', childName)
       formData.append('yearLevel', yearLevel)
       if (question) formData.append('question', question)
 
+      // Step 3: send request
+      addStep(`✅ Step 3: Sending to Earni...`)
       const res = await fetch('/api/homework', { method: 'POST', body: formData })
-      const data = await res.json()
+      addStep(`✅ Step 4: Got response — HTTP ${res.status}`)
+
+      const text = await res.text()
+      addStep(`✅ Step 5: Response body (${text.length} chars): ${text.slice(0, 120)}`)
+
+      let data
+      try {
+        data = JSON.parse(text)
+      } catch {
+        addStep(`❌ Step 6: JSON parse failed — raw: ${text.slice(0, 200)}`)
+        setLoading(false)
+        return
+      }
+      addStep(`✅ Step 6: Parsed — earniSays: ${(data.earniSays || '').slice(0, 80)}`)
+      if (data._debug) addStep(`⚠️ Debug: ${data._debug}`)
+
 
       setResponse(data)
       setConversation(prev => [
@@ -282,6 +307,24 @@ export default function HomeworkPage() {
             >
               Take a different photo
             </button>
+          </div>
+        )}
+
+        {/* Debug steps — visible during and after loading */}
+        {debugSteps.length > 0 && (
+          <div style={{
+            background: 'rgba(0,0,0,0.4)',
+            border: '1px solid rgba(255,255,255,0.1)',
+            borderRadius: '12px',
+            padding: '12px 16px',
+            marginBottom: '12px',
+            fontFamily: 'monospace',
+            fontSize: '12px',
+            color: 'rgba(255,255,255,0.7)',
+            lineHeight: 1.8,
+          }}>
+            <div style={{ fontWeight: 700, marginBottom: '6px', color: '#2ec4b6' }}>Debug log:</div>
+            {debugSteps.map((step, i) => <div key={i}>{step}</div>)}
           </div>
         )}
 
