@@ -32,13 +32,52 @@ export default function HomeworkPage() {
     setYearLevel(localStorage.getItem('learni_year_level') || '5')
   }, [])
 
-  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0]
     if (!f) return
-    setFile(f)
-    setPreview(URL.createObjectURL(f))
+
+    // Compress image to stay under Anthropic's 5MB base64 limit
+    // Base64 adds ~33% overhead, so raw file must be under ~3.5MB
+    const compressed = await compressImage(f, 3 * 1024 * 1024) // 3MB raw target
+    setFile(compressed)
+    setPreview(URL.createObjectURL(compressed))
     setResponse(null)
     setConversation([])
+    setDebugSteps([])
+  }
+
+  async function compressImage(file: File, maxBytes: number): Promise<File> {
+    if (file.size <= maxBytes) return file // Already small enough
+    return new Promise((resolve) => {
+      const img = new window.Image()
+      const url = URL.createObjectURL(file)
+      img.onload = () => {
+        URL.revokeObjectURL(url)
+        const canvas = document.createElement('canvas')
+        // Scale down proportionally — max 1600px wide
+        const maxDim = 1600
+        let { width, height } = img
+        if (width > maxDim || height > maxDim) {
+          if (width > height) { height = Math.round(height * maxDim / width); width = maxDim }
+          else { width = Math.round(width * maxDim / height); height = maxDim }
+        }
+        canvas.width = width
+        canvas.height = height
+        const ctx = canvas.getContext('2d')!
+        ctx.drawImage(img, 0, 0, width, height)
+        // Try quality 0.85 first, then 0.7 if still too large
+        canvas.toBlob((blob) => {
+          if (blob && blob.size <= maxBytes) {
+            resolve(new File([blob], file.name, { type: 'image/jpeg' }))
+          } else {
+            canvas.toBlob((blob2) => {
+              resolve(new File([blob2 || blob!], file.name, { type: 'image/jpeg' }))
+            }, 'image/jpeg', 0.65)
+          }
+        }, 'image/jpeg', 0.85)
+      }
+      img.src = url
+    })
   }
 
   async function handleSubmit(question?: string) {
