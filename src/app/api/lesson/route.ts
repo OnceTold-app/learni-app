@@ -21,8 +21,8 @@ const LessonRequestSchema = z.object({
   yearLevel: z.number().int().min(1).max(13),
   subject: z.string().min(1),
   phase: z.enum(['warmup', 'lesson', 'financial', 'closing', 'reward']),
-  topicId: z.string().optional(),
-  learnerId: z.string().optional(),
+  topicId: z.string().nullable().optional(),
+  learnerId: z.string().nullable().optional(),
   drillTopics: z.array(z.string()).optional().default([]),
   history: z.array(z.object({
     role: z.enum(['user', 'assistant']),
