@@ -221,7 +221,8 @@ export default function HomeworkPage() {
       minHeight: '100vh',
       background: 'linear-gradient(180deg, #0d2b28, #143330)',
       fontFamily: "'Plus Jakarta Sans', sans-serif",
-      padding: '76px 24px 24px',
+      padding: '76px 24px 120px',
+      overflowY: 'auto',
     }}>
       <div style={{ maxWidth: '600px', margin: '0 auto' }}>
         <a href="/kid-hub" style={{ fontSize: '13px', color: 'rgba(255,255,255,0.3)', textDecoration: 'none' }}>← Back to Hub</a>
