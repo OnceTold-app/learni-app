@@ -74,8 +74,9 @@ export default function HomeworkPage() {
           }
         } catch { /* silent */ }
       }
-    } catch {
-      setResponse({ earniSays: "Hmm, I couldn't read that. Can you take a clearer photo or type the question?" })
+    } catch (err) {
+      console.error('Homework submit error:', err)
+      setResponse({ earniSays: "Something went wrong. Try typing your question instead, or take a new photo." })
     }
     setLoading(false)
   }
@@ -195,7 +196,7 @@ export default function HomeworkPage() {
                 JPG, PNG — snap your worksheet, textbook, or exercise book
               </div>
             </button>
-            <input ref={fileRef} type="file" accept="image/*" capture="environment" onChange={handleFileChange} style={{ display: 'none' }} />
+            <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/*" capture="environment" onChange={handleFileChange} style={{ display: 'none' }} />
 
             <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.2)', fontSize: '13px', margin: '12px 0' }}>or</div>
 

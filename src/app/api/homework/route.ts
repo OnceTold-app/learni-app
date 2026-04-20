@@ -113,14 +113,34 @@ export async function POST(req: NextRequest) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const content: any[] = []
 
+    const SUPPORTED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp']
+
     if (image && !question) {
       // Photo submitted — encode as base64
       const bytes = await image.arrayBuffer()
       const base64 = Buffer.from(bytes).toString('base64')
-      const mediaType = image.type as 'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp'
+      let mediaType = image.type?.toLowerCase() || 'image/jpeg'
+
+      // iPhone sends HEIC — Claude doesn't support it. Treat as JPEG (HEIC often mislabeled)
+      // or return a friendly error
+      if (!SUPPORTED_TYPES.includes(mediaType)) {
+        if (mediaType.includes('heic') || mediaType.includes('heif')) {
+          // HEIC: can't process — tell user to use camera app directly
+          return NextResponse.json({
+            earniSays: "That photo format isn't supported yet. Try taking the photo from inside the Learni app using the camera button, or screenshot your homework first and share that!",
+            subject: 'Unknown',
+            helpWith: 'Photo format',
+            practiceQuestions: [],
+            checkIn: ["Take another photo", "Type my question instead"],
+          })
+        }
+        // Default unknown types to JPEG
+        mediaType = 'image/jpeg'
+      }
+
       content.push({
         type: 'image',
-        source: { type: 'base64', media_type: mediaType, data: base64 },
+        source: { type: 'base64', media_type: mediaType as 'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp', data: base64 },
       })
       content.push({
         type: 'text',
@@ -161,13 +181,15 @@ export async function POST(req: NextRequest) {
       checkIn: ["Help me with the first question", "I don't understand any of it"],
     })
   } catch (error) {
-    console.error('Homework API error:', error)
+    const errMsg = error instanceof Error ? error.message : String(error)
+    console.error('Homework API error:', errMsg)
     return NextResponse.json({
       earniSays: "Hmm, something went wrong. Can you try again or type out the question?",
       subject: 'Unknown',
       helpWith: '',
       practiceQuestions: [],
       checkIn: ["Try again", "Type my question instead"],
+      _debug: process.env.NODE_ENV !== 'production' ? errMsg : undefined,
     }, { status: 500 })
   }
 }

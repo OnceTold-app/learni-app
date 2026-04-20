@@ -107,10 +107,12 @@ export function moderateEarniResponse(text: string, childId?: string): Moderatio
 
 async function logFlag(childId: string, responseText: string, reason: string) {
   try {
+    // Guard: skip if env vars not available
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) return
     const { createClient } = await import('@supabase/supabase-js')
     const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.SUPABASE_SERVICE_ROLE_KEY
     )
     await supabase.from('session_flags').insert({
       learner_id: childId,
@@ -119,8 +121,8 @@ async function logFlag(childId: string, responseText: string, reason: string) {
       response_excerpt: responseText.slice(0, 500),
       reviewed: false,
     })
-  } catch {
+  } catch (e) {
     // Never block the response due to logging failure
-    console.error('Flag logging failed — non-blocking')
+    console.error('Flag logging failed — non-blocking:', e)
   }
 }
