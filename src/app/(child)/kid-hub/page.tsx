@@ -1466,8 +1466,7 @@ export default function KidHubPage() {
           {/* Homework help */}
           <button
             onClick={() => {
-              localStorage.setItem('learni_start_mode', 'homework')
-              window.location.href = '/kid-checkin'
+              window.location.href = '/homework'
             }}
             style={{
               background: 'rgba(255,255,255,0.05)',
