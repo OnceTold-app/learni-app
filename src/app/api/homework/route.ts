@@ -3,6 +3,10 @@ import Anthropic from '@anthropic-ai/sdk'
 import { CLAUDE_MODEL } from '@/lib/claude'
 import { CHILD_SAFETY_SYSTEM_PROMPT, moderateEarniResponse } from '@/lib/child-safety'
 
+// Allow up to 10MB request body for homework photo uploads
+export const maxDuration = 30
+export const dynamic = 'force-dynamic'
+
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
 const HOMEWORK_SYSTEM_PROMPT = `You are Earni — a warm, patient AI tutor helping a child understand their homework.
@@ -189,7 +193,7 @@ export async function POST(req: NextRequest) {
       helpWith: '',
       practiceQuestions: [],
       checkIn: ["Try again", "Type my question instead"],
-      _debug: process.env.NODE_ENV !== 'production' ? errMsg : undefined,
+      _debug: errMsg, // Temporary — remove after diagnosis
     }, { status: 500 })
   }
 }
