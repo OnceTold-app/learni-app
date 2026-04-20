@@ -208,12 +208,26 @@ export default function HomeworkPage() {
   }
 
   async function startHomeworkSession() {
-    // Go straight into a session focused on the homework topics
-    const topics = response?.questionsFound?.join(', ') || response?.helpWith || response?.subject || 'homework'
-    localStorage.setItem('learni_subject', topics)
+    // Map subject to a clean session subject + pass context as topic
+    const rawSubject = response?.subject || 'Reading & Writing'
+    const helpWith = response?.helpWith || ''
+
+    // Map to valid session subjects
+    const subjectMap: Record<string, string> = {
+      'maths': 'Maths', 'math': 'Maths', 'mathematics': 'Maths',
+      'reading': 'Reading & Writing', 'writing': 'Reading & Writing',
+      'reading & writing': 'Reading & Writing', 'english': 'Reading & Writing',
+      'science': 'Reading & Writing', 'history': 'Reading & Writing',
+      'geography': 'Reading & Writing', 'social studies': 'Reading & Writing',
+    }
+    const cleanSubject = subjectMap[rawSubject.toLowerCase()] || 'Reading & Writing'
+    const topicContext = helpWith || rawSubject
+
+    localStorage.setItem('learni_subject', cleanSubject)
+    localStorage.setItem('learni_topic', topicContext)
     localStorage.setItem('learni_session_mode', 'learn')
-    localStorage.setItem('learni_homework_topics', topics)
-    window.location.href = '/session'
+    localStorage.setItem('learni_homework_context', topicContext)
+    window.location.href = '/start-session'
   }
 
   return (
