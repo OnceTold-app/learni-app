@@ -196,7 +196,7 @@ export default function HomeworkPage() {
                 JPG, PNG — snap your worksheet, textbook, or exercise book
               </div>
             </button>
-            <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/*" capture="environment" onChange={handleFileChange} style={{ display: 'none' }} />
+            <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/*" onChange={handleFileChange} style={{ display: 'none' }} />
 
             <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.2)', fontSize: '13px', margin: '12px 0' }}>or</div>
 
