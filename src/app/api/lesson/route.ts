@@ -300,7 +300,7 @@ It is IMPOSSIBLE for you to teach any other topic.${relatedTopicHint ? `\nIf you
     let systemPrompt: string
     switch (phase) {
       case 'warmup':
-        systemPrompt = rapidFirePrompt(childName, yearLevel, drillTopics.length > 0 ? drillTopics : ['times tables', 'number bonds'])
+        systemPrompt = rapidFirePrompt(childName, yearLevel, []) // topics passed via childContextMsg
         break
       case 'lesson': {
         const isMoneySubject = subject.toLowerCase().includes('money') || subject.toLowerCase().includes('financial') || subject.toLowerCase().includes('wealth') || subject.toLowerCase().includes('wise')
@@ -308,8 +308,6 @@ It is IMPOSSIBLE for you to teach any other topic.${relatedTopicHint ? `\nIf you
           systemPrompt = financialPrompt(childName, yearLevel, false)
         } else {
           systemPrompt = tutorPrompt(childName, yearLevel, subject, topicId || drillTopics[0] || '')
-            + masteryContextStr
-            + (topicId ? topicLockInstruction(topicId) : '')
         }
         break
       }
@@ -346,9 +344,11 @@ It is IMPOSSIBLE for you to teach any other topic.${relatedTopicHint ? `\nIf you
     // Build messages — inject child context as FIRST user message so system prompt stays static
     // This is critical for prompt caching — system prompt must be identical across all children
     const yearExamples = yearLevel <= 3 ? 'counting, number bonds, addition to 20' : yearLevel <= 6 ? 'times tables, fractions, place value to 1000' : yearLevel <= 9 ? 'algebra basics, decimals, percentages' : 'quadratics, statistics, trigonometry'
+    const topicLock = topicId ? `\nCRITICAL: Teach "${topicId}" ONLY. Every question must be about ${topicId}. Do not drift to other topics.` : ''
+    const drillLine = drillTopics.length > 0 ? `\nDrill topics: ${drillTopics.join(', ')}` : ''
     const childContextMsg = `[SESSION CONTEXT]
 Child: ${childName} | Year: ${yearLevel} | Subject: ${subject}${topicId ? ` | Topic: ${topicId}` : ''}
-Difficulty: Stay at Year ${yearLevel} level (min: Year ${Math.max(1, yearLevel - 1)}, max: Year ${yearLevel + 1}). Examples: ${yearExamples}.${profileContext ? `\nProfile: ${profileContext}` : ''}${masteryContextStr ? `\n${masteryContextStr}` : ''}`
+Difficulty: Stay at Year ${yearLevel} level (min: Year ${Math.max(1, yearLevel - 1)}, max: Year ${yearLevel + 1}). Examples: ${yearExamples}.${topicLock}${drillLine}${profileContext ? `\nProfile: ${profileContext}` : ''}${masteryContextStr}`
     const messages: Array<{ role: 'user' | 'assistant'; content: string }> = [
       { role: 'user', content: childContextMsg },
       { role: 'assistant', content: `Understood — I'm ready to teach ${childName} (Year ${yearLevel}) ${subject}. Let's begin.` },
