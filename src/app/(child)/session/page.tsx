@@ -388,6 +388,7 @@ export default function SessionPage() {
   const [showConfetti, setShowConfetti] = useState(false)
   const [shake, setShake] = useState(false)
   const [showHelp, setShowHelp] = useState(false)
+  const [showNeedHelp, setShowNeedHelp] = useState(false)
   const [showWellDone, setShowWellDone] = useState(false)
   const [wellDoneMessage, setWellDoneMessage] = useState('')
   const [wellDoneEmoji, setWellDoneEmoji] = useState('⭐')
@@ -1714,9 +1715,7 @@ export default function SessionPage() {
                 onClick={() => {
                   setShowHintOffer(false)
                   if (hintTimerRef.current) clearTimeout(hintTimerRef.current)
-                  lastActivityRef.current = Date.now()
-                  historyRef.current.push({ role: 'user', content: `${childName} pressed the help button for "${state.question}". Give a warm, encouraging hint WITHOUT giving the answer. Guide them step by step.` })
-                  fetchQuestion(state.phase)
+                  setShowNeedHelp(true)
                 }}
                 style={{
                   marginTop: '14px',
@@ -1827,13 +1826,7 @@ export default function SessionPage() {
             {/* Help button — always visible during lesson/financial */}
             {!state.selectedAnswer && !isRapidFire && (
               <button
-                onClick={() => {
-                  setShowHintOffer(false)
-                  if (hintTimerRef.current) clearTimeout(hintTimerRef.current)
-                  lastActivityRef.current = Date.now()
-                  historyRef.current.push({ role: 'user', content: `${childName} pressed the help button for "${state.question}". Give a warm, encouraging hint WITHOUT giving the answer. Guide them step by step.` })
-                  fetchQuestion(state.phase)
-                }}
+                onClick={() => setShowNeedHelp(true)}
                 style={{
                   marginTop: '14px',
                   padding: '10px 20px',
@@ -1888,11 +1881,7 @@ export default function SessionPage() {
         {/* Floating help button — always visible during lesson/financial when question is showing */}
         {state.question && !state.selectedAnswer && !isRapidFire && !state.loading && (
           <button
-            onClick={() => {
-              lastActivityRef.current = Date.now()
-              historyRef.current.push({ role: 'user', content: `${childName} pressed the help button for "${state.question}". Give a warm, encouraging hint WITHOUT giving the answer. Guide them step by step.` })
-              fetchQuestion(state.phase)
-            }}
+            onClick={() => setShowNeedHelp(true)}
             style={{
               position: 'fixed',
               bottom: '24px',
@@ -2134,6 +2123,71 @@ export default function SessionPage() {
         )}
 
         {/* Help overlay */}
+        {/* Need Help overlay — kid picks what they're stuck on */}
+        {showNeedHelp && (
+          <div style={{
+            position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', zIndex: 950,
+            display: 'flex', alignItems: 'flex-end', justifyContent: 'center', padding: '0 0 24px',
+          }} onClick={() => setShowNeedHelp(false)}>
+            <div style={{
+              background: '#0f3330', borderRadius: '24px 24px 16px 16px', padding: '28px 24px',
+              maxWidth: '480px', width: '100%', border: '1px solid rgba(46,196,182,0.15)',
+            }} onClick={e => e.stopPropagation()}>
+              {/* Earni avatar + prompt */}
+              <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start', marginBottom: '20px' }}>
+                <div style={{
+                  width: '44px', height: '44px', borderRadius: '50%', flexShrink: 0,
+                  background: 'linear-gradient(145deg, #2ec4b6, #1a9e92)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '22px',
+                }}>🤖</div>
+                <div style={{ fontFamily: "'Nunito', sans-serif", fontSize: '16px', fontWeight: 800, color: 'white', lineHeight: 1.5 }}>
+                  What do you need help with?
+                </div>
+              </div>
+
+              {/* Choice buttons */}
+              {[
+                { emoji: '🤔', label: "I don't understand the question", msg: `${childName} doesn't understand the question itself. Re-read the question in simpler words and check they understand what's being asked before helping.` },
+                { emoji: '📖', label: "I forgot how to do this", msg: `${childName} forgot the method. Briefly re-teach the concept with a different example, then let them try again.` },
+                { emoji: '🔢', label: "I got confused with the numbers", msg: `${childName} is confused by the numbers. Break the calculation into smaller steps and guide them through it.` },
+                { emoji: '💬', label: "Can you explain it differently?", msg: `${childName} wants a different explanation. Use a completely different analogy or real-world example to explain the same concept.` },
+              ].map(({ emoji, label, msg }) => (
+                <button
+                  key={label}
+                  onClick={() => {
+                    setShowNeedHelp(false)
+                    lastActivityRef.current = Date.now()
+                    historyRef.current.push({ role: 'user', content: msg })
+                    fetchQuestion(state.phase)
+                  }}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: '12px',
+                    width: '100%', padding: '13px 16px', marginBottom: '8px',
+                    background: 'rgba(255,255,255,0.05)',
+                    border: '1px solid rgba(255,255,255,0.09)',
+                    borderRadius: '14px', cursor: 'pointer',
+                    fontFamily: "'Nunito', sans-serif", fontSize: '14px', fontWeight: 700,
+                    color: 'rgba(255,255,255,0.85)', textAlign: 'left',
+                  }}
+                >
+                  <span style={{ fontSize: '20px' }}>{emoji}</span>
+                  {label}
+                </button>
+              ))}
+
+              {/* Cancel */}
+              <button
+                onClick={() => setShowNeedHelp(false)}
+                style={{
+                  width: '100%', padding: '12px', marginTop: '4px',
+                  background: 'none', border: 'none',
+                  color: 'rgba(255,255,255,0.3)', fontSize: '13px', cursor: 'pointer',
+                }}
+              >Never mind, I'll try again</button>
+            </div>
+          </div>
+        )}
+
         {showHelp && (
           <div style={{
             position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 900,
