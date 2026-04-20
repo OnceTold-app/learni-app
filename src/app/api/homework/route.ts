@@ -103,7 +103,7 @@ const homeworkTool = {
       practiceQuestions: {
         type: 'array',
         items: { type: 'string' },
-        description: 'DIFFERENT practice questions that teach the same concept using completely different scenarios',
+        description: 'DIFFERENT practice questions that teach the same concept using completely different scenarios. Each item must be ONLY the question text — no labels, no prefixes like "NOUN SORT PRACTICE —" or "AR SPELLING —". Just the question itself.',
       },
       checkIn: {
         type: 'array',
