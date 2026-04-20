@@ -5,6 +5,7 @@ import { z } from 'zod'
 import { CLAUDE_MODEL } from '@/lib/claude'
 import { tutorPrompt, rapidFirePrompt, financialPrompt } from '@/lib/earni-prompts'
 import { CHILD_SAFETY_SYSTEM_PROMPT, moderateEarniResponse } from '@/lib/child-safety'
+import { storeExplanation, topicToExplanationId } from '@/lib/explanation-bank'
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
@@ -431,6 +432,7 @@ Remember: you're a tutor, not a quiz machine. Teach first. Questions come AFTER 
             phase, source: 'bank',
             earniSays: teachText,
             question: null, answer: null, visual: concept.visual_suggestion || null,
+            explanationId: concept.id, // For feedback tracking
             conceptData: concept,
             ...(q ? {} : {}),
           })
@@ -543,6 +545,21 @@ Remember: you're a tutor, not a quiz machine. Teach first. Questions come AFTER 
       // Also clear any question if the response was flagged
       parsed.question = null
       parsed.answer = null
+    }
+
+    // ─── Store teaching explanations in concept bank for future use ─────────────
+    // When Earni teaches (no question = teaching phase), store the explanation.
+    // Next child asking about the same topic gets it free from the bank.
+    if (phase === 'lesson' && !parsed.question && parsed.earniSays && topicId) {
+      const expTopicId = topicToExplanationId(subject, topicId)
+      void storeExplanation({
+        topicId: expTopicId,
+        yearLevel,
+        subject,
+        concept: topicId.replace(/-/g, ' '),
+        body: parsed.earniSays,
+        source: 'generated',
+      })
     }
 
     return NextResponse.json({ phase, ...parsed })

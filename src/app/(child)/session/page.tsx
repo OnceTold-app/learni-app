@@ -15,12 +15,22 @@ function TeachingButtons({
   onRespond,
   checkIn,
   phase,
+  explanationId,
 }: {
   childName: string
   onRespond: (msg: string) => void
   checkIn: string[]
   phase: string
+  explanationId?: string
 }) {
+  function sendFeedback(understood: boolean) {
+    if (!explanationId) return
+    fetch('/api/explanation-feedback', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ explanationId, understood }),
+    }).catch(() => {})
+  }
   const [showExplainBox, setShowExplainBox] = useState(false)
   const [explainText, setExplainText] = useState('')
 
@@ -60,6 +70,7 @@ function TeachingButtons({
   const hasCheckIn = checkIn && checkIn.length > 0
 
   function handleGotIt() {
+    sendFeedback(true)
     onRespond(`${childName} understands. Move to a practice question.`)
   }
 
@@ -68,6 +79,7 @@ function TeachingButtons({
   }
 
   function handleDontUnderstand() {
+    sendFeedback(false)
     onRespond(`${childName} doesn't understand yet. Start from scratch with a completely different explanation — use a story or real-world scenario. Take it slower.`)
   }
 
@@ -159,6 +171,7 @@ interface SessionState {
   options: string[]
   answer: string
   hint: string | null
+  explanationId: string | null
   starsEarned: number
   correctCount: number
   totalQuestions: number
@@ -212,7 +225,20 @@ export default function SessionPage() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [childProfile, setChildProfile] = useState<any>({})
   const masteryResultsRef = useRef<Array<{ topic: string; correct: boolean; question?: string }>>([])
-  const [audioChecked, setAudioChecked] = useState(false)
+  // Persist audioChecked in sessionStorage — survives app backgrounding/remount on mobile
+  const [audioChecked, setAudioCheckedState] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return sessionStorage.getItem('learni_audio_checked') === '1'
+    }
+    return false
+  })
+  function setAudioChecked(val: boolean) {
+    if (typeof window !== 'undefined') {
+      if (val) sessionStorage.setItem('learni_audio_checked', '1')
+      else sessionStorage.removeItem('learni_audio_checked')
+    }
+    setAudioCheckedState(val)
+  }
   const [audioCheckPlaying, setAudioCheckPlaying] = useState(false)
   const [accessBlocked, setAccessBlocked] = useState(false)
   const [trialDaysLeft, setTrialDaysLeft] = useState<number | null>(null)
@@ -228,6 +254,7 @@ export default function SessionPage() {
     options: [],
     answer: '',
     hint: null,
+    explanationId: null,
     starsEarned: 0,
     correctCount: 0,
     totalQuestions: 0,
@@ -462,6 +489,7 @@ export default function SessionPage() {
         options: data.options || [],
         answer: data.answer || '',
         hint: data.hint || null,
+        explanationId: data.explanationId || null,
         loading: false,
         sessionStarted: true,
       }))
@@ -580,7 +608,9 @@ export default function SessionPage() {
   // Well-done redirect — in useEffect so it fires AFTER component renders (not in onClick)
   useEffect(() => {
     if (!showWellDone) return
-    const timer = setTimeout(() => { window.location.href = '/kid-hub' }, 3000)
+    // Clear audio check so next session starts fresh
+    sessionStorage.removeItem('learni_audio_checked')
+    const timer = setTimeout(() => { sessionStorage.removeItem('learni_audio_checked'); window.location.href = '/kid-hub' }, 3000)
     return () => clearTimeout(timer)
   }, [showWellDone])
 
@@ -1515,6 +1545,7 @@ export default function SessionPage() {
             }}
             checkIn={state.checkIn}
             phase={state.phase}
+            explanationId={state.explanationId || undefined}
           />
         )}
 
