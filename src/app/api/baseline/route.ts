@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 import { CLAUDE_MODEL } from '@/lib/claude'
+import { moderateEarniResponse } from '@/lib/child-safety'
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
@@ -128,6 +129,8 @@ export async function POST(req: NextRequest) {
 
     try {
       const parsed = JSON.parse(text)
+      const mod = moderateEarniResponse(parsed.earniSays || '')
+      if (mod.flagged) parsed.earniSays = mod.text
       return NextResponse.json(parsed)
     } catch {
       let depth = 0, start = -1
@@ -136,7 +139,12 @@ export async function POST(req: NextRequest) {
         else if (text[i] === '}') {
           depth--
           if (depth === 0 && start >= 0) {
-            try { return NextResponse.json(JSON.parse(text.slice(start, i + 1))) } catch { /* keep looking */ }
+            try {
+              const parsed = JSON.parse(text.slice(start, i + 1))
+              const mod = moderateEarniResponse(parsed.earniSays || '')
+              if (mod.flagged) parsed.earniSays = mod.text
+              return NextResponse.json(parsed)
+            } catch { /* keep looking */ }
             start = -1
           }
         }
