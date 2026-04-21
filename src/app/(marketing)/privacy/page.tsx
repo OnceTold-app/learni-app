@@ -11,7 +11,7 @@ export default function PrivacyPage() {
         <h1 style={{ fontFamily: "'Nunito', sans-serif", fontSize: '32px', fontWeight: 900, color: '#0d2b28', marginTop: '32px', marginBottom: '8px' }}>
           Privacy Policy
         </h1>
-        <p style={{ color: '#5a8a84', fontSize: '14px', marginBottom: '32px' }}>Last updated: 15 April 2026</p>
+        <p style={{ color: '#5a8a84', fontSize: '14px', marginBottom: '32px' }}>Last updated: 21 April 2026</p>
 
         <div style={{ fontSize: '15px', lineHeight: 1.8, color: '#2d3a38' }}>
           <h2 style={h2Style}>1. Who We Are</h2>
@@ -91,7 +91,18 @@ export default function PrivacyPage() {
           <p>We never sell your data. We never share it for advertising purposes.</p>
 
           <h2 style={h2Style}>7. Children&apos;s Privacy</h2>
-          <p>We take children&apos;s privacy seriously. Child profiles are created and managed by parents. We collect only the minimum information needed to provide the tutoring service. Children do not have email addresses on our system. Parents can view, edit, or delete their child&apos;s data at any time from the parent Hub.</p>
+          <p>Learni is designed for children under the supervision of a parent or guardian. We take children&apos;s privacy seriously and apply the following protections:</p>
+          <ul style={ulStyle}>
+            <li>All child accounts are created and managed by a parent or guardian. Children cannot create accounts independently.</li>
+            <li>We collect only the minimum information necessary to operate the platform &mdash; a first name, username, year level, and session activity.</li>
+            <li>We do not collect children&apos;s surnames, photos, school name, or any information that could identify their physical location.</li>
+            <li>We do not use children&apos;s data for advertising purposes.</li>
+            <li>We do not sell children&apos;s data to any third party.</li>
+            <li>All AI interactions are processed in accordance with our data handling practices. Earni is an AI &mdash; not a human. Children are informed of this within the product.</li>
+            <li>Parents may request access to, correction of, or deletion of their child&apos;s data at any time by contacting <a href="mailto:hello@learniapp.co" style={{ color: '#2ec4b6' }}>hello@learniapp.co</a>.</li>
+            <li>Learni complies with the New Zealand Privacy Act 2020.</li>
+          </ul>
+          <p>If you have questions about how we handle your child&apos;s information, contact us at <a href="mailto:hello@learniapp.co" style={{ color: '#2ec4b6' }}>hello@learniapp.co</a>.</p>
 
           <h2 style={h2Style}>8. Data Retention</h2>
           <ul style={ulStyle}>
