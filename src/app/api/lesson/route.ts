@@ -395,7 +395,7 @@ ${
 } ${subjectNote}`,
         })
       }
-    } else if (messages.length === 0) {
+    } else if (isFirstMessage) {
       messages.push({
         role: 'user',
         content: phase === 'warmup'
