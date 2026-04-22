@@ -59,6 +59,8 @@ const LessonRequestSchema = z.object({
     challenges: z.string().optional(),
     parentGoals: z.string().optional(),
   }).optional().default({}),
+  homeworkContext: z.string().nullable().optional(),
+  homeworkEarniIntro: z.string().nullable().optional(),
 })
 
 type Phase = 'warmup' | 'lesson' | 'financial' | 'closing' | 'reward'
@@ -126,6 +128,8 @@ export async function POST(req: NextRequest) {
       focusAreas,
       weakTopics,
       childProfile,
+      homeworkContext,
+      homeworkEarniIntro,
     } = body
 
     // ─── Question Bank Helpers ────────────────────────────────────────────────
@@ -410,7 +414,14 @@ ${
             ? `Start the closing rapid fire. This tests ONLY what ${childName} just learned TODAY in the ${subject} lesson. Only ask questions from today's lesson content — make sure it's locked in. Say "Last round — let's see if today's lesson stuck. No thinking, just knowing. Go." then give the first question.`
             : phase === 'financial'
               ? `Now teach a financial literacy concept connected to today's ${subject} lesson. ${childName} earned ${sessionStats.starsEarned} stars so far. TEACH the concept first with real examples using their star earnings, THEN ask questions. Use the teach → practice cycle.`
-              : `You are tutoring ${childName} (Year ${yearLevel}) in: ${subject}.
+              : homeworkContext
+                ? `${childName} (Year ${yearLevel}) just photographed their homework. The concept is: "${homeworkContext}" (subject: ${subject}).
+${homeworkEarniIntro ? `You already started teaching them: "${homeworkEarniIntro.slice(0, 200)}"` : ''}
+
+CONTINUE TEACHING this exact concept. Do NOT drift to other topics.
+Build on what was just explained. Give ${childName} a practice problem about "${homeworkContext}" — different from their homework sheet but same concept.
+Do NOT re-introduce yourself. Pick up right where the explanation left off.`
+                : `You are tutoring ${childName} (Year ${yearLevel}) in: ${subject}.
 ${focusAreas.length > 0 ? `Parent's priority topics: ${focusAreas.join(', ')}. ` : ''}${weakTopics.length > 0 ? `Needs extra help with: ${weakTopics.join(', ')}. ` : ''}
 
 START BY TEACHING. Do NOT ask a question yet.

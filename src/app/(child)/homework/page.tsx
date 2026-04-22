@@ -149,19 +149,26 @@ export default function HomeworkPage() {
   function startHomeworkSessionWith(data: HelpResponse) {
     const rawSubject = data.subject || 'Reading & Writing'
     const helpWith = data.helpWith || ''
+    // Map to the canonical subject names Learni uses
     const subjectMap: Record<string, string> = {
       'maths': 'Maths', 'math': 'Maths', 'mathematics': 'Maths',
       'reading': 'Reading & Writing', 'writing': 'Reading & Writing',
       'reading & writing': 'Reading & Writing', 'english': 'Reading & Writing',
-      'science': 'Reading & Writing', 'history': 'Reading & Writing',
-      'geography': 'Reading & Writing', 'social studies': 'Reading & Writing',
+      'science': 'Science',
+      'history': 'History',
+      'geography': 'Geography',
+      'social studies': 'Social Studies',
+      'te reo māori': 'Te Reo Māori', 'te reo maori': 'Te Reo Māori',
     }
-    const cleanSubject = subjectMap[rawSubject.toLowerCase()] || 'Reading & Writing'
+    const cleanSubject = subjectMap[rawSubject.toLowerCase()] || rawSubject
+    // Build a topic slug from the helpWith description so the lesson stays on topic
+    const topicSlug = helpWith
+      ? helpWith.toLowerCase().replace(/[^a-z0-9\s]/g, '').trim().replace(/\s+/g, '-').slice(0, 50)
+      : rawSubject.toLowerCase().replace(/[^a-z0-9\s]/g, '').trim().replace(/\s+/g, '-').slice(0, 50)
     localStorage.setItem('learni_subject', cleanSubject)
-    localStorage.setItem('learni_topic', helpWith || rawSubject)
+    localStorage.setItem('learni_session_topic', topicSlug)  // session page reads THIS key
     localStorage.setItem('learni_session_mode', 'learn')
     localStorage.setItem('learni_homework_context', helpWith || rawSubject)
-    // Pass Earni's teaching context so the session starts with continuity
     localStorage.setItem('learni_homework_earni_intro', data.earniSays || '')
     window.location.href = '/session'
   }

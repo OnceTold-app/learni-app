@@ -216,6 +216,8 @@ export default function SessionPage() {
   const subject = typeof window !== 'undefined' ? localStorage.getItem('learni_subject') || 'Maths' : 'Maths'
   const sessionMode = typeof window !== 'undefined' ? localStorage.getItem('learni_session_mode') || 'full' : 'full'
   const sessionTopic = typeof window !== 'undefined' ? localStorage.getItem('learni_session_topic') || '' : ''
+  const homeworkContext = typeof window !== 'undefined' ? localStorage.getItem('learni_homework_context') || '' : ''
+  const homeworkEarniIntro = typeof window !== 'undefined' ? localStorage.getItem('learni_homework_earni_intro') || '' : ''
   // learnerId for spaced repetition question bank
   const learnerId = typeof window !== 'undefined' ? localStorage.getItem('learni_child_id') || '' : ''
   const [sessionStarsPerDollar, setSessionStarsPerDollar] = useState(20) // default 20 stars = $1
@@ -452,9 +454,12 @@ export default function SessionPage() {
           // Question bank: pass topicId and learnerId for bank-first serving
           topicId: sessionTopic || null,
           learnerId: learnerId || null,
+          // Homework context — tells Claude exactly what concept to teach
+          homeworkContext: homeworkContext || null,
+          homeworkEarniIntro: homeworkEarniIntro || null,
           drillTopics: phase === 'warmup'
             ? (weakTopics.length > 0 ? weakTopics : focusAreas.length > 0 ? focusAreas : subject !== 'Maths' ? [subject] : ['times tables', 'number bonds'])
-            : [sessionTopic || subject],
+            : [sessionTopic || (homeworkContext ? homeworkContext : subject)],
           focusAreas,
           weakTopics,
           reviewTopics,
@@ -597,6 +602,10 @@ export default function SessionPage() {
   useEffect(() => {
     if (!state.sessionStarted && audioChecked) {
       localStorage.removeItem('learni_session_topic') // clear stale topic from previous session
+      // Only clear homework context after it has been used (first turn)
+      // so it persists through the audio check screen but not into the next regular session
+      localStorage.removeItem('learni_homework_context')
+      localStorage.removeItem('learni_homework_earni_intro')
       fetchQuestion('lesson')
       sessionStartTime.current = Date.now()
       phaseStartRef.current = Date.now()
