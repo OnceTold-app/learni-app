@@ -16,6 +16,11 @@ interface Visual {
   left?: string
   right?: string
   equal?: boolean
+  // place_value type
+  number?: string | number
+  underline_digit?: number  // 0-based index from right (0=ones, 1=tens, 2=hundreds etc)
+  underline_index?: number  // 0-based index from left
+  column_labels?: boolean
 }
 
 export default function MathsVisual({ visual }: { visual: Visual }) {
@@ -34,6 +39,13 @@ export default function MathsVisual({ visual }: { visual: Visual }) {
       return <EquationSteps equation={typeof visual.equation === 'string' ? visual.equation : ''} />
     case 'comparison':
       return <Comparison left={visual.left || ''} right={visual.right || ''} equal={visual.equal ?? true} />
+    case 'place_value':
+      return <PlaceValueHighlight
+        number={String(visual.number || '')}
+        underlineDigit={visual.underline_digit}
+        underlineIndex={visual.underline_index}
+        columnLabels={visual.column_labels ?? true}
+      />
     default:
       return null
   }
@@ -214,6 +226,69 @@ function EquationSteps({ equation }: { equation: string }) {
           </span>
         ))}
       </div>
+    </div>
+  )
+}
+
+const PLACE_VALUE_LABELS = ['ones', 'tens', 'hundreds', 'thousands', 'ten-thousands', 'hundred-thousands', 'millions']
+
+function PlaceValueHighlight({ number, underlineDigit, underlineIndex, columnLabels }: {
+  number: string
+  underlineDigit?: number   // position from right (0=ones)
+  underlineIndex?: number   // position from left (0=first digit)
+  columnLabels?: boolean
+}) {
+  const digits = number.replace(/[^0-9]/g, '').split('')
+  const len = digits.length
+
+  // Resolve which index (from left) to underline
+  let targetIndex = -1
+  if (underlineIndex !== undefined) {
+    targetIndex = underlineIndex
+  } else if (underlineDigit !== undefined) {
+    // Convert from-right to from-left
+    targetIndex = len - 1 - underlineDigit
+  }
+
+  const columnLabel = underlineDigit !== undefined ? PLACE_VALUE_LABELS[underlineDigit] : ''
+
+  return (
+    <div style={{
+      background: 'rgba(46,196,182,0.06)',
+      border: '1px solid rgba(46,196,182,0.15)',
+      borderRadius: '16px',
+      padding: '20px 24px',
+      textAlign: 'center',
+    }}>
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-end', gap: '2px', marginBottom: '8px' }}>
+        {digits.map((d, i) => {
+          const isTarget = i === targetIndex
+          return (
+            <span
+              key={i}
+              style={{
+                fontFamily: "'Nunito', sans-serif",
+                fontSize: '36px',
+                fontWeight: 900,
+                color: isTarget ? '#2ec4b6' : 'rgba(255,255,255,0.85)',
+                textDecoration: isTarget ? 'underline' : 'none',
+                textDecorationColor: '#2ec4b6',
+                textDecorationThickness: '3px',
+                textUnderlineOffset: '4px',
+                padding: '0 2px',
+                lineHeight: 1.1,
+              }}
+            >
+              {d}
+            </span>
+          )
+        })}
+      </div>
+      {columnLabels && columnLabel && (
+        <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', marginTop: '4px' }}>
+          underlined digit is in the <span style={{ color: '#2ec4b6', fontWeight: 700 }}>{columnLabel}</span> column
+        </div>
+      )}
     </div>
   )
 }

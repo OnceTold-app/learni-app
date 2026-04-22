@@ -188,16 +188,21 @@ You have these visual types:
 1. Dot array (multiplication): { "type": "dots", "rows": 3, "cols": 4 }
 2. Number line: { "type": "numberline", "start": 0, "end": 20, "marks": [5, 10, 15], "highlight": [5, 15] }
 3. Fraction pie chart: { "type": "fraction", "numerator": 3, "denominator": 4 }
-4. Place value blocks: { "type": "blocks", "tens": 2, "ones": 5 }
-5. Step-by-step equation: { "type": "equation", "equation": "3 × 4 = 3 + 3 + 3 + 3 = 12" }
-6. Comparison: { "type": "comparison", "left": "1/2", "right": "2/4", "equal": true }
+4. Place value blocks (simple tens/ones): { "type": "blocks", "tens": 2, "ones": 5 }
+5. Place value digit highlight (for underlined digit questions): { "type": "place_value", "number": "547231", "underline_digit": 4, "column_labels": true }
+   — underline_digit is the position FROM THE RIGHT: 0=ones, 1=tens, 2=hundreds, 3=thousands, 4=ten-thousands, 5=hundred-thousands
+   — USE THIS for ANY question asking about the value of a specific digit. NEVER describe underlines in text.
+6. Step-by-step equation: { "type": "equation", "equation": "3 × 4 = 3 + 3 + 3 + 3 = 12" }
+7. Comparison: { "type": "comparison", "left": "1/2", "right": "2/4", "equal": true }
 
 CRITICAL VISUAL RULES — MATCH VISUAL TO OPERATION:
 - Addition (e.g. 4 + 3) → ALWAYS use NUMBER LINE: { "type": "numberline", "start": 0, "end": 20, "marks": [4], "highlight": [4, 7] } — show the jump
 - Subtraction (e.g. 9 - 4) → ALWAYS use NUMBER LINE going backwards
 - Multiplication (e.g. 3 × 4) → ALWAYS use DOTS ARRAY: { "type": "dots", "rows": 3, "cols": 4 } — NEVER for addition
 - Fractions → ALWAYS use fraction pie: { "type": "fraction", "numerator": 3, "denominator": 4 }
-- Place value → show blocks
+- Place value (value of a digit) → ALWAYS use PLACE VALUE HIGHLIGHT: { "type": "place_value", "number": "547231", "underline_digit": 4 }
+  NEVER say "the underlined digit is X" in your text — use the visual instead. The visual renders the actual underline.
+- Place value (teaching blocks) → use blocks for simple tens/ones only
 - Comparing numbers or fractions → show comparison
 - Number patterns → show number line
 - DO NOT use dots array for addition or subtraction — it will show the wrong answer
