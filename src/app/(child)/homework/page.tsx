@@ -92,7 +92,12 @@ export default function HomeworkPage() {
       setResponse(data)
 
       // Speak Earni's response then immediately go to session
+      // Timeout: if TTS hangs for more than 8s, skip and go straight to session
       if (data.earniSays) {
+        let navigated = false
+        const fallback = setTimeout(() => {
+          if (!navigated) { navigated = true; startHomeworkSessionWith(data) }
+        }, 8000)
         try {
           const ttsRes = await fetch('/api/speak', {
             method: 'POST',
@@ -102,14 +107,16 @@ export default function HomeworkPage() {
           if (ttsRes.ok) {
             const blob = await ttsRes.blob()
             const audio = new Audio(URL.createObjectURL(blob))
-            audio.onended = () => startHomeworkSessionWith(data)
+            audio.onended = () => { clearTimeout(fallback); if (!navigated) { navigated = true; startHomeworkSessionWith(data) } }
+            audio.onerror = () => { clearTimeout(fallback); if (!navigated) { navigated = true; startHomeworkSessionWith(data) } }
             await audio.play()
           } else {
-            // No voice — go straight to session
-            startHomeworkSessionWith(data)
+            clearTimeout(fallback)
+            if (!navigated) { navigated = true; startHomeworkSessionWith(data) }
           }
         } catch {
-          startHomeworkSessionWith(data)
+          clearTimeout(fallback)
+          if (!navigated) { navigated = true; startHomeworkSessionWith(data) }
         }
       } else {
         startHomeworkSessionWith(data)
